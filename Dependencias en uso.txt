@@ -1,0 +1,40 @@
+✅ Dependencias esenciales:
+Spring Web
+→ Para construir APIs REST con Spring MVC.
+
+Spring Data JPA
+→ Para persistencia con JPA y Hibernate.
+
+PostgreSQL Driver
+→ Para conectarte a tu base de datos PostgreSQL.
+
+Spring Boot Starter Security
+→ Para implementar autenticación/autorización.
+
+Spring Boot Starter Validation
+→ Para usar anotaciones como @NotBlank, @Email, etc. en tus DTOs.
+
+Lombok
+→ Para evitar boilerplate como getters, setters, etc.
+
+🧰 Herramientas de desarrollo:
+Spring Boot DevTools
+→ Para recarga rápida de la app en desarrollo.
+
+Spring Configuration Processor
+→ Para autocompletado en application.properties o .yml.
+
+🔐 Spring Security OAuth2 Resource Server
+→ Si querés usar Spring Security para validar JWT automáticamente.
+
+📖 Documentación interactiva (Swagger):
+Springdoc OpenAPI UI
+→ Para generar documentación Swagger y testear endpoints en una interfaz web amigable.
+
+🔁 DTO Mapping (opcional):
+MapStruct
+→ Para convertir automáticamente entre entidades y DTOs sin escribir mucho código manual.
+
+🧪 Pruebas con PostgreSQL (opcional pero recomendado):
+Testcontainers
+→ Para correr tests en una base PostgreSQL real en contenedor durante tus pruebas con JUnit.
