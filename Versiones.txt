@@ -1,0 +1,8 @@
+beta 0.0.1: autentificacion JWT, devuelve token
+beta 0.0.2: autentificacion JWT, parte 1/4 finalizada
+
+✅ Login funcionando
+✅ Token válido/inválido manejado
+✅ Rutas públicas y protegidas bien diferenciadas
+
+beta 0.0.3: asociación de usuarios con roles y control por roles
