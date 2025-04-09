@@ -12,12 +12,23 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
+import org.springframework.util.AntPathMatcher;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    
+    private static final List<String> RUTAS_PUBLICAS = List.of(
+        "/api/auth/**",
+        "/api/usuarios/registro/**"
+    );
+    
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -31,9 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String path = request.getRequestURI();
-        if (path.startsWith("/api/auth") || path.equals("/api/usuarios/registro")) {
-            filterChain.doFilter(request, response);
-            return;
+
+        for (String rutaPublica : RUTAS_PUBLICAS) {
+            if (pathMatcher.match(rutaPublica, path)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         

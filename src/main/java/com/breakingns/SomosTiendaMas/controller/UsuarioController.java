@@ -1,7 +1,9 @@
 package com.breakingns.SomosTiendaMas.controller;
 
+import com.breakingns.SomosTiendaMas.model.Rol;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.service.RolService;
 import com.breakingns.SomosTiendaMas.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,9 @@ public class UsuarioController {
     
     @Autowired
     private UsuarioService usuarioService;
+    
+    @Autowired
+    private RolService rolService;
     /*
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -36,8 +41,7 @@ public class UsuarioController {
         return ResponseEntity.ok("Hola usuarios!");
     }
 
-    
-    @PostMapping("/registro")
+    @PostMapping("/registro/usuario")
     public ResponseEntity<?> registerUser(@RequestBody Usuario usuario) {
         if (usuarioService.existeUsuario(usuario.getUsername())) {
             return ResponseEntity
@@ -46,10 +50,30 @@ public class UsuarioController {
         }
 
         // Asignar el rol por defecto
-        usuario.getRoles().add(RolNombre.ROLE_ADMIN);
+        Rol rolUser = rolService.getByNombre(RolNombre.ROLE_USUARIO)
+                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
+        usuario.getRoles().add(rolUser);
+
         usuarioService.registrar(usuario);
 
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
     
+    @PostMapping("/registro/admin")
+    public ResponseEntity<?> registerAdmin(@RequestBody Usuario usuario) {
+        if (usuarioService.existeUsuario(usuario.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("El nombre de usuario ya está en uso");
+        }
+
+        // Asignar el rol por defecto
+        Rol rolAdmin = rolService.getByNombre(RolNombre.ROLE_ADMIN)
+                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
+        usuario.getRoles().add(rolAdmin);
+
+        usuarioService.registrar(usuario);
+
+        return ResponseEntity.ok("Administrador registrado correctamente");
+    }
 }
