@@ -35,8 +35,14 @@ public class UsuarioController {
         return ResponseEntity.ok("Hola Admin!");
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'USUARIO')")
+    @PreAuthorize("hasRole('USUARIO')")
     @GetMapping("/comun")
+    public ResponseEntity<String> soloUsuario() {
+        return ResponseEntity.ok("Hola usuario!");
+    }
+    
+    @PreAuthorize("hasAnyRole('ADMIN', 'USUARIO')")
+    @GetMapping("/compartido")
     public ResponseEntity<String> adminYUsuarios() {
         return ResponseEntity.ok("Hola usuarios!");
     }
