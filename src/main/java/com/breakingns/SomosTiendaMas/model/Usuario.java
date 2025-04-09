@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
+    private Long id_usuario;
 
     private String username;
     private String password;
@@ -34,12 +35,20 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "rol_id"))
     private Set<Rol> roles = new HashSet<>();
 
+    @OneToOne(mappedBy = "usuario")
+    private Carrito carrito;
+    
     public Usuario() {}
 
-    public Usuario(Long id, String username, String password, String email) {
-        this.id = id;
+    public Usuario(Long id_usuario, String username, String password, String email, Carrito carrito) {
+        this.id_usuario = id_usuario;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.carrito = carrito;
     }
+
+    
+
+    
 }

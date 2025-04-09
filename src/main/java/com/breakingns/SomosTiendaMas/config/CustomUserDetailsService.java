@@ -2,11 +2,13 @@ package com.breakingns.SomosTiendaMas.config;
 
 import com.breakingns.SomosTiendaMas.model.Usuario;
 import com.breakingns.SomosTiendaMas.repository.IUsuarioRepository;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
@@ -20,12 +22,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
 
-        return new org.springframework.security.core.userdetails.User(
+        List<GrantedAuthority> authorities = usuario.getRoles().stream()
+                .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
+                .collect(Collectors.toList());
+
+        return new CustomUserDetails(
+                usuario.getId_usuario(),
                 usuario.getUsername(),
                 usuario.getPassword(),
-                usuario.getRoles().stream()
-                        .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
-                        .collect(Collectors.toList())
+                authorities
         );
     }
 }

@@ -3,12 +3,12 @@ package com.breakingns.SomosTiendaMas.controller;
 import com.breakingns.SomosTiendaMas.model.Rol;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.service.CarritoService;
 import com.breakingns.SomosTiendaMas.service.RolService;
 import com.breakingns.SomosTiendaMas.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +24,9 @@ public class UsuarioController {
     
     @Autowired
     private RolService rolService;
+    
+    @Autowired
+    private CarritoService carritoService;
     /*
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -61,7 +64,9 @@ public class UsuarioController {
         usuario.getRoles().add(rolUser);
 
         usuarioService.registrar(usuario);
-
+        
+        crearCarrito(usuario.getId_usuario());
+        
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
     
@@ -79,7 +84,17 @@ public class UsuarioController {
         usuario.getRoles().add(rolAdmin);
 
         usuarioService.registrar(usuario);
+        
+        crearCarrito(usuario.getId_usuario());
 
         return ResponseEntity.ok("Administrador registrado correctamente");
+    }
+    
+    //------------ Funciones utiles
+    
+    public void crearCarrito(Long id_usuario){
+        
+        carritoService.crearCarrito(id_usuario);
+        
     }
 }

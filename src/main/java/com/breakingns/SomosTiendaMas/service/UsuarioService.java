@@ -2,7 +2,9 @@ package com.breakingns.SomosTiendaMas.service;
 
 import com.breakingns.SomosTiendaMas.model.Usuario;
 import com.breakingns.SomosTiendaMas.repository.IUsuarioRepository;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +27,15 @@ public class UsuarioService implements IUsuarioService{
     public Boolean existeUsuario(String nombreUsuario) {
         return usuarioRepository.existsByUsername(nombreUsuario);
     }
+
+    @Override
+    public Optional<Usuario> findById(Long id) {
+        return usuarioRepository.findById(id);
+    }
     
+    @Override
+    public Usuario findByUsername(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
+    }
 }
