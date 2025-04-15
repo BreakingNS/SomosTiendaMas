@@ -1,8 +1,8 @@
-package com.breakingns.SomosTiendaMas.service;
+package com.breakingns.SomosTiendaMas.auth.service;
 
-import com.breakingns.SomosTiendaMas.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
-import com.breakingns.SomosTiendaMas.repository.IRolRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

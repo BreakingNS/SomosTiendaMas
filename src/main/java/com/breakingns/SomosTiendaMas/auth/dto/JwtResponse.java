@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.DTO;
+package com.breakingns.SomosTiendaMas.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

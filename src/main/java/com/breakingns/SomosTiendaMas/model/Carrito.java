@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.model;
 
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

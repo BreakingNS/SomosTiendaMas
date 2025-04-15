@@ -1,5 +1,6 @@
-package com.breakingns.SomosTiendaMas.config;
+package com.breakingns.SomosTiendaMas.auth.security.jwt;
 
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -25,20 +26,24 @@ public class JwtTokenProvider {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
-
-    public String generarToken(Authentication authentication) {
-        CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
+    
+    //Metodo para generar Token
+    public String generarToken(Authentication authentication) {//Recibe el objeto Authentication con los datos validados por autenticacion.
+        
+        UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
+        //Obtiene los datos del usuario logueado (que implementa UserDetails) desde el objeto Authentication.
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        //Guarda la fecha actual y la fecha de expiración del token (por ejemplo, 1 hora después).
 
         return Jwts.builder()
-                .setSubject(userPrincipal.getUsername())
-                .claim("id", userPrincipal.getId())  // acá agregás el ID
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+            .setSubject(userPrincipal.getUsername())                // El "dueño" del token
+            .claim("id", userPrincipal.getId())                   // Agrega un dato extra: el ID
+            .setIssuedAt(now)                                         // Cuándo fue emitido
+            .setExpiration(expiryDate)                                // Cuándo expira
+            .signWith(getSigningKey(), SignatureAlgorithm.HS512)   // Lo firma con una clave secreta
+            .compact();
     }
 
     public String obtenerUsernameDelToken(String token) {

@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.controller.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,5 +1,6 @@
-package com.breakingns.SomosTiendaMas.model;
+package com.breakingns.SomosTiendaMas.auth.model;
 
+import com.breakingns.SomosTiendaMas.model.RolNombre;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

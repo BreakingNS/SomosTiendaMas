@@ -1,5 +1,7 @@
-package com.breakingns.SomosTiendaMas.model;
+package com.breakingns.SomosTiendaMas.domain.usuario.model;
 
+import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.model.Carrito;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

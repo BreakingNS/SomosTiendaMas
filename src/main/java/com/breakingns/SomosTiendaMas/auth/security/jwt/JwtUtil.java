@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.config;
+package com.breakingns.SomosTiendaMas.auth.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

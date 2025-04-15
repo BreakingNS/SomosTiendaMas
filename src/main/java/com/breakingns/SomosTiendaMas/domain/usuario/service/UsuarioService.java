@@ -1,7 +1,7 @@
-package com.breakingns.SomosTiendaMas.service;
+package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
-import com.breakingns.SomosTiendaMas.model.Usuario;
-import com.breakingns.SomosTiendaMas.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

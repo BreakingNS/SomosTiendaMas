@@ -1,5 +1,8 @@
-package com.breakingns.SomosTiendaMas.config;
+package com.breakingns.SomosTiendaMas.auth.security.config;
 
+import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
+import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +28,7 @@ public class SecurityConfig {
     
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
-                                                            CustomUserDetailsService userDetailsService) {
+                                                            UserDetailsServiceImpl userDetailsService) {
         return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
     }
     

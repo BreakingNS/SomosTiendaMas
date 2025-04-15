@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.service;
 
 import com.breakingns.SomosTiendaMas.model.Carrito;
-import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
-import com.breakingns.SomosTiendaMas.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

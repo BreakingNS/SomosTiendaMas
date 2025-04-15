@@ -1,5 +1,7 @@
-package com.breakingns.SomosTiendaMas.config;
+package com.breakingns.SomosTiendaMas.auth.security.filter;
 
+import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,12 +17,14 @@ import java.io.IOException;
 import java.util.List;
 import org.springframework.util.AntPathMatcher;
 
+//Es un filtro de seguridad personalizado que se ejecuta una vez por cada request (OncePerRequestFilter)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     
     private final JwtTokenProvider jwtTokenProvider;
-    private final CustomUserDetailsService userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
     
+    //Lista de rutas públicas
     private static final List<String> RUTAS_PUBLICAS = List.of(
         "/api/auth/**",
         "/api/usuarios/registro/**"
@@ -29,18 +33,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
 
-
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService userDetailsService) {
+    //Constructor
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
     }
     
     @Override
+    //Metodo principal: Este método se ejecuta por cada request que entra.
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
         
+        //Verifica si es una ruta pública
         String path = request.getRequestURI();
 
         for (String rutaPublica : RUTAS_PUBLICAS) {
@@ -50,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        
+        //Verifica que venga el header Authorization
         String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
@@ -59,22 +65,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        //Extrae y valida el token
         String token = header.substring(7);
 
         if (!jwtTokenProvider.validarToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token inválido o expirado");
+            response.getWriter().write("Token invalido o expirado");
             return;
         }
 
+        //Obtiene el usuario desde el token
         String username = jwtTokenProvider.obtenerUsernameDelToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
+        //Crea el objeto de autenticación
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-
+        SecurityContextHolder.getContext().setAuthentication(authToken);//Guarda la autenticación en el contexto de seguridad de Spring para que esté disponible mientras dure la sesión de esa request
+        
+        //Deja pasar la request
         filterChain.doFilter(request, response);
     }
 }

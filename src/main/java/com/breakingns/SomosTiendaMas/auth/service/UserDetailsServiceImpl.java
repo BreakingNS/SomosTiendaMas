@@ -1,7 +1,8 @@
-package com.breakingns.SomosTiendaMas.config;
+package com.breakingns.SomosTiendaMas.auth.service;
 
-import com.breakingns.SomosTiendaMas.model.Usuario;
-import com.breakingns.SomosTiendaMas.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
@@ -12,7 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
-public class CustomUserDetailsService implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private IUsuarioRepository usuarioRepository;
@@ -26,7 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
                 .collect(Collectors.toList());
 
-        return new CustomUserDetails(
+        return new UserAuthDetails(
                 usuario.getId_usuario(),
                 usuario.getUsername(),
                 usuario.getPassword(),

@@ -1,11 +1,11 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.domain.usuario.controller;
 
-import com.breakingns.SomosTiendaMas.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
-import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
-import com.breakingns.SomosTiendaMas.service.RolService;
-import com.breakingns.SomosTiendaMas.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.auth.service.RolService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

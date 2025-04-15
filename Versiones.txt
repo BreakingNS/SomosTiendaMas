@@ -6,3 +6,7 @@ beta 0.0.2: autentificacion JWT, parte 1/4 finalizada
 ✅ Rutas públicas y protegidas bien diferenciadas
 
 beta 0.0.3: asociación de usuarios con roles y control por roles
+
+Beta 0.0.3.5 - Autorización a nivel de método (verificación manual en controller)
+
+beta 0.0.4: modificacion de modelo de organizacion, cada tabla tiene su propia arquitectura multicapas

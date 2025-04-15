@@ -1,6 +1,6 @@
-package com.breakingns.SomosTiendaMas.service;
+package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
-import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import java.util.Optional;
 
 public interface IUsuarioService {

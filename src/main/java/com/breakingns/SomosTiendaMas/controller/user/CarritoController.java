@@ -1,17 +1,14 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.controller.user;
 
-import com.breakingns.SomosTiendaMas.config.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.model.Carrito;
-import com.breakingns.SomosTiendaMas.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
-import com.breakingns.SomosTiendaMas.service.UsuarioService;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,7 +52,7 @@ public class CarritoController {
 
     @GetMapping("/traer/{id_usuario}")
     public ResponseEntity<?> verCarrito(@PathVariable Long id_usuario) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication(); //Obtiene el usuario autenticado del token JWT
         String usernameActual = auth.getName(); // esto es el username del token
 
         // Obtener usuario actual desde la base de datos
