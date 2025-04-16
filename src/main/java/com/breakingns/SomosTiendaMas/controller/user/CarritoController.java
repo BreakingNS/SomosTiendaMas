@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,29 +44,16 @@ public class CarritoController {
 
     @Autowired
     private CarritoService carritoService;
-
+    /*
     @Autowired
     private UsuarioService usuarioService;
     
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
+    */
+    @PreAuthorize("hasRole('ADMIN') or #id_usuario == principal.id")
     @GetMapping("/traer/{id_usuario}")
     public ResponseEntity<?> verCarrito(@PathVariable Long id_usuario) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication(); //Obtiene el usuario autenticado del token JWT
-        String usernameActual = auth.getName(); // esto es el username del token
-
-        // Obtener usuario actual desde la base de datos
-        Usuario usuarioActual = usuarioService.findByUsername(usernameActual);
-
-        // Si es admin, dejar pasar
-        boolean esAdmin = auth.getAuthorities().stream()
-                .anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
-
-        // Si no es admin, solo puede ver su propio carrito
-        if (!esAdmin && !usuarioActual.getId_usuario().equals(id_usuario)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No autorizado");
-        }
 
         // OK, puede ver el carrito
         Optional<Carrito> carrito = carritoService.traerCarritoPorIdUsuario(id_usuario);
