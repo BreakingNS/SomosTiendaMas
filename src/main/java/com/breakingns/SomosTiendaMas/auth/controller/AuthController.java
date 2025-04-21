@@ -1,8 +1,15 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
+import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.JwtResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.AuthService;
+import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +27,12 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private AuthService authService;
+    
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -45,6 +58,73 @@ public class AuthController {
         
         //Respuesta
         return ResponseEntity.ok(new JwtResponse(token)); //Devuelve una respuesta HTTP 200 con un objeto JwtResponse que contiene el token generado.
+    }
+    
+    @PostMapping("/loginNew")
+    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest) {
+        AuthResponse tokens = authService.login(loginRequest);
+        return ResponseEntity.ok(tokens);
+    }
+    /*
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest request) {
+        String requestToken = request.getRefreshToken();
+
+        return refreshTokenService.encontrarPorToken(requestToken)
+                .map(refreshTokenService::verificarExpiracion)
+                .map(RefreshToken::getUsuario)
+                .map(usuario -> {
+                    String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
+                    return ResponseEntity.ok(Map.of(
+                        "accessToken", nuevoJwt,
+                        "refreshToken", requestToken // o generar uno nuevo si querés rotar
+                    ));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
+    }
+    */
+    /*
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String requestToken = request.getRefreshToken();
+
+        return refreshTokenService.verificarValidez(requestToken)
+                .map(RefreshToken::getUsuario)
+                .map(usuario -> {
+                    String newAccessToken = jwtTokenProvider.generarToken(
+                            new UsernamePasswordAuthenticationToken(
+                                    usuario.getUsername(), null, usuario.getRoles()
+                            )
+                    );
+                    return ResponseEntity.ok(new AuthResponse(newAccessToken, requestToken));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token no válido o expirado"));
+    }
+    */
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest request) {
+        String requestToken = request.getRefreshToken();
+
+        return refreshTokenService.encontrarPorToken(requestToken)
+                .map(refreshTokenService::verificarExpiracion)
+                .map(refreshToken -> {
+                    // 1. Marcar como usado y revocado
+                    refreshToken.setUsado(true);
+                    refreshToken.setRevocado(true);
+                    refreshTokenService.guardar(refreshToken); // método que hace save()
+
+                    // 2. Generar nuevo JWT y nuevo refreshToken
+                    Usuario usuario = refreshToken.getUsuario();
+                    String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
+                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario());
+
+                    // 3. Devolver ambos nuevos tokens
+                    return ResponseEntity.ok(Map.of(
+                        "accessToken", nuevoJwt,
+                        "refreshToken", nuevoRefreshToken.getToken()
+                    ));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
     }
 }
 

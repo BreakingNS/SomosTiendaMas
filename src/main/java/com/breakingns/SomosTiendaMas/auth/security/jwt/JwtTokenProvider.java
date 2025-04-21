@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.security.jwt;
 
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
+import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +20,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Component
 public class JwtTokenProvider {
@@ -28,6 +32,9 @@ public class JwtTokenProvider {
 
     @Value("${app.jwt-expiration-ms}")
     private int jwtExpirationMs;
+    
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
     
     public JwtTokenProvider() throws Exception {
         this.privateKey = loadPrivateKey("src/main/resources/keys/private.pem");
@@ -60,7 +67,7 @@ public class JwtTokenProvider {
         return keyFactory.generatePublic(keySpec);
     }
     
-    //Metodo para generar Token
+    //Metodo para generar Token por Authentication
     public String generarToken(Authentication authentication) {//Recibe el objeto Authentication con los datos validados por autenticacion.
         
         UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
@@ -77,6 +84,14 @@ public class JwtTokenProvider {
             .setExpiration(expiryDate)                                // Cuándo expira
             .signWith(privateKey, SignatureAlgorithm.RS256)         // Lo firma con una clave privada
             .compact();
+    }
+    
+    public String generarTokenDesdeUsername(String username) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+            userDetails, null, userDetails.getAuthorities()
+        );
+        return generarToken(auth); // usás tu método existente
     }
 
     public String obtenerUsernameDelToken(String token) {
