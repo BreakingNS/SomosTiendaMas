@@ -31,7 +31,15 @@
                 <springdoc.version>1.7.0</springdoc.version>
                 <mapstruct.version>1.5.5.Final</mapstruct.version>
 	</properties>
-	<dependencies>  
+	<dependencies>
+            
+            <!-- BouncyCastle: Para trabajar con claves RSA y leer los archivos PEM de manera sencilla en Java -->  
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>1.70</version>
+            </dependency>
+            
             <!-- Web y REST API -->  
             <dependency>  
                 <groupId>org.springframework.boot</groupId>  

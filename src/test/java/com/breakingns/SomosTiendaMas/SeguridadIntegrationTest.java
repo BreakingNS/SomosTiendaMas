@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
@@ -14,6 +15,8 @@ import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Set;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -23,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -261,5 +265,16 @@ public class SeguridadIntegrationTest {
                 .andExpect(status().isOk()); // 403 esperado
     }
 
-    
+    @Test
+    public void testGenerateToken() throws Exception {
+
+        System.out.println("Generated Token: " + tokenAdmin);
+        System.out.println("Generated Token: " + tokenUsuario);
+
+        // Asegúrate de que el token no esté vacío
+        assertNotNull(tokenAdmin);
+        assertTrue(tokenAdmin.length() > 0);
+        assertNotNull(tokenUsuario);
+        assertTrue(tokenUsuario.length() > 0);
+    }
 }

@@ -4,7 +4,14 @@ import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.Key;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -16,15 +23,41 @@ import java.util.List;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwt-secret}")
-    private String jwtSecret;
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
 
     @Value("${app.jwt-expiration-ms}")
     private int jwtExpirationMs;
+    
+    public JwtTokenProvider() throws Exception {
+        this.privateKey = loadPrivateKey("src/main/resources/keys/private.pem");
+        this.publicKey = loadPublicKey("src/main/resources/keys/public.pem");
+    }
+    
+    // Método para cargar clave privada
+    private PrivateKey loadPrivateKey(String filepath) throws Exception {
+        byte[] keyBytes = Files.readAllBytes(Paths.get(filepath));
+        String privateKeyPEM = new String(keyBytes)
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s", "");
 
-    // Método para convertir el String jwtSecret a una Key segura
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(privateKeyPEM));
+        return keyFactory.generatePrivate(keySpec);
+    }
+    
+    // Método para cargar clave publica
+    private PublicKey loadPublicKey(String filepath) throws Exception {
+        byte[] keyBytes = Files.readAllBytes(Paths.get(filepath));
+        String publicKeyPEM = new String(keyBytes)
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(publicKeyPEM));
+        return keyFactory.generatePublic(keySpec);
     }
     
     //Metodo para generar Token
@@ -42,13 +75,13 @@ public class JwtTokenProvider {
             .claim("id", userPrincipal.getId())                   // Agrega un dato extra: el ID
             .setIssuedAt(now)                                         // Cuándo fue emitido
             .setExpiration(expiryDate)                                // Cuándo expira
-            .signWith(getSigningKey(), SignatureAlgorithm.HS512)   // Lo firma con una clave secreta
+            .signWith(privateKey, SignatureAlgorithm.RS256)         // Lo firma con una clave privada
             .compact();
     }
 
     public String obtenerUsernameDelToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -58,7 +91,7 @@ public class JwtTokenProvider {
     public boolean validarToken(String token) {
         try {
             Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token);
             return true;
@@ -71,7 +104,7 @@ public class JwtTokenProvider {
     
     public Long obtenerIdDelToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -80,7 +113,7 @@ public class JwtTokenProvider {
     
     public List<String> obtenerRolesDelToken(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

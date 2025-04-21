@@ -12,3 +12,5 @@ Beta 0.0.3.5 - Autorización a nivel de método (verificación manual en control
 beta 0.0.4: modificacion de modelo de organizacion, cada tabla tiene su propia arquitectura multicapas
 
 beta 0.0.5: tests exitosos sobre JWT basico.
+
+beta 0.0.6: implementacion RSA Keys (SIN VARIABLES DE ENTORNO)
