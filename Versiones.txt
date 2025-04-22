@@ -16,3 +16,5 @@ beta 0.0.5: tests exitosos sobre JWT basico.
 beta 0.0.6: implementacion RSA Keys (SIN VARIABLES DE ENTORNO)
 
 beta 0.0.6.1: implementacion parcial de refreshToken (PROBLEMAS DE ACCESO, POSIBLE FILTER)
+
+beta 0.0.6.2: implementacion parcial de refreshToken (CREACION INFINITA DE TOKENS POR PARTE DE REFRESHTOCKEN)
