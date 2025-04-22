@@ -4,6 +4,7 @@ import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -48,12 +49,25 @@ public class RefreshTokenService {
                 .filter(rt -> !rt.getRevocado() && !rt.getUsado())
                 .filter(rt -> rt.getFechaExpiracion().isAfter(Instant.now()));
     }
-    
+    /*
     public RefreshToken verificarExpiracion(RefreshToken token) {
         if (token.getFechaExpiracion().isBefore(Instant.now())) {
             refreshTokenRepository.delete(token);
             throw new RuntimeException("El refresh token expiró. Por favor, logueate de nuevo.");
         }
+        return token;
+    }
+    */
+    public RefreshToken verificarExpiracion(RefreshToken token) {
+        if (token.getFechaExpiracion().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(token);
+            throw new RefreshTokenException("El refresh token ha expirado. Por favor, inicie sesión nuevamente.");
+        }
+
+        if (token.getRevocado() || token.getUsado()) {
+            throw new RefreshTokenException("El refresh token ya fue usado o revocado.");
+        }
+
         return token;
     }
 

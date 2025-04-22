@@ -18,3 +18,5 @@ beta 0.0.6: implementacion RSA Keys (SIN VARIABLES DE ENTORNO)
 beta 0.0.6.1: implementacion parcial de refreshToken (PROBLEMAS DE ACCESO, POSIBLE FILTER)
 
 beta 0.0.6.2: implementacion parcial de refreshToken (CREACION INFINITA DE TOKENS POR PARTE DE REFRESHTOCKEN)
+
+beta 0.0.6.3: implementacion parcial de refreshToken (AGREGADO DE EXCEPCIONES Y USO/REVOCACION DE REFRESHTOKEN)
