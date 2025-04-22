@@ -9,15 +9,20 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,12 +68,34 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(token)); //Devuelve una respuesta HTTP 200 con un objeto JwtResponse que contiene el token generado.
     }
     */
+    
     @PostMapping("/loginNew")
     public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         AuthResponse tokens = authService.login(loginRequest, request);
         return ResponseEntity.ok(tokens);
     }
     
+    /*
+    PARA UTILIZAR COOKIESSSSSSSSSSSSSSSSS -------------------------------
+    @PostMapping("/loginNew")
+    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        AuthResponse tokens = authService.login(loginRequest, request);
+
+        // Preparar cookie con refresh token
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.getRefreshToken())
+                .httpOnly(true)
+                .secure(false) // true si usás HTTPS
+                .path("/api/refresh-token")
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Strict")
+                .build();
+
+        // Devolver access token en body, refresh token en cookie
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(new AuthResponse(tokens.getAccessToken(), null)); // no mandamos el refresh en body
+    }
+    */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request) {
         refreshTokenService.logout(request.getRefreshToken());
@@ -137,5 +164,48 @@ public class AuthController {
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
     }
+    /*
+    PARA COOKIESSSSSSSSSSSSSSSSSSS ---------------------------
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refrescarTokenDesdeCookie(@CookieValue(name = "refreshToken", required = false) String requestToken,
+                                                       HttpServletRequest request) {
+        if (requestToken == null || requestToken.isBlank()) {
+            throw new RefreshTokenException("No se encontró el refresh token en la cookie.");
+        }
+
+        return refreshTokenService.encontrarPorToken(requestToken)
+                .map(refreshTokenService::verificarExpiracion)
+                .map(refreshToken -> {
+                    if (refreshToken.getRevocado() || refreshToken.getUsado()) {
+                        throw new RefreshTokenException("Refresh token inválido o ya utilizado.");
+                    }
+
+                    // Marcar como revocado y usado
+                    refreshToken.setUsado(true);
+                    refreshToken.setRevocado(true);
+                    refreshToken.setFechaRevocado(Instant.now());
+                    refreshTokenService.guardar(refreshToken);
+
+                    // Generar nuevos tokens
+                    Usuario usuario = refreshToken.getUsuario();
+                    String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
+                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario(), request);
+
+                    // Nueva cookie con el nuevo refresh token
+                    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", nuevoRefreshToken.getToken())
+                            .httpOnly(true)
+                            .secure(false) // true si usás HTTPS
+                            .path("/api/refresh-token")
+                            .maxAge(Duration.ofDays(7))
+                            .sameSite("Strict")
+                            .build();
+
+                    return ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                            .body(Map.of("accessToken", nuevoJwt));
+                })
+                .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
+    }
+    */
 }
 
