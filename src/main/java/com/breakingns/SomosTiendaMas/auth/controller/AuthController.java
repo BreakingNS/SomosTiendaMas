@@ -8,6 +8,7 @@ import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
+import com.breakingns.SomosTiendaMas.auth.service.TokenBlacklistService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,10 +22,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,6 +41,9 @@ public class AuthController {
     
     @Autowired
     private AuthService authService;
+    
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
     
     @Autowired
     private RefreshTokenService refreshTokenService;
@@ -96,10 +103,39 @@ public class AuthController {
                 .body(new AuthResponse(tokens.getAccessToken(), null)); // no mandamos el refresh en body
     }
     */
+    /*
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request) {
         refreshTokenService.logout(request.getRefreshToken());
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+    */
+    
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
+                                    @RequestHeader("Authorization") String authorizationHeader,
+                                    HttpServletRequest httpRequest) {
+
+        String accessToken = authorizationHeader.replace("Bearer ", "");
+
+        // Revocar el refresh token
+        refreshTokenService.logout(request.getRefreshToken());
+
+        // Revocar el access token agregándolo a la blacklist
+        tokenBlacklistService.revocarToken(accessToken);
+
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+    
+    @PostMapping("/logout-total")
+    public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String token) {
+        // Extraer username directamente del JWT
+        String username = jwtTokenProvider.obtenerUsernameDelToken(token.substring(7)); // Eliminar "Bearer " del token
+
+        // Ahora puedes llamar a tu servicio de refresh tokens para revocar todas las sesiones de ese usuario
+        refreshTokenService.logoutTotal(username);
+
+        return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
     
     /*

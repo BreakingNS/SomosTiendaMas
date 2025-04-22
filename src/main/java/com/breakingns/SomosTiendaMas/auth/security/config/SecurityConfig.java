@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.security.config;
 
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenBlacklistRepository;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
@@ -17,17 +18,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity // Opcional: te permite usar @PreAuthorize en métodos
 public class SecurityConfig {
-
+    
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
-                                                            UserDetailsServiceImpl userDetailsService) {
-        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+                                                           UserDetailsServiceImpl userDetailsService,
+                                                           ITokenBlacklistRepository tokenBlacklistRepository) {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService, tokenBlacklistRepository);
     }
     
     @Bean

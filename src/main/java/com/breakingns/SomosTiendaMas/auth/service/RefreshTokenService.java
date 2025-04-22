@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,6 +59,19 @@ public class RefreshTokenService {
         refreshToken.setUsado(false);
         refreshToken.setFechaRevocado(Instant.now());
         refreshTokenRepository.save(refreshToken);
+    }
+    
+    public void logoutTotal(String username) {
+        // Buscar todos los refresh tokens de ese usuario
+        List<RefreshToken> tokens = refreshTokenRepository.findByUsuarioUsername(username);
+
+        // Revocar cada token
+        for (RefreshToken token : tokens) {
+            token.setRevocado(true);
+            token.setUsado(false);
+            token.setFechaRevocado(Instant.now());
+            refreshTokenRepository.save(token);
+        }
     }
     
     public Optional<RefreshToken> encontrarPorToken(String token) {

@@ -13,6 +13,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Instant;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.List;
+import static org.bouncycastle.crypto.params.Blake3Parameters.key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -139,4 +141,19 @@ public class JwtTokenProvider {
         }
         return Collections.emptyList();
     }
+    
+    public Instant obtenerFechaExpiracion(String token) {
+        Claims claims = obtenerClaims(token);
+        Date fecha = claims.getExpiration();
+        return fecha.toInstant();
+    }
+    
+    private Claims obtenerClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(publicKey) // tu clave pública si usás RSA
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
 }
