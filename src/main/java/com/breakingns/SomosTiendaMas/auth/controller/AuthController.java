@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import java.time.Instant;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +66,13 @@ public class AuthController {
         AuthResponse tokens = authService.login(loginRequest);
         return ResponseEntity.ok(tokens);
     }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request) {
+        refreshTokenService.logout(request.getRefreshToken());
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+    
     /*
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest request) {
@@ -110,7 +118,8 @@ public class AuthController {
                 .map(refreshToken -> {
                     // 1. Marcar como usado y revocado
                     refreshToken.setUsado(true);
-                    refreshToken.setRevocado(true);
+                    refreshToken.setRevocado(false);
+                    refreshToken.setFechaRevocado(Instant.now());
                     refreshTokenService.guardar(refreshToken); // método que hace save()
 
                     // 2. Generar nuevo JWT y nuevo refreshToken

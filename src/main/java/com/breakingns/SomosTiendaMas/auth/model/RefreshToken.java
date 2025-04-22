@@ -31,12 +31,15 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant fechaExpiracion;
 
+    @Column(name = "fecha_revocado")
+    private Instant fechaRevocado;
+    
     @Column(nullable = false)
     private Boolean usado = false;
 
     @Column(nullable = false)
     private Boolean revocado = false;
-
+    
     private String ip;
     private String userAgent;
 
@@ -45,16 +48,15 @@ public class RefreshToken {
     public RefreshToken() {
     }
 
-    public RefreshToken(Long id, String token, Usuario usuario, Instant fechaExpiracion, String ip, String userAgent) {
+    public RefreshToken(Long id, String token, Usuario usuario, Instant fechaExpiracion, Instant fechaRevocado, String ip, String userAgent) {
         this.id = id;
         this.token = token;
         this.usuario = usuario;
         this.fechaExpiracion = fechaExpiracion;
+        this.fechaRevocado = fechaRevocado;
         this.ip = ip;
         this.userAgent = userAgent;
     }
-
-    
 
 }
 

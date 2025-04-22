@@ -39,7 +39,21 @@ public class RefreshTokenService {
 
         return refreshTokenRepository.save(refreshToken);
     }
+    
+    public void logout(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
+            .orElseThrow(() -> new RefreshTokenException("Token no encontrado."));
 
+        if (refreshToken.getRevocado() || refreshToken.getUsado()) {
+            throw new RefreshTokenException("Token ya fue revocado o usado.");
+        }
+
+        refreshToken.setRevocado(true);
+        refreshToken.setUsado(false);
+        refreshToken.setFechaRevocado(Instant.now());
+        refreshTokenRepository.save(refreshToken);
+    }
+    
     public Optional<RefreshToken> encontrarPorToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
