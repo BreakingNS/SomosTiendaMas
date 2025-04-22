@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +27,19 @@ public class RefreshTokenService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public RefreshToken crearRefreshToken(Long userId) {
+    public RefreshToken crearRefreshToken(Long userId, HttpServletRequest request) {
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
-
+        
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUsuario(usuario);
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setFechaExpiracion(Instant.now().plusMillis(refreshTokenDurationMs));
+        refreshToken.setIp(ip);
+        refreshToken.setUserAgent(userAgent);
         refreshToken.setRevocado(false);
         refreshToken.setUsado(false);
 

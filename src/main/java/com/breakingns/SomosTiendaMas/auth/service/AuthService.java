@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +29,7 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
     
-    public AuthResponse login(LoginRequest loginRequest) {
+    public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 loginRequest.getUsername(),
@@ -43,7 +44,7 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        String refreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario()).getToken();
+        String refreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario(), request).getToken();
 
         return new AuthResponse(accessToken, refreshToken);
     }

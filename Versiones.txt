@@ -22,3 +22,5 @@ beta 0.0.6.2: implementacion parcial de refreshToken (CREACION INFINITA DE TOKEN
 beta 0.0.6.3: implementacion parcial de refreshToken (AGREGADO DE EXCEPCIONES Y USO/REVOCACION DE REFRESHTOKEN)
 
 beta 0.0.6.4: implementacion parcial de refreshToken (USO/REVOCACION DE REFRESHTOKEN Y MULTIPLES SESIONES)
+
+beta 0.0.6.5: implementacion parcial de refreshToken (GUARDADO DE IP Y USER_AGENT)

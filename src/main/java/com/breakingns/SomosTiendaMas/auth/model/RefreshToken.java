@@ -40,7 +40,10 @@ public class RefreshToken {
     @Column(nullable = false)
     private Boolean revocado = false;
     
+    @Column(name = "ip")
     private String ip;
+
+    @Column(name = "user_agent")
     private String userAgent;
 
     // Getters y Setters

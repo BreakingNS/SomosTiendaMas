@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ public class AuthController {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
     */
+    /*
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) { //recibe en el cuerpo del request (JSON) un objeto LoginRequest.
         //Autenticacion
@@ -60,10 +62,10 @@ public class AuthController {
         //Respuesta
         return ResponseEntity.ok(new JwtResponse(token)); //Devuelve una respuesta HTTP 200 con un objeto JwtResponse que contiene el token generado.
     }
-    
+    */
     @PostMapping("/loginNew")
-    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest) {
-        AuthResponse tokens = authService.login(loginRequest);
+    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        AuthResponse tokens = authService.login(loginRequest, request);
         return ResponseEntity.ok(tokens);
     }
     
@@ -110,8 +112,8 @@ public class AuthController {
     }
     */
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest request) {
-        String requestToken = request.getRefreshToken();
+    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
+        String requestToken = refresh.getRefreshToken();
 
         return refreshTokenService.encontrarPorToken(requestToken)
                 .map(refreshTokenService::verificarExpiracion)
@@ -125,7 +127,7 @@ public class AuthController {
                     // 2. Generar nuevo JWT y nuevo refreshToken
                     Usuario usuario = refreshToken.getUsuario();
                     String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
-                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario());
+                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario(), request);
 
                     // 3. Devolver ambos nuevos tokens
                     return ResponseEntity.ok(Map.of(
