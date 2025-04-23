@@ -1,6 +1,8 @@
 package com.breakingns.SomosTiendaMas.auth.security.filter;
 
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenBlacklistRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
@@ -16,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.util.AntPathMatcher;
 
 //Es un filtro de seguridad personalizado que se ejecuta una vez por cada request (OncePerRequestFilter)
@@ -24,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
-    private final ITokenBlacklistRepository tokenBlacklistRepository;
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
     
     //Lista de rutas públicas
     private static final List<String> RUTAS_PUBLICAS = List.of(
@@ -38,10 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     //Constructor
         public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, 
                                    UserDetailsServiceImpl userDetailsService,
-                                   ITokenBlacklistRepository tokenBlacklistRepository) {
+                                   ITokenEmitidoRepository tokenEmitidoRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
-        this.tokenBlacklistRepository = tokenBlacklistRepository;
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
     }
     
     @Override
@@ -78,14 +81,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().write("Token inválido o expirado");
             return;
         }
-
-        //Validar contra blacklist
-        if (tokenBlacklistRepository.existsByToken(token)) {
+        
+        //Validar contra tabla token_emitido
+        Optional <TokenEmitido> tokenDb = tokenEmitidoRepository.findByToken(token);
+        if (tokenDb.isEmpty() || tokenDb.get().isRevocado()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token revocado (blacklist)");
+            response.getWriter().write("Token inválido o revocado");
             return;
         }
-
+        
         //Obtiene el usuario desde el token
         String username = jwtTokenProvider.obtenerUsernameDelToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -99,6 +103,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //Deja pasar la request
         filterChain.doFilter(request, response);
     }
+    
     /*
     @Override
     //Metodo principal: Este método se ejecuta por cada request que entra.

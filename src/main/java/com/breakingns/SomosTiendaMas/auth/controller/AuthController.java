@@ -5,15 +5,19 @@ import com.breakingns.SomosTiendaMas.auth.dto.JwtResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenBlacklistService;
+import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -44,6 +48,12 @@ public class AuthController {
     
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
+    
+    @Autowired
+    private ITokenEmitidoRepository tokenEmitidoRepository;
+    
+    @Autowired
+    private TokenEmitidoService tokenEmitidoService;
     
     @Autowired
     private RefreshTokenService refreshTokenService;
@@ -122,7 +132,13 @@ public class AuthController {
         refreshTokenService.logout(request.getRefreshToken());
 
         // Revocar el access token agregándolo a la blacklist
-        tokenBlacklistService.revocarToken(accessToken);
+        tokenEmitidoRepository.findByToken(accessToken).ifPresent(t -> {
+            t.setRevocado(true);
+            tokenEmitidoRepository.save(t);
+        });
+        
+        // Revoca el access en tabla token_emitido
+        tokenEmitidoService.revocarToken(accessToken);
 
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
@@ -134,7 +150,14 @@ public class AuthController {
 
         // Ahora puedes llamar a tu servicio de refresh tokens para revocar todas las sesiones de ese usuario
         refreshTokenService.logoutTotal(username);
-
+        tokenEmitidoService.revocarTodosLosTokensActivos(username); // <-- Nuevo método
+        
+        List<TokenEmitido> tokens = tokenEmitidoRepository.findAllByUsuario_Username(username);
+        tokens.forEach(t -> {
+            t.setRevocado(true);
+        });
+        tokenEmitidoRepository.saveAll(tokens);
+        
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
     

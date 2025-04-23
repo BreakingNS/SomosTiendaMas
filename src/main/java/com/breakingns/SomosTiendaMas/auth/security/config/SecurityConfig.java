@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.security.config;
 
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenBlacklistRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
@@ -27,8 +28,8 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
                                                            UserDetailsServiceImpl userDetailsService,
-                                                           ITokenBlacklistRepository tokenBlacklistRepository) {
-        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService, tokenBlacklistRepository);
+                                                           ITokenEmitidoRepository tokenEmitidoRepository) {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService, tokenEmitidoRepository);
     }
     
     @Bean

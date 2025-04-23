@@ -1,7 +1,11 @@
 package com.breakingns.SomosTiendaMas.auth.security.jwt;
 
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +40,13 @@ public class JwtTokenProvider {
     private int jwtExpirationMs;
     
     @Autowired
+    private IUsuarioRepository usuarioRepository;
+    
+    @Autowired
     private UserDetailsServiceImpl userDetailsService;
+    
+    @Autowired
+    private ITokenEmitidoRepository tokenEmitidoRepository;
     
     public JwtTokenProvider() throws Exception {
         this.privateKey = loadPrivateKey("src/main/resources/keys/private.pem");
@@ -68,7 +78,7 @@ public class JwtTokenProvider {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(publicKeyPEM));
         return keyFactory.generatePublic(keySpec);
     }
-    
+    /*
     //Metodo para generar Token por Authentication
     public String generarToken(Authentication authentication) {//Recibe el objeto Authentication con los datos validados por autenticacion.
         
@@ -86,6 +96,38 @@ public class JwtTokenProvider {
             .setExpiration(expiryDate)                                // Cuándo expira
             .signWith(privateKey, SignatureAlgorithm.RS256)         // Lo firma con una clave privada
             .compact();
+    }
+    */
+    public String generarToken(Authentication authentication) {
+        UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        String token = Jwts.builder()
+            .setSubject(userPrincipal.getUsername())
+            .claim("id", userPrincipal.getId())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(privateKey, SignatureAlgorithm.RS256)
+            .compact();
+
+        // Guardar el token emitido en la base de datos
+        TokenEmitido tokenEmitido = new TokenEmitido();
+        tokenEmitido.setToken(token);
+        tokenEmitido.setRevocado(false);
+        tokenEmitido.setFechaEmision(now.toInstant());
+        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
+
+        // Asegúrate de asignar el usuario correctamente
+        Usuario usuario = usuarioRepository.findById(userPrincipal.getId())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado al generar token"));
+        tokenEmitido.setUsuario(usuario);
+
+        // Guardar el token en la base de datos
+        tokenEmitidoRepository.save(tokenEmitido);
+
+        return token;
     }
     
     public String generarTokenDesdeUsername(String username) {

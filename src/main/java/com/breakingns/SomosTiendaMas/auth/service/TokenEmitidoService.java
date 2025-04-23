@@ -1,0 +1,52 @@
+package com.breakingns.SomosTiendaMas.auth.service;
+
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import java.time.Instant;
+import org.springframework.stereotype.Service;
+
+@Service
+public class TokenEmitidoService {
+
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
+    private final IUsuarioRepository usuarioRepository;
+
+    public TokenEmitidoService(ITokenEmitidoRepository tokenEmitidoRepository, IUsuarioRepository usuarioRepository) {
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    public void guardarToken(String token, Instant fechaExpiracion, String username) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        TokenEmitido nuevoToken = new TokenEmitido();
+        nuevoToken.setToken(token);
+        nuevoToken.setFechaEmision(Instant.now());
+        nuevoToken.setFechaExpiracion(fechaExpiracion);
+        nuevoToken.setRevocado(false);
+        nuevoToken.setUsuario(usuario);
+
+        tokenEmitidoRepository.save(nuevoToken);
+    }
+
+    public void revocarToken(String jwt) {
+        tokenEmitidoRepository.findByToken(jwt).ifPresent(tokenEmitido -> {
+            tokenEmitido.setRevocado(true);
+            tokenEmitidoRepository.save(tokenEmitido);
+        });
+    }
+
+
+    public void revocarTodosLosTokensActivos(String username) {
+        tokenEmitidoRepository.revocarTokensActivosPorUsuario(username, Instant.now());
+    }
+
+    public boolean estaRevocado(String token) {
+        return tokenEmitidoRepository.findByToken(token)
+                .map(TokenEmitido::isRevocado)
+                .orElse(true); // Si no está registrado, lo tratamos como inválido
+    }
+}
