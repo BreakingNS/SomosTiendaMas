@@ -3,12 +3,15 @@ package com.breakingns.SomosTiendaMas.auth.controller;
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
+import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
+import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +20,10 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -27,9 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
     
     @Autowired
     private AuthService authService;
@@ -45,6 +48,9 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    
+    @Autowired
+    private SesionActivaService sesionActivaService;
     
     @PostMapping("/loginNew")
     public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
@@ -117,6 +123,26 @@ public class AuthController {
                     ));
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
+    }
+
+    @GetMapping("/sesiones")
+    public ResponseEntity<List<SesionActivaResponse>> sesionesActivas() {
+        Usuario usuario = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<SesionActivaResponse> sesiones = sesionActivaService.obtenerSesionesActivas(usuario);
+        return ResponseEntity.ok(sesiones);
+    }
+    
+    @DeleteMapping("/logout/{idSesion}")
+    public ResponseEntity<?> cerrarSesion(@PathVariable Long idSesion) {
+        sesionActivaService.cerrarSesion(idSesion);
+        return ResponseEntity.ok("Sesión cerrada con éxito");
+    }
+
+    @PostMapping("/logout-otras-sesiones")
+    public ResponseEntity<?> logoutOtrasSesiones(@RequestHeader("Authorization") String authHeader) {
+        String tokenActual = authHeader.replace("Bearer ", "");
+        sesionActivaService.cerrarOtrasSesiones(tokenActual);
+        return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }
     
     /*

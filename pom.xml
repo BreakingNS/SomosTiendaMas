@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.breakingns</groupId>
 	<artifactId>SomosTiendaMas</artifactId>
-	<version>0.0.6.1</version>
+	<version>0.0.7.4</version>
 	<name>SomosTiendaMas</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -31,6 +31,7 @@
                 <springdoc.version>1.7.0</springdoc.version>
                 <mapstruct.version>1.5.5.Final</mapstruct.version>
 	</properties>
+        
 	<dependencies>
             
             <!-- BouncyCastle: Para trabajar con claves RSA y leer los archivos PEM de manera sencilla en Java -->  
