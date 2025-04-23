@@ -198,4 +198,8 @@ public class JwtTokenProvider {
                 .getBody();
     }
 
+    public long getJwtExpirationMs() {
+        return jwtExpirationMs;
+    }
+
 }

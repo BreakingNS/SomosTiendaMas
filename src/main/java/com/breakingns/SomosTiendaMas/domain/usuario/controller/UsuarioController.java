@@ -65,7 +65,7 @@ public class UsuarioController {
 
         usuarioService.registrar(usuario);
         
-        crearCarrito(usuario.getId_usuario());
+        crearCarrito(usuario.getIdUsuario());
         
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
@@ -85,7 +85,7 @@ public class UsuarioController {
 
         usuarioService.registrar(usuario);
         
-        crearCarrito(usuario.getId_usuario());
+        crearCarrito(usuario.getIdUsuario());
 
         return ResponseEntity.ok("Administrador registrado correctamente");
     }

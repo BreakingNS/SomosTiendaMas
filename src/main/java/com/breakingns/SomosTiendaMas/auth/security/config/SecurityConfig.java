@@ -1,6 +1,5 @@
 package com.breakingns.SomosTiendaMas.auth.security.config;
 
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenBlacklistRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;

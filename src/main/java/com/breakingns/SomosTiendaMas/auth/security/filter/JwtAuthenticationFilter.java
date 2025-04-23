@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.security.filter;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenBlacklistRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;

@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.JwtResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
@@ -10,26 +9,15 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
-import com.breakingns.SomosTiendaMas.auth.service.TokenBlacklistService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,9 +35,6 @@ public class AuthController {
     private AuthService authService;
     
     @Autowired
-    private TokenBlacklistService tokenBlacklistService;
-    
-    @Autowired
     private ITokenEmitidoRepository tokenEmitidoRepository;
     
     @Autowired
@@ -60,66 +45,12 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-    /*
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
-    */
-    /*
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) { //recibe en el cuerpo del request (JSON) un objeto LoginRequest.
-        //Autenticacion
-        Authentication authentication = authenticationManager.authenticate( //intenta autenticar el usuario usando el Authenticacion Manager.
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-        
-        //Guardar la autenticación en el contexto de seguridad
-        SecurityContextHolder.getContext().setAuthentication(authentication); //Esto guarda la autenticación en el contexto de seguridad de Spring para que esté disponible mientras dure la sesión de esa request
-        
-        //Generación del Token JWT
-        String token = jwtTokenProvider.generarToken(authentication); //Llama a un método que genera un JWT (JSON Web Token) a partir del usuario autenticado.
-        
-        //Respuesta
-        return ResponseEntity.ok(new JwtResponse(token)); //Devuelve una respuesta HTTP 200 con un objeto JwtResponse que contiene el token generado.
-    }
-    */
     
     @PostMapping("/loginNew")
     public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         AuthResponse tokens = authService.login(loginRequest, request);
         return ResponseEntity.ok(tokens);
     }
-    
-    /*
-    PARA UTILIZAR COOKIESSSSSSSSSSSSSSSSS -------------------------------
-    @PostMapping("/loginNew")
-    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
-        AuthResponse tokens = authService.login(loginRequest, request);
-
-        // Preparar cookie con refresh token
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.getRefreshToken())
-                .httpOnly(true)
-                .secure(false) // true si usás HTTPS
-                .path("/api/refresh-token")
-                .maxAge(Duration.ofDays(7))
-                .sameSite("Strict")
-                .build();
-
-        // Devolver access token en body, refresh token en cookie
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(new AuthResponse(tokens.getAccessToken(), null)); // no mandamos el refresh en body
-    }
-    */
-    /*
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request) {
-        refreshTokenService.logout(request.getRefreshToken());
-        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
-    }
-    */
     
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
@@ -161,42 +92,6 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
     
-    /*
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest request) {
-        String requestToken = request.getRefreshToken();
-
-        return refreshTokenService.encontrarPorToken(requestToken)
-                .map(refreshTokenService::verificarExpiracion)
-                .map(RefreshToken::getUsuario)
-                .map(usuario -> {
-                    String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
-                    return ResponseEntity.ok(Map.of(
-                        "accessToken", nuevoJwt,
-                        "refreshToken", requestToken // o generar uno nuevo si querés rotar
-                    ));
-                })
-                .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
-    }
-    */
-    /*
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
-        String requestToken = request.getRefreshToken();
-
-        return refreshTokenService.verificarValidez(requestToken)
-                .map(RefreshToken::getUsuario)
-                .map(usuario -> {
-                    String newAccessToken = jwtTokenProvider.generarToken(
-                            new UsernamePasswordAuthenticationToken(
-                                    usuario.getUsername(), null, usuario.getRoles()
-                            )
-                    );
-                    return ResponseEntity.ok(new AuthResponse(newAccessToken, requestToken));
-                })
-                .orElseThrow(() -> new RuntimeException("Refresh token no válido o expirado"));
-    }
-    */
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
         String requestToken = refresh.getRefreshToken();
@@ -213,7 +108,7 @@ public class AuthController {
                     // 2. Generar nuevo JWT y nuevo refreshToken
                     Usuario usuario = refreshToken.getUsuario();
                     String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
-                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getId_usuario(), request);
+                    RefreshToken nuevoRefreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request);
 
                     // 3. Devolver ambos nuevos tokens
                     return ResponseEntity.ok(Map.of(
@@ -223,6 +118,29 @@ public class AuthController {
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
     }
+    
+    /*
+    PARA UTILIZAR COOKIESSSSSSSSSSSSSSSSS -------------------------------
+    @PostMapping("/loginNew")
+    public ResponseEntity<AuthResponse> login2(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        AuthResponse tokens = authService.login(loginRequest, request);
+
+        // Preparar cookie con refresh token
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokens.getRefreshToken())
+                .httpOnly(true)
+                .secure(false) // true si usás HTTPS
+                .path("/api/refresh-token")
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Strict")
+                .build();
+
+        // Devolver access token en body, refresh token en cookie
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(new AuthResponse(tokens.getAccessToken(), null)); // no mandamos el refresh en body
+    }
+    */
+
     /*
     PARA COOKIESSSSSSSSSSSSSSSSSSS ---------------------------
     @PostMapping("/refresh-token")
