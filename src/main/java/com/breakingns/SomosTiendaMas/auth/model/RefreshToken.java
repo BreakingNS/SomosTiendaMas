@@ -45,9 +45,7 @@ public class RefreshToken {
 
     @Column(name = "user_agent")
     private String userAgent;
-
-    // Getters y Setters
-
+    
     public RefreshToken() {
     }
 
@@ -61,5 +59,7 @@ public class RefreshToken {
         this.userAgent = userAgent;
     }
 
+    // Getters y Setters
+    
 }
 

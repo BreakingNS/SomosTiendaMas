@@ -22,4 +22,6 @@ public class Rol {
     public Rol(RolNombre nombre) {
         this.nombre = nombre;
     }
+    
+    // Getters y Setters
 }

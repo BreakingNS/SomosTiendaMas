@@ -34,3 +34,5 @@ beta 0.0.7.2: implementacion parcial de refreshToken avanzado (AGREGADO TOKEN EM
 beta 0.0.7.3: implementacion parcial de Multi-login con IP / User-Agent / Tokens por dispositivo (SE GUARDAN SESIONES DIFERENTES)
 
 beta 0.0.7.4: implementacion parcial de Multi-login con IP / User-Agent / Tokens por dispositivo (TABLA SESIONACTIVA NO SE MODIFICA EN PRODUCCION)
+
+beta 0.0.7.5: implementacion parcial de Multi-login con IP / User-Agent / Tokens por dispositivo (PROCESO DE ORDENAMIENTO Y LIMPIEZA DE CLASES)

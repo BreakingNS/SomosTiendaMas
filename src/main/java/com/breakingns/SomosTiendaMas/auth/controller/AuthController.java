@@ -5,7 +5,6 @@ import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;

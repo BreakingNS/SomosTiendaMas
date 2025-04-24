@@ -7,11 +7,8 @@ import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -22,10 +19,8 @@ import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
 import java.util.Date;
 import java.util.List;
-import static org.bouncycastle.crypto.params.Blake3Parameters.key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,8 +28,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Component
 public class JwtTokenProvider {
 
-    private PrivateKey privateKey;
-    private PublicKey publicKey;
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
     @Value("${app.jwt-expiration-ms}")
     private int jwtExpirationMs;
@@ -78,26 +73,8 @@ public class JwtTokenProvider {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(publicKeyPEM));
         return keyFactory.generatePublic(keySpec);
     }
-    /*
+    
     //Metodo para generar Token por Authentication
-    public String generarToken(Authentication authentication) {//Recibe el objeto Authentication con los datos validados por autenticacion.
-        
-        UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
-        //Obtiene los datos del usuario logueado (que implementa UserDetails) desde el objeto Authentication.
-
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-        //Guarda la fecha actual y la fecha de expiración del token (por ejemplo, 1 hora después).
-
-        return Jwts.builder()
-            .setSubject(userPrincipal.getUsername())                // El "dueño" del token
-            .claim("id", userPrincipal.getId())                   // Agrega un dato extra: el ID
-            .setIssuedAt(now)                                         // Cuándo fue emitido
-            .setExpiration(expiryDate)                                // Cuándo expira
-            .signWith(privateKey, SignatureAlgorithm.RS256)         // Lo firma con una clave privada
-            .compact();
-    }
-    */
     public String generarToken(Authentication authentication) {
         UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
 
