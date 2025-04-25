@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.time.Instant;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,16 +33,17 @@ public class TokenEmitidoService {
         tokenEmitidoRepository.save(nuevoToken);
     }
 
-    public void revocarToken(String jwt) {
+    public void revocarToken(String jwt) { //SE USA
         tokenEmitidoRepository.findByToken(jwt).ifPresent(tokenEmitido -> {
             tokenEmitido.setRevocado(true);
             tokenEmitidoRepository.save(tokenEmitido);
         });
     }
 
-
     public void revocarTodosLosTokensActivos(String username) {
-        tokenEmitidoRepository.revocarTokensActivosPorUsuario(username, Instant.now());
+        List<TokenEmitido> tokens = tokenEmitidoRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
+        tokens.forEach(t -> t.setRevocado(true));
+        tokenEmitidoRepository.saveAll(tokens);
     }
 
     public boolean estaRevocado(String token) {

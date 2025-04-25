@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
+import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,10 +24,15 @@ public class RefreshTokenService {
 
     private final IRefreshTokenRepository refreshTokenRepository;
     private final IUsuarioRepository usuarioRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository, IUsuarioRepository usuarioRepository) {
+    public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository, 
+                                IUsuarioRepository usuarioRepository,
+                                JwtTokenProvider jwtTokenProvider
+                                ) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.usuarioRepository = usuarioRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public RefreshToken crearRefreshToken(Long userId, HttpServletRequest request) {
@@ -62,16 +69,13 @@ public class RefreshTokenService {
     }
     
     public void logoutTotal(String username) {
-        // Buscar todos los refresh tokens de ese usuario
-        List<RefreshToken> tokens = refreshTokenRepository.findByUsuarioUsername(username);
-
-        // Revocar cada token
-        for (RefreshToken token : tokens) {
+        List<RefreshToken> tokens = refreshTokenRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
+        Instant ahora = Instant.now();
+        tokens.forEach(token -> {
             token.setRevocado(true);
-            token.setUsado(false);
-            token.setFechaRevocado(Instant.now());
-            refreshTokenRepository.save(token);
-        }
+            token.setFechaRevocado(ahora);
+        });
+        refreshTokenRepository.saveAll(tokens);
     }
     
     public Optional<RefreshToken> encontrarPorToken(String token) {
@@ -83,15 +87,7 @@ public class RefreshTokenService {
                 .filter(rt -> !rt.getRevocado() && !rt.getUsado())
                 .filter(rt -> rt.getFechaExpiracion().isAfter(Instant.now()));
     }
-    /*
-    public RefreshToken verificarExpiracion(RefreshToken token) {
-        if (token.getFechaExpiracion().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(token);
-            throw new RuntimeException("El refresh token expiró. Por favor, logueate de nuevo.");
-        }
-        return token;
-    }
-    */
+        
     public RefreshToken verificarExpiracion(RefreshToken token) {
         if (token.getFechaExpiracion().isBefore(Instant.now())) {
             refreshTokenRepository.delete(token);
@@ -113,5 +109,28 @@ public class RefreshTokenService {
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
         refreshTokenRepository.deleteByUsuario(usuario);
+    }
+    
+    public Map<String, String> refrescarTokens(String requestToken, HttpServletRequest request) {
+        RefreshToken refreshToken = encontrarPorToken(requestToken)
+                .map(this::verificarExpiracion)
+                .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
+
+        // 1. Marcar como usado y revocado
+        refreshToken.setUsado(true);
+        refreshToken.setRevocado(true);
+        refreshToken.setFechaRevocado(Instant.now());
+        guardar(refreshToken);
+
+        // 2. Generar nuevo JWT y refreshToken
+        Usuario usuario = refreshToken.getUsuario();
+        String nuevoJwt = jwtTokenProvider.generarTokenDesdeUsername(usuario.getUsername());
+        RefreshToken nuevoRefreshToken = crearRefreshToken(usuario.getIdUsuario(), request);
+
+        // 3. Devolver ambos
+        return Map.of(
+            "accessToken", nuevoJwt,
+            "refreshToken", nuevoRefreshToken.getToken()
+        );
     }
 }

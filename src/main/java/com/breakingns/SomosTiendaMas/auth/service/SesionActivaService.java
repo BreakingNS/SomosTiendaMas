@@ -9,7 +9,6 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,17 +16,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-@RequiredArgsConstructor
 public class SesionActivaService {
 
+    private final IUsuarioRepository usuarioRepository;
+    private final ISesionActivaRepository sesionActivaRepository;
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
+
     @Autowired
-    private IUsuarioRepository usuarioRepository;
-    
-    @Autowired
-    private ISesionActivaRepository sesionActivaRepository;
-    
-    @Autowired
-    private ITokenEmitidoRepository tokenEmitidoRepository;
+    public SesionActivaService(IUsuarioRepository usuarioRepository, 
+                                ISesionActivaRepository sesionActivaRepository, 
+                                ITokenEmitidoRepository tokenEmitidoRepository
+                                ) {
+        this.usuarioRepository = usuarioRepository;
+        this.sesionActivaRepository = sesionActivaRepository;
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+    }
     
     public List<SesionActivaDTO> listarSesionesPorUsuario(Long usuarioId) {
         return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
@@ -98,4 +101,9 @@ public class SesionActivaService {
         }
     }
     
+    public void revocarTodasLasSesiones(String username) {
+        List<SesionActiva> sesiones = sesionActivaRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
+        sesiones.forEach(sesion -> sesion.setRevocado(true));
+        sesionActivaRepository.saveAll(sesiones);
+    }
 }

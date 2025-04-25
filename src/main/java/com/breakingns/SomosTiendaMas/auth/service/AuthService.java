@@ -9,7 +9,6 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,22 +18,36 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+    
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
+    
+    private final RefreshTokenService refreshTokenService;
+    private final TokenEmitidoService tokenEmitidoService;
+    private final SesionActivaService sesionActivaService;
+   
+    private final IUsuarioRepository usuarioRepository;
+    private final ISesionActivaRepository sesionActivaRepository;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private IUsuarioRepository usuarioRepository;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private ISesionActivaRepository sesionActivaRepository;
-
+    public AuthService(
+            JwtTokenProvider jwtTokenProvider,
+            RefreshTokenService refreshTokenService,
+            IUsuarioRepository usuarioRepository,
+            AuthenticationManager authenticationManager,
+            ISesionActivaRepository sesionActivaRepository,
+            TokenEmitidoService tokenEmitidoService,
+            SesionActivaService sesionActivaService) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.refreshTokenService = refreshTokenService;
+        this.usuarioRepository = usuarioRepository;
+        this.authenticationManager = authenticationManager;
+        this.sesionActivaRepository = sesionActivaRepository;
+        this.tokenEmitidoService = tokenEmitidoService;
+        this.sesionActivaService = sesionActivaService;
+    }
+    
+    // ---
+    
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
@@ -76,5 +89,29 @@ public class AuthService {
         sesionActivaRepository.save(sesion);
 
         return new AuthResponse(accessToken, refreshToken);
+    }
+    
+    public void logout(String accessToken, String refreshToken) {
+        // Revocar refresh token
+        refreshTokenService.logout(refreshToken);
+
+        // Revocar access token
+        tokenEmitidoService.revocarToken(accessToken);
+        
+        // Revocar sesion
+        sesionActivaService.revocarSesion(accessToken);
+    }
+    
+    public void logoutTotal(String rawToken) {
+        String username = jwtTokenProvider.obtenerUsernameDelToken(rawToken);
+        
+        // Revocar tolos los refresh token de este usuario
+        refreshTokenService.logoutTotal(username);
+        
+        // Revocar todos los access token de este usuario
+        tokenEmitidoService.revocarTodosLosTokensActivos(username);
+
+        // También podés revocar sesiones activas si corresponde
+        sesionActivaService.revocarTodasLasSesiones(username);
     }
 }

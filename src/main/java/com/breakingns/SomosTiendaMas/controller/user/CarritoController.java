@@ -15,10 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/carrito")
 public class CarritoController {
+    
+    private final CarritoService carritoService;
 
     @Autowired
-    private CarritoService carritoService;
-
+    public CarritoController(CarritoService carritoService) {
+        this.carritoService = carritoService;
+    }
+    
     @PreAuthorize("hasRole('ADMIN') or #id_usuario == principal.id")
     @GetMapping("/traer/{id_usuario}")
     public ResponseEntity<?> verCarrito(@PathVariable Long id_usuario) {

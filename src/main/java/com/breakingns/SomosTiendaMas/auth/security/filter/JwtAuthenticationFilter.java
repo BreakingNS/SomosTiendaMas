@@ -23,22 +23,19 @@ import org.springframework.util.AntPathMatcher;
 //Es un filtro de seguridad personalizado que se ejecuta una vez por cada request (OncePerRequestFilter)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
     
     //Lista de rutas públicas
     private static final List<String> RUTAS_PUBLICAS = List.of(
         "/api/auth/**",
         "/api/usuarios/registro/**"
     );
-    
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
 
     //Constructor
-        public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, 
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, 
                                    UserDetailsServiceImpl userDetailsService,
                                    ITokenEmitidoRepository tokenEmitidoRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -46,16 +43,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.tokenEmitidoRepository = tokenEmitidoRepository;
     }
     
-    @Override
-    //Metodo principal: Este método se ejecuta por cada request que entra.
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    @Override//SE USA ---
+    //Metodo principal: Este método se ejecuta por cada request que entra.//SE USA ---
+    protected void doFilterInternal(HttpServletRequest request,//SE USA ---
+                                    HttpServletResponse response,//SE USA ---
+                                    FilterChain filterChain) //SE USA ---
+            throws ServletException, IOException {//SE USA ---
         
         //Verifica si es una ruta pública
-        String path = request.getRequestURI();
-
+        //String path = request.getRequestURI();
+        String path = request.getServletPath();
+        
         for (String rutaPublica : RUTAS_PUBLICAS) {
             if (pathMatcher.match(rutaPublica, path)) {
                 filterChain.doFilter(request, response);

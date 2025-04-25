@@ -38,4 +38,5 @@ public class UsuarioService implements IUsuarioService{
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
+    
 }

@@ -12,7 +12,9 @@ public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Lon
     List<SesionActiva> findByUsuario_IdUsuario(Long usuarioId);
     Optional<SesionActiva> findByToken(String token);
 
-    public List<SesionActiva> findByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+    List<SesionActiva> findByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
 
-    public List<SesionActiva> findByUsuario(Usuario usuario);
+    List<SesionActiva> findByUsuario(Usuario usuario);
+
+    List<SesionActiva> findAllByUsuario_UsernameAndRevocadoFalse(String username);
 }

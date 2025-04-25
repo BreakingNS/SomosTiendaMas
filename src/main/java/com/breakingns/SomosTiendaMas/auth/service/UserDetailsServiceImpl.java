@@ -14,9 +14,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
+    
+    private final IUsuarioRepository usuarioRepository;
 
     @Autowired
-    private IUsuarioRepository usuarioRepository;
+    public UserDetailsServiceImpl(IUsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
