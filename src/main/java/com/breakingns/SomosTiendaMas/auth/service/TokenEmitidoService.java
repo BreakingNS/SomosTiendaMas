@@ -51,4 +51,6 @@ public class TokenEmitidoService {
                 .map(TokenEmitido::isRevocado)
                 .orElse(true); // Si no está registrado, lo tratamos como inválido
     }
+    
+    
 }

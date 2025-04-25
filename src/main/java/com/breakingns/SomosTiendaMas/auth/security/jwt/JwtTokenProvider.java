@@ -82,8 +82,8 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         String token = Jwts.builder()
-            .setSubject(userPrincipal.getUsername())
-            .claim("id", userPrincipal.getId())
+            .setSubject(String.valueOf(userPrincipal.getId())) // 👈 Guardamos el ID como subject
+            .claim("username", userPrincipal.getUsername())     // 👈 Guardamos el username como claim adicional
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -102,6 +102,31 @@ public class JwtTokenProvider {
         tokenEmitido.setUsuario(usuario);
 
         // Guardar el token en la base de datos
+        tokenEmitidoRepository.save(tokenEmitido);
+
+        return token;
+    }
+    
+    public String generarTokenConUsuario(Usuario usuario) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        String token = Jwts.builder()
+            .setSubject(String.valueOf(usuario.getIdUsuario()))
+            .claim("id", usuario.getIdUsuario())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(privateKey, SignatureAlgorithm.RS256)
+            .compact();
+
+        // Guardar el token emitido
+        TokenEmitido tokenEmitido = new TokenEmitido();
+        tokenEmitido.setToken(token);
+        tokenEmitido.setRevocado(false);
+        tokenEmitido.setFechaEmision(now.toInstant());
+        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
+        tokenEmitido.setUsuario(usuario);
+
         tokenEmitidoRepository.save(tokenEmitido);
 
         return token;

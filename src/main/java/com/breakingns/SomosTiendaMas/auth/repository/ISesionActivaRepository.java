@@ -17,4 +17,6 @@ public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Lon
     List<SesionActiva> findByUsuario(Usuario usuario);
 
     List<SesionActiva> findAllByUsuario_UsernameAndRevocadoFalse(String username);
+
+    SesionActiva findByUsuarioAndIpAndUserAgentAndRevocadoFalse(Usuario usuario, String ip, String userAgent);
 }

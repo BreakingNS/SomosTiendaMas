@@ -2,11 +2,16 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaResponse;
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import static jakarta.persistence.GenerationType.UUID;
+import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,15 +26,18 @@ public class SesionActivaService {
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
+    private final IRefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     public SesionActivaService(IUsuarioRepository usuarioRepository, 
                                 ISesionActivaRepository sesionActivaRepository, 
-                                ITokenEmitidoRepository tokenEmitidoRepository
+                                ITokenEmitidoRepository tokenEmitidoRepository,
+                                IRefreshTokenRepository refreshTokenRepository
                                 ) {
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
     
     public List<SesionActivaDTO> listarSesionesPorUsuario(Long usuarioId) {
@@ -105,5 +113,17 @@ public class SesionActivaService {
         List<SesionActiva> sesiones = sesionActivaRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
         sesiones.forEach(sesion -> sesion.setRevocado(true));
         sesionActivaRepository.saveAll(sesiones);
+    }
+    
+    public void registrarSesion(String jwt, Usuario usuario, String ip, String userAgent) {
+        SesionActiva sesion = new SesionActiva();
+        sesion.setToken(jwt);
+        sesion.setUsuario(usuario);
+        sesion.setIp(ip);
+        sesion.setUserAgent(userAgent);
+        sesion.setFechaInicioSesion(Instant.now());
+        sesion.setFechaExpiracion(Instant.now().plusSeconds(3600)); // o lo que dure tu token
+        sesion.setRevocado(false);
+        sesionActivaRepository.save(sesion);
     }
 }
