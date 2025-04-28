@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
@@ -117,6 +118,12 @@ public class AuthController {
     public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
         Map<String, String> nuevosTokens = refreshTokenService.refrescarTokens(refresh.getRefreshToken(), request);
         return ResponseEntity.ok(nuevosTokens);
+    }
+    
+    @PostMapping("/public/olvide-password")
+    public ResponseEntity<?> solicitarRecuperacionPassword(@RequestBody OlvidePasswordRequest request) {
+        authService.solicitarRecuperacionPassword(request.email());
+        return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
     }
     
     @PostMapping("/private/logout") // LISTO
