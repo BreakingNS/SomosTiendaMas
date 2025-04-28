@@ -48,7 +48,17 @@ public class TokenEmitidoService {
         tokens.forEach(t -> t.setRevocado(true));
         tokenEmitidoRepository.saveAll(tokens);
     }
-
+    
+    public void revocarTodosLosTokensActivosExceptoSesionActual(Long idUsuario, String accessToken) {
+        List<TokenEmitido> tokens = tokenEmitidoRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
+        tokens.forEach(token -> {
+            if (!token.getToken().equals(accessToken)) { // Si NO es el token actual
+                token.setRevocado(true);
+            }
+        });
+        tokenEmitidoRepository.saveAll(tokens);
+    }
+    
     public boolean estaRevocado(String token) {
         return tokenEmitidoRepository.findByToken(token)
                 .map(TokenEmitido::isRevocado)

@@ -17,4 +17,6 @@ public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Lon
     List<RefreshToken> findByUsuarioUsername(String username);
 
     List<RefreshToken> findAllByUsuario_UsernameAndRevocadoFalse(String username);
+
+    public List<RefreshToken> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
 }

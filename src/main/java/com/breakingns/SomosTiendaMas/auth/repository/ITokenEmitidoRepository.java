@@ -27,4 +27,6 @@ public interface ITokenEmitidoRepository extends JpaRepository<TokenEmitido, Lon
     void revocarTokensActivosPorUsuario(@Param("username") String username, @Param("ahora") Instant ahora);
 
     public List<TokenEmitido> findAllByUsuario_UsernameAndRevocadoFalse(String username);
+
+    public List<TokenEmitido> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
 }

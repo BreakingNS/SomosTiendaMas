@@ -49,46 +49,6 @@ public class UsuarioController {
     public ResponseEntity<String> adminYUsuarios() {
         return ResponseEntity.ok("Hola usuarios!");
     }
-
-    @PostMapping("/registro/usuario")
-    public ResponseEntity<?> registerUser(@RequestBody Usuario usuario) {
-        if (usuarioService.existeUsuario(usuario.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("El nombre de usuario ya está en uso");
-        }
-
-        // Asignar el rol por defecto
-        Rol rolUser = rolService.getByNombre(RolNombre.ROLE_USUARIO)
-                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
-        usuario.getRoles().add(rolUser);
-
-        usuarioService.registrar(usuario);
-        
-        crearCarrito(usuario.getIdUsuario());
-        
-        return ResponseEntity.ok("Usuario registrado correctamente");
-    }
-    
-    @PostMapping("/registro/admin")
-    public ResponseEntity<?> registerAdmin(@RequestBody Usuario usuario) {
-        if (usuarioService.existeUsuario(usuario.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("El nombre de usuario ya está en uso");
-        }
-
-        // Asignar el rol por defecto
-        Rol rolAdmin = rolService.getByNombre(RolNombre.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
-        usuario.getRoles().add(rolAdmin);
-
-        usuarioService.registrar(usuario);
-        
-        crearCarrito(usuario.getIdUsuario());
-
-        return ResponseEntity.ok("Administrador registrado correctamente");
-    }
     
     //------------ Funciones utiles
     

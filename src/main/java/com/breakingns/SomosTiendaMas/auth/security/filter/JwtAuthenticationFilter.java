@@ -30,8 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     //Lista de rutas públicas
     private static final List<String> RUTAS_PUBLICAS = List.of(
-        "/api/auth/public/**",
-        "/api/usuarios/registro/**"
+        "/api/auth/public/**"
     );
 
     //Constructor
