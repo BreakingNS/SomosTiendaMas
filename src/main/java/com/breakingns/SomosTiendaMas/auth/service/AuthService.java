@@ -2,8 +2,8 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.model.PasswordResetToken;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -141,13 +141,13 @@ public class AuthService {
             Usuario usuario = usuarioOpt.get();
             String token = UUID.randomUUID().toString();
 
-            PasswordResetToken resetToken = new PasswordResetToken();
-            resetToken.setToken(token);
-            resetToken.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES)); // expira en 15 minutos
-            resetToken.setUsado(false);
-            resetToken.setUsuario(usuario);
+            TokenResetPassword tokenReset = new TokenResetPassword();
+            tokenReset.setToken(token);
+            tokenReset.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES)); // expira en 15 minutos
+            tokenReset.setUsado(false);
+            tokenReset.setUsuario(usuario);
 
-            passwordResetTokenRepository.save(resetToken);
+            passwordResetTokenRepository.save(tokenReset);
 
             // Acá deberías enviar un email real, pero por ahora podemos hacer un print:
             System.out.println("Token para resetear contraseña (enviarlo por email en producción): " + token);

@@ -4,6 +4,8 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface IPasswordResetTokenRepository extends JpaRepository<TokenResetPassword, Long> {
+public interface ITokenResetPasswordRepository extends JpaRepository<TokenResetPassword, Long> {
+
     Optional<TokenResetPassword> findByToken(String token);
+    
 }

@@ -4,11 +4,13 @@ import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
+import com.breakingns.SomosTiendaMas.auth.service.ResetPasswordService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
@@ -43,6 +45,8 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final SesionActivaService sesionActivaService;
     private final TokenEmitidoService tokenEmitidoService;
+    private final ResetPasswordService resetPasswordService 
+;
     
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -54,7 +58,8 @@ public class AuthController {
                             JwtTokenProvider jwtTokenProvider,
                             TokenEmitidoService tokenEmitidoService,
                             CarritoService carritoService,
-                            RolService rolService
+                            RolService rolService,
+                            ResetPasswordService resetPasswordService
                             ) {
         this.authService = authService;
         this.refreshTokenService = refreshTokenService;
@@ -64,6 +69,7 @@ public class AuthController {
         this.tokenEmitidoService = tokenEmitidoService;
         this.carritoService = carritoService;
         this.rolService = rolService;
+        this.resetPasswordService = resetPasswordService;
     }
     
     // ---
@@ -124,6 +130,13 @@ public class AuthController {
     public ResponseEntity<?> solicitarRecuperacionPassword(@RequestBody OlvidePasswordRequest request) {
         authService.solicitarRecuperacionPassword(request.email());
         return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
+    }
+    
+    @PostMapping("/public/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        System.out.println("token recibido: " + request.getToken());
+        resetPasswordService.resetearPassword(request.getToken(), request.getNuevaPassword());
+        return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
     @PostMapping("/private/logout") // LISTO

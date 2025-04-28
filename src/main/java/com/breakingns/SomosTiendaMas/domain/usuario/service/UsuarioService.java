@@ -3,19 +3,20 @@ package com.breakingns.SomosTiendaMas.domain.usuario.service;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UsuarioService implements IUsuarioService{
-
-    @Autowired
-    private IUsuarioRepository usuarioRepository;
     
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final IUsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
     
     @Override
     public Usuario registrar(Usuario usuario) {
