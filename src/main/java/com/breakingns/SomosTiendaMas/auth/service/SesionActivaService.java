@@ -43,8 +43,12 @@ public class SesionActivaService {
     public List<SesionActivaDTO> listarSesionesPorUsuario(Long usuarioId) {
         return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
             .map(s -> new SesionActivaDTO(
-                s.getId(), s.getIp(), s.getUserAgent(),
-                s.getFechaInicioSesion(), s.getFechaExpiracion(), s.isRevocado()
+                s.getId(), 
+                s.getIp(), 
+                s.getUserAgent(),
+                s.getFechaInicioSesion(), 
+                s.getFechaExpiracion(),
+                s.isRevocado()
             ))
             .toList();
     }
@@ -69,6 +73,7 @@ public class SesionActivaService {
             ))
             .collect(Collectors.toList());
     }
+    
     public void cerrarSesion(Long idSesion) {
         // Obtener el usuario logueado desde el contexto
         Usuario usuarioActual = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -125,5 +130,35 @@ public class SesionActivaService {
         sesion.setFechaExpiracion(Instant.now().plusSeconds(3600)); // o lo que dure tu token
         sesion.setRevocado(false);
         sesionActivaRepository.save(sesion);
+    }
+    
+    // Para usuarios comunes
+    public List<SesionActivaDTO> obtenerSesionesActivasPorUsuario(Long idUsuario) {
+        return sesionActivaRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream()
+                .filter(sesion -> !sesion.isRevocado())  // Filtra las sesiones activas
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    // Para admins
+    public List<SesionActivaDTO> obtenerTodasLasSesionesActivas() {
+        return sesionActivaRepository.findAll()
+                .stream()
+                .filter(sesion -> !sesion.isRevocado())
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    private SesionActivaDTO convertirADTO(SesionActiva sesion) {
+        // Podés adaptar el DTO según tus campos
+        return new SesionActivaDTO(
+            sesion.getId(), 
+            sesion.getIp(), 
+            sesion.getUserAgent(),
+            sesion.getFechaInicioSesion(), 
+            sesion.getFechaExpiracion(),
+            sesion.isRevocado()
+        );
     }
 }

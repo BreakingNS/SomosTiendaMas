@@ -1,11 +1,14 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -52,5 +55,17 @@ public class TokenEmitidoService {
                 .orElse(true); // Si no está registrado, lo tratamos como inválido
     }
     
-    
+    public Long obtenerIdDesdeToken() {
+        System.out.println("Entrando obtenerIdDesdeToken");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Authentication actual: " + auth);
+        Object principal = auth.getPrincipal();
+        System.out.println("Principal obtenido: " + principal);
+        if (principal instanceof UserAuthDetails userAuthDetails) {
+            Long id = userAuthDetails.getId();
+            return id;
+        } else {
+            throw new RuntimeException("Principal no es instancia de UserAuthDetails");
+        }
+    }
 }

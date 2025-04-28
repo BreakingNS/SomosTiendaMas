@@ -21,7 +21,7 @@ public class SesionActivaController {
     private final SesionActivaService sesionService;
 
     @GetMapping("/usuario/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
     public List<SesionActivaDTO> listarSesiones(@PathVariable Long id) {
         return sesionService.listarSesionesPorUsuario(id);
     }

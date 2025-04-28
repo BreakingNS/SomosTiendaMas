@@ -132,9 +132,11 @@ public class RefreshTokenService {
         System.out.println("1. Token recibido (JWT): " + tokenAnterior);
 
         // 2. Obtener usuario desde el access token (aunque esté expirado)
-        String usuarioId = jwtTokenProvider.obtenerUsernameDelToken(tokenAnterior); // asumimos que devuelve ID como String
+        Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior); // Ahora devuelve el ID como Long
         System.out.println("2. Usuario ID extraído del token: " + usuarioId);
-        Usuario usuario = usuarioRepository.findById(Long.parseLong(usuarioId))
+
+        // Buscar al usuario en la base de datos
+        Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
         
         // 3. Validar y revocar el refresh token

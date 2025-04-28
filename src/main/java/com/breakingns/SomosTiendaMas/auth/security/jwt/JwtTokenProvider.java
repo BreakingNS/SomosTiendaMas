@@ -146,7 +146,7 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getSubject();
+                .get("username", String.class); // Cambié sub por username
     }
 
     public boolean validarToken(String token) {
@@ -162,7 +162,7 @@ public class JwtTokenProvider {
         }
         return false;
     }
-    
+    /*
     public Long obtenerIdDelToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(publicKey)
@@ -170,6 +170,12 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .get("id", Long.class);
+    }
+    */
+    
+    public Long obtenerIdDelToken(String token) {
+        Claims claims = Jwts.parser().setSigningKey(publicKey).parseClaimsJws(token).getBody();
+        return Long.valueOf(claims.get("sub", String.class));  // Extrae "sub" y lo convierte a Long
     }
     
     public List<String> obtenerRolesDelToken(String token) {

@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     //Lista de rutas públicas
     private static final List<String> RUTAS_PUBLICAS = List.of(
-        "/api/auth/**",
+        "/api/auth/public/**",
         "/api/usuarios/registro/**"
     );
 
@@ -50,12 +50,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) //SE USA ---
             throws ServletException, IOException {//SE USA ---
         
+        System.out.println("Ejecutando JwtAuthenticationFilter...");
+        
         //Verifica si es una ruta pública
         //String path = request.getRequestURI();
         String path = request.getServletPath();
         
+        System.out.println("Verificando token para la ruta: " + request.getRequestURI());
+        
         for (String rutaPublica : RUTAS_PUBLICAS) {
             if (pathMatcher.match(rutaPublica, path)) {
+                System.out.println("Ruta pública detectada: " + path); // Log para detectar si es una ruta pública
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -67,6 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header == null || !header.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token faltante o mal formado");
+            System.out.println("Header Authorization recibido: " + header);
             return;
         }
 
@@ -76,6 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (!jwtTokenProvider.validarToken(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token inválido o expirado");
+            
             return;
         }
         
@@ -89,8 +96,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         //Obtiene el usuario desde el token
         String username = jwtTokenProvider.obtenerUsernameDelToken(token);
+        System.out.println("Username extraído del token: " + username);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
+        System.out.println("UserDetails cargado: " + userDetails);
+        
         //Crea el objeto de autenticación
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

@@ -32,19 +32,19 @@ public class UsuarioController {
     private PasswordEncoder passwordEncoder;
     */
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/admin")
     public ResponseEntity<String> soloAdmin() {
         return ResponseEntity.ok("Hola Admin!");
     }
 
-    @PreAuthorize("hasRole('USUARIO')")
+    @PreAuthorize("hasRole('ROLE_USUARIO')")
     @GetMapping("/comun")
     public ResponseEntity<String> soloUsuario() {
         return ResponseEntity.ok("Hola usuario!");
     }
     
-    @PreAuthorize("hasAnyRole('ADMIN', 'USUARIO')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USUARIO')")
     @GetMapping("/compartido")
     public ResponseEntity<String> adminYUsuarios() {
         return ResponseEntity.ok("Hola usuarios!");

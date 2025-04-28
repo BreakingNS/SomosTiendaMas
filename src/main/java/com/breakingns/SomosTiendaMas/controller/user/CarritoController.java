@@ -23,7 +23,7 @@ public class CarritoController {
         this.carritoService = carritoService;
     }
     
-    @PreAuthorize("hasRole('ADMIN') or #id_usuario == principal.id")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #id_usuario == principal.id")
     @GetMapping("/traer/{id_usuario}")
     public ResponseEntity<?> verCarrito(@PathVariable Long id_usuario) {
 
