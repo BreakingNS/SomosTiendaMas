@@ -120,22 +120,18 @@ public class AuthController {
         return ResponseEntity.ok("Contraseña cambiada exitosamente.");
     }
     
-    @PostMapping("/private/logout") // LISTO
+    @PostMapping("/private/logout")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
-                                    @RequestHeader("Authorization") String authorizationHeader) {
-        // Log para verificar el encabezado
-        System.out.println("Header Authorization recibido: " + authorizationHeader);
+                                    @RequestHeader("Authorization") String authHeader) {
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                  .body(Map.of("error", "Token faltante o mal formado"));
         }
 
-        // Extrae el token de acceso
-        String accessToken = authorizationHeader.replace("Bearer ", "");
+        String accessToken = authHeader.substring(7);
 
-        // Verifica si el token es válido antes de hacer logout
         if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
             return TokenUtils.respuestaTokenInvalido();
         }

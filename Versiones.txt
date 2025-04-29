@@ -60,3 +60,7 @@ beta 0.0.8.5: Ordenamiento y limpieza: login completado.
 beta 0.0.8.6: Ordenamiento y limpieza: refresh completado.
 
 beta 0.0.8.7: Ordenamiento y limpieza: olvide-password y reset-password completado.
+
+beta 0.0.8.8: Ordenamiento y limpieza: change-password completado.
+
+beta 0.0.8.9: Ordenamiento y limpieza: logout completado.
