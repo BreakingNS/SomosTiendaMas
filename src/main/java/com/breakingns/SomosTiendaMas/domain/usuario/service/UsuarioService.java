@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
+import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioYaExisteException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
@@ -65,14 +66,15 @@ public class UsuarioService implements IUsuarioService{
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
     
+    @Override
     public void changePassword(Usuario usuario, String currentPassword, String newPassword) {
-        System.out.println("1.1. entrando a changePassword");
         if (!passwordEncoder.matches(currentPassword, usuario.getPassword())) {
-            throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+            throw new PasswordIncorrectaException("La contraseña actual es incorrecta.");
         }
-        System.out.println("1.2. se realiza el cambio");
+        if (passwordEncoder.matches(newPassword, usuario.getPassword())) {
+            throw new PasswordIncorrectaException("La nueva contraseña no puede ser igual a la actual.");
+        }
         usuario.setPassword(passwordEncoder.encode(newPassword));
-        System.out.println("1.3. se seteo el password sin encriptar");
         usuarioRepository.save(usuario);
     }
     

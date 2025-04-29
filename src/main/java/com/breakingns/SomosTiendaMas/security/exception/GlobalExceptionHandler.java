@@ -14,6 +14,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(PasswordIncorrectaException.class)
+    public ResponseEntity<?> manejarPasswordIncorrecta(PasswordIncorrectaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Contraseña incorrecta",
+            "mensaje", ex.getMessage(),
+            "timestamp", Instant.now().toString()
+        ));
+    }
+    
     @ExceptionHandler(RefreshTokenException.class)
     public ResponseEntity<?> manejarRefreshTokenException(RefreshTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(

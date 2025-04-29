@@ -112,19 +112,12 @@ public class AuthController {
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
-    @PostMapping("/private/change-password") // LISTO
+    @PostMapping("/private/change-password")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, Authentication authentication) {
-        // Obtener el usuario autenticado
-        UserAuthDetails userDetails = (UserAuthDetails) authentication.getPrincipal();
-        Usuario usuario = userDetails.getUsuario();
-        
-        try {
-            usuarioService.changePassword(usuario, changePasswordRequest.getCurrentPassword(), changePasswordRequest.getNewPassword());
-            return ResponseEntity.ok("Contraseña cambiada exitosamente.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest req, Authentication auth) {
+        Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
+        usuarioService.changePassword(usuario, req.getCurrentPassword(), req.getNewPassword());
+        return ResponseEntity.ok("Contraseña cambiada exitosamente.");
     }
     
     @PostMapping("/private/logout") // LISTO

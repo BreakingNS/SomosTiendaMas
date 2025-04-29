@@ -11,4 +11,5 @@ public interface IUsuarioService {
     public Boolean existeUsuario(String nombreUsuario);
     public Usuario findByUsername(String username);
     public void registrarConRol(Usuario usuario, RolNombre rolNombre);
+    public void changePassword(Usuario usuario, String currentPassword, String newPassword);
 }
