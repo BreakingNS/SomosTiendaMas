@@ -38,7 +38,7 @@ public class TokenEmitidoService {
         tokenEmitidoRepository.save(nuevoToken);
     }
 
-    public void revocarToken(String jwt) { //SE USA
+    public void revocarToken(String jwt) {
         tokenEmitidoRepository.findByToken(jwt).ifPresent(tokenEmitido -> {
             tokenEmitido.setRevocado(true);
             tokenEmitidoRepository.save(tokenEmitido);
@@ -54,7 +54,7 @@ public class TokenEmitidoService {
     public void revocarTodosLosTokensActivosExceptoSesionActual(Long idUsuario, String accessToken) {
         List<TokenEmitido> tokens = tokenEmitidoRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
         tokens.forEach(token -> {
-            if (!token.getToken().equals(accessToken)) { // Si NO es el token actual
+            if (!token.getToken().equals(accessToken)) {
                 token.setRevocado(true);
             }
         });
@@ -68,14 +68,10 @@ public class TokenEmitidoService {
     }
     
     public Long obtenerIdDesdeToken() {
-        System.out.println("Entrando obtenerIdDesdeToken");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("Authentication actual: " + auth);
         Object principal = auth.getPrincipal();
-        System.out.println("Principal obtenido: " + principal);
         if (principal instanceof UserAuthDetails userAuthDetails) {
-            Long id = userAuthDetails.getId();
-            return id;
+            return userAuthDetails.getId();
         } else {
             throw new PrincipalInvalidoException("Principal no es instancia de UserAuthDetails");
         }

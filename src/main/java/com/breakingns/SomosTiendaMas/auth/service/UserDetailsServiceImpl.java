@@ -16,14 +16,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-    
+
     private final IUsuarioRepository usuarioRepository;
 
     @Autowired
-    public UserDetailsServiceImpl(IUsuarioRepository usuarioRepository) {
+    public UserDetailsServiceImpl(final IUsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
-    
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByUsername(username)
@@ -34,14 +34,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             usuario.getUsername(),
             usuario.getPassword(),
             mapearRoles(usuario.getRoles()),
-            usuario // 👈 pasás el usuario completo acá
+            usuario
         );
     }
-    
+
     private Collection<? extends GrantedAuthority> mapearRoles(Set<Rol> roles) {
         return roles.stream()
             .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
             .collect(Collectors.toList());
     }
-
 }
