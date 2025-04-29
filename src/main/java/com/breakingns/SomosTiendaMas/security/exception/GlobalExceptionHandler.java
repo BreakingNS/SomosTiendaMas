@@ -113,4 +113,48 @@ public class GlobalExceptionHandler {
             "timestamp", Instant.now().toString()
         ));
     }
+    
+    @ExceptionHandler(TokenInvalidoException.class)
+    public ResponseEntity<?> manejarTokenInvalido(TokenInvalidoException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
+    }
+    
+    
+    @ExceptionHandler(SesionNoEncontradaException.class)
+    public ResponseEntity<?> manejarSesionNoEncontrada(SesionNoEncontradaException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", ex.getMessage()));
+    }
+    
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ResponseEntity<?> manejarAccesoDenegado(AccesoDenegadoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+    
+    /*
+    
+    @ExceptionHandler(TokenExpiradoException.class)
+    public ResponseEntity<?> manejarTokenExpirado(TokenExpiradoException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
+    }
+    
+    
+
+    
+    @ExceptionHandler(CarritoNoEncontradoException.class)
+    public ResponseEntity<?> manejarCarritoNoEncontrado(CarritoNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    // Por si querés un catch-all opcional
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> manejarExcepcionGeneral(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error inesperado: " + ex.getMessage()));
+    }
+    */
 }

@@ -16,10 +16,12 @@ import com.breakingns.SomosTiendaMas.auth.service.ResetPasswordService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
+import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
 import com.breakingns.SomosTiendaMas.auth.utils.TokenUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
+import com.breakingns.SomosTiendaMas.security.exception.TokenInvalidoException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -124,15 +126,15 @@ public class AuthController {
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
                                     @RequestHeader("Authorization") String authorizationHeader) {
-        String accessToken = authorizationHeader.replace("Bearer ", "");
+        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
         authService.logout(accessToken, request.getRefreshToken());
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
     
     @PostMapping("/private/logout-total")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String authHeader) {
-        String accessToken = authHeader.replace("Bearer ", "");
+    public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String authorizationHeader) {
+        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
         authService.logoutTotal(accessToken);
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
@@ -156,18 +158,17 @@ public class AuthController {
                                                   @RequestHeader("Authorization") String authorizationHeader) {
         String accessToken = TokenUtils.extractTokenFromHeader(authorizationHeader);
         if (accessToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Token faltante o mal formado"));
+            throw new TokenInvalidoException("Token faltante o mal formado");
         }
 
         if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
-            return TokenUtils.respuestaTokenInvalido();
+            throw new TokenInvalidoException("Token inválido o expirado");
         }
 
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
         authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, request.getRefreshToken());
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
-}
+    }
     
     /*
     @DeleteMapping("/private/logout/{idSesion}")

@@ -10,6 +10,8 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.AccesoDenegadoException;
+import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
@@ -97,11 +99,11 @@ public class SesionActivaService {
         
         // Buscar la sesión
         SesionActiva sesion = sesionActivaRepository.findById(idSesion)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión no encontrada"));
+            .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada"));
 
         // Verificar que la sesión pertenezca al usuario logueado
         if (!sesion.getUsuario().getIdUsuario().equals(userDetails.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tenés permiso para cerrar esta sesión");
+            throw new AccesoDenegadoException("No tenés permiso para cerrar esta sesión");
         }
 
         // Marcar como inactiva / revocada

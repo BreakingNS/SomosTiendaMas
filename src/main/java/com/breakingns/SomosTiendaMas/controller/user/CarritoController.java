@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.controller.user;
 
 import com.breakingns.SomosTiendaMas.model.Carrito;
+import com.breakingns.SomosTiendaMas.security.exception.CarritoNoEncontradoException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,9 @@ public class CarritoController {
         // OK, puede ver el carrito
         Optional<Carrito> carrito = carritoService.traerCarritoPorIdUsuario(id_usuario);
         if (carrito.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Carrito no encontrado");
+            throw new CarritoNoEncontradoException("Carrito no encontrado");
         }
-
+        
         return ResponseEntity.ok(carrito.get());
     }
     

@@ -1,9 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.utils;
 
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
-import java.util.Map;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 public class TokenUtils {
     
@@ -14,15 +11,10 @@ public class TokenUtils {
     public static boolean validarToken(String token, JwtTokenProvider jwtTokenProvider) {
         return jwtTokenProvider.validarToken(token);
     }
-
-    public static ResponseEntity<?> respuestaTokenInvalido() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Token inválido o expirado"));
-    }
     
     public static String extractTokenFromHeader(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.replace("Bearer ", "");
+            return HeaderUtils.extraerAccessToken(authorizationHeader);
         }
         return null;
     }
