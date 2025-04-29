@@ -19,4 +19,11 @@ public class TokenUtils {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Token inválido o expirado"));
     }
+    
+    public static String extractTokenFromHeader(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.replace("Bearer ", "");
+        }
+        return null;
+    }
 }

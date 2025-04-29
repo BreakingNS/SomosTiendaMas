@@ -150,6 +150,25 @@ public class AuthController {
         return sesionActivaService.obtenerSesionesActivas(idUsuario);
     }
     
+    @PostMapping("/private/logout-otras-sesiones")
+    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    public ResponseEntity<?> logoutOtrasSesiones(@RequestBody RefreshTokenRequest request,
+                                                  @RequestHeader("Authorization") String authorizationHeader) {
+        String accessToken = TokenUtils.extractTokenFromHeader(authorizationHeader);
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Token faltante o mal formado"));
+        }
+
+        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
+            return TokenUtils.respuestaTokenInvalido();
+        }
+
+        Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
+        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, request.getRefreshToken());
+        return ResponseEntity.ok("Sesiones cerradas excepto la actual");
+}
+    
     /*
     @DeleteMapping("/private/logout/{idSesion}")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
@@ -158,34 +177,7 @@ public class AuthController {
         return ResponseEntity.ok("Sesión cerrada con éxito");
     }
     */
-    
-    @PostMapping("/private/logout-otras-sesiones") // Listo
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> logoutOtrasSesiones(@RequestBody RefreshTokenRequest request,
-                                                @RequestHeader("Authorization") String authorizationHeader) {
-        
-        // Log para verificar el encabezado
-        System.out.println("Header Authorization recibido: " + authorizationHeader);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Token faltante o mal formado"));
-        }
-
-        // Extrae el token de acceso
-        String accessToken = authorizationHeader.replace("Bearer ", "");
-
-        // Verifica si el token es válido antes de hacer logout
-        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
-            return TokenUtils.respuestaTokenInvalido();
-        }
-
-        String refresh = request.getRefreshToken();
-        Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
-        
-        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, refresh);
-        return ResponseEntity.ok("Sesiones cerradas excepto la actual");
-    }
     
     /*
     PARA UTILIZAR COOKIESSSSSSSSSSSSSSSSS -------------------------------
