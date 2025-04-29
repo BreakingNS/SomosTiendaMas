@@ -27,110 +27,73 @@ public class SesionActivaService {
     private final ISesionActivaRepository sesionActivaRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final IRefreshTokenRepository refreshTokenRepository;
-    private final TokenEmitidoService tokenEmitidoService;
 
     @Autowired
     public SesionActivaService(IUsuarioRepository usuarioRepository, 
-                                ISesionActivaRepository sesionActivaRepository, 
-                                ITokenEmitidoRepository tokenEmitidoRepository,
-                                IRefreshTokenRepository refreshTokenRepository,
-                                TokenEmitidoService tokenEmitidoService,
-                                JwtTokenProvider jwtTokenProvider
-                                ) {
+                               ISesionActivaRepository sesionActivaRepository, 
+                               ITokenEmitidoRepository tokenEmitidoRepository,
+                               IRefreshTokenRepository refreshTokenRepository,
+                               JwtTokenProvider jwtTokenProvider) {
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.tokenEmitidoService = tokenEmitidoService;
         this.jwtTokenProvider = jwtTokenProvider;
     }
     
-    public List<SesionActivaDTO> listarSesionesPorUsuario(Long usuarioId) {
+    // Listar sesiones activas de un usuario
+    public List<SesionActivaDTO> listarSesionesActivas(Long usuarioId) {
         return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
-            .map(s -> new SesionActivaDTO(
-                s.getId(), 
-                s.getIp(), 
-                s.getUserAgent(),
-                s.getFechaInicioSesion(), 
-                s.getFechaExpiracion(),
-                s.isRevocado()
-            ))
-            .toList();
-    }
-
-    public void revocarSesion(String token) {
-        SesionActiva sesion = sesionActivaRepository.findByToken(token)
-            .orElseThrow(() -> new TokenNoEncontradoException("Token no encontrado"));
-        sesion.setRevocado(true);
-        sesionActivaRepository.save(sesion);
-    }
-
-    public List<SesionActivaDTO> obtenerSesionesActivas(Long idUsuario) {
-        if (idUsuario != null) {
-            return obtenerSesionesActivasPorUsuario(idUsuario);
-        } else {
-            return obtenerTodasLasSesionesActivas();
-        }
-    }
-
-    public List<SesionActivaDTO> obtenerSesionesActivasPorUsuario(Long idUsuario) {
-        return sesionActivaRepository.findByUsuario_IdUsuario(idUsuario)
-                .stream()
-                .filter(sesion -> !sesion.isRevocado())
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<SesionActivaDTO> obtenerTodasLasSesionesActivas() {
-        return sesionActivaRepository.findAll()
-                .stream()
-                .filter(sesion -> !sesion.isRevocado())
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
+            .filter(sesion -> !sesion.isRevocado()) // Filtrar solo las activas
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
     }
     
+    // Revocar sesión
+    public void revocarSesion(String token) {
+        sesionActivaRepository.findByToken(token)
+            .ifPresentOrElse(sesion -> {
+                sesion.setRevocado(true);
+                sesionActivaRepository.save(sesion);
+            }, () -> { throw new TokenNoEncontradoException("Token no encontrado"); });
+    }
+    
+    // Cerrar sesión del usuario
     public void cerrarSesion(Long idSesion) {
-        // Obtener el usuario logueado desde el contexto
         UserAuthDetails userDetails = (UserAuthDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long idUsuario = userDetails.getId();
-        
-        // Buscar la sesión
         SesionActiva sesion = sesionActivaRepository.findById(idSesion)
             .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada"));
 
-        // Verificar que la sesión pertenezca al usuario logueado
         if (!sesion.getUsuario().getIdUsuario().equals(userDetails.getId())) {
             throw new AccesoDenegadoException("No tenés permiso para cerrar esta sesión");
         }
-
-        // Marcar como inactiva / revocada
-        sesion.setRevocado(true); // o sesion.setRevocado(true);
+        sesion.setRevocado(true);
         sesionActivaRepository.save(sesion);
-
-        // (Opcional) agregar a blacklist
         tokenEmitidoRepository.revocarPorToken(sesion.getToken());
     }
-    
+
+    // Revocar todas las sesiones de un usuario
     public void revocarTodasLasSesiones(String username) {
         List<SesionActiva> sesiones = sesionActivaRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
         sesiones.forEach(sesion -> sesion.setRevocado(true));
         sesionActivaRepository.saveAll(sesiones);
     }
-    
+
+    // Revocar todas las sesiones excepto la actual
     public void revocarTodasLasSesionesExceptoSesionActual(Long idUsuario, String accessToken) {
         List<SesionActiva> sesiones = sesionActivaRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
         sesiones.forEach(sesion -> {
-            if (!sesion.getToken().equals(accessToken)) { // Revocar todas excepto la sesión actual
+            if (!sesion.getToken().equals(accessToken)) {
                 sesion.setRevocado(true);
             }
         });
         sesionActivaRepository.saveAll(sesiones);
     }
     
+    // Registrar sesión activa
     public void registrarSesion(Usuario usuario, String token, String ip, String userAgent) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(jwtTokenProvider.getJwtExpirationMs());
-
         SesionActiva sesion = new SesionActiva();
         sesion.setUsuario(usuario);
         sesion.setToken(token);
@@ -139,12 +102,11 @@ public class SesionActivaService {
         sesion.setFechaInicioSesion(now);
         sesion.setFechaExpiracion(expiry);
         sesion.setRevocado(false);
-
         sesionActivaRepository.save(sesion);
     }
 
+    // Convertir sesión a DTO
     private SesionActivaDTO convertirADTO(SesionActiva sesion) {
-        // Podés adaptar el DTO según tus campos
         return new SesionActivaDTO(
             sesion.getId(), 
             sesion.getIp(), 

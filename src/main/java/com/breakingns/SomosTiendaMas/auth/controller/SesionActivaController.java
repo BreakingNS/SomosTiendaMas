@@ -23,7 +23,7 @@ public class SesionActivaController {
     @GetMapping("/usuario/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #id == authentication.principal.id")
     public List<SesionActivaDTO> listarSesiones(@PathVariable Long id) {
-        return sesionService.listarSesionesPorUsuario(id);
+        return sesionService.listarSesionesActivas(id);
     }
 
     @PostMapping("/revocar")

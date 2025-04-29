@@ -143,13 +143,13 @@ public class AuthController {
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public List<SesionActivaDTO> misSesionesActivas() {
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
-        return sesionActivaService.obtenerSesionesActivasPorUsuario(idUsuario);
+        return sesionActivaService.listarSesionesActivas(idUsuario);
     }
 
     @GetMapping("/private/admin/activas")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
-        return sesionActivaService.obtenerSesionesActivas(idUsuario);
+        return sesionActivaService.listarSesionesActivas(idUsuario);
     }
     
     @PostMapping("/private/logout-otras-sesiones")

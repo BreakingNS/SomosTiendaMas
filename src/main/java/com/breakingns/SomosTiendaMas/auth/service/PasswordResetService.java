@@ -6,6 +6,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepositor
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,12 +14,17 @@ public class PasswordResetService {
 
     private final IUsuarioRepository usuarioRepository;
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public PasswordResetService(IUsuarioRepository usuarioRepository, IPasswordResetTokenRepository passwordResetTokenRepository) {
+    public PasswordResetService(IUsuarioRepository usuarioRepository, 
+                                   IPasswordResetTokenRepository passwordResetTokenRepository,
+                                   PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
+    // Solicitar recuperación de contraseña
     public void solicitarRecuperacionPassword(String email) {
         usuarioRepository.findByEmail(email).ifPresent(usuario -> {
             String token = UUID.randomUUID().toString();
