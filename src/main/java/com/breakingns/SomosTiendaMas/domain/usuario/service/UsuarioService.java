@@ -40,4 +40,15 @@ public class UsuarioService implements IUsuarioService{
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
     
+    public void changePassword(Usuario usuario, String currentPassword, String newPassword) {
+        System.out.println("1.1. entrando a changePassword");
+        if (!passwordEncoder.matches(currentPassword, usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+        }
+        System.out.println("1.2. se realiza el cambio");
+        usuario.setPassword(passwordEncoder.encode(newPassword));
+        System.out.println("1.3. se seteo el password sin encriptar");
+        usuarioRepository.save(usuario);
+    }
+    
 }

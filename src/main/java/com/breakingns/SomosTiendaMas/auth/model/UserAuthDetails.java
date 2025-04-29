@@ -3,6 +3,7 @@ package com.breakingns.SomosTiendaMas.auth.model;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 
 public class UserAuthDetails implements UserDetails {
 
@@ -10,16 +11,22 @@ public class UserAuthDetails implements UserDetails {
     private String username;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
+    private Usuario usuario; // 👈 nuevo campo
 
-    public UserAuthDetails(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserAuthDetails(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities, Usuario usuario) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.authorities = authorities;
+        this.usuario = usuario;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
     }
 
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }

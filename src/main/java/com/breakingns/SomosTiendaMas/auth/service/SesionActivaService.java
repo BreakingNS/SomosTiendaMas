@@ -3,6 +3,7 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaResponse;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
@@ -76,14 +77,15 @@ public class SesionActivaService {
     
     public void cerrarSesion(Long idSesion) {
         // Obtener el usuario logueado desde el contexto
-        Usuario usuarioActual = (Usuario) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
+        UserAuthDetails userDetails = (UserAuthDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long idUsuario = userDetails.getId();
+        
         // Buscar la sesión
         SesionActiva sesion = sesionActivaRepository.findById(idSesion)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión no encontrada"));
 
         // Verificar que la sesión pertenezca al usuario logueado
-        if (!sesion.getUsuario().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
+        if (!sesion.getUsuario().getIdUsuario().equals(userDetails.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tenés permiso para cerrar esta sesión");
         }
 

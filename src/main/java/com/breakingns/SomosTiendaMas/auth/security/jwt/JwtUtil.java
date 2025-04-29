@@ -1,3 +1,4 @@
+/*
 package com.breakingns.SomosTiendaMas.auth.security.jwt;
 
 import io.jsonwebtoken.*;
@@ -57,3 +58,4 @@ public class JwtUtil {
         return (extractedUsername.equals(username) && !isTokenExpired(token));
     }
 }
+*/

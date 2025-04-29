@@ -1,12 +1,14 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
+import com.breakingns.SomosTiendaMas.auth.dto.ChangePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
@@ -25,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,31 +49,22 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final SesionActivaService sesionActivaService;
     private final TokenEmitidoService tokenEmitidoService;
-    private final ResetPasswordService resetPasswordService 
-;
+    private final ResetPasswordService resetPasswordService;
     
+    private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    public AuthController(AuthService authService, 
-                            RefreshTokenService refreshTokenService, 
-                            SesionActivaService sesionActivaService,
-                            UsuarioService usuarioService,
-                            JwtTokenProvider jwtTokenProvider,
-                            TokenEmitidoService tokenEmitidoService,
-                            CarritoService carritoService,
-                            RolService rolService,
-                            ResetPasswordService resetPasswordService
-                            ) {
+    public AuthController(AuthService authService, UsuarioService usuarioService, CarritoService carritoService, RolService rolService, RefreshTokenService refreshTokenService, SesionActivaService sesionActivaService, TokenEmitidoService tokenEmitidoService, ResetPasswordService resetPasswordService, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.authService = authService;
-        this.refreshTokenService = refreshTokenService;
-        this.sesionActivaService = sesionActivaService;
         this.usuarioService = usuarioService;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.tokenEmitidoService = tokenEmitidoService;
         this.carritoService = carritoService;
         this.rolService = rolService;
+        this.refreshTokenService = refreshTokenService;
+        this.sesionActivaService = sesionActivaService;
+        this.tokenEmitidoService = tokenEmitidoService;
         this.resetPasswordService = resetPasswordService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
     
     // ---
@@ -137,6 +132,21 @@ public class AuthController {
         System.out.println("token recibido: " + request.getToken());
         resetPasswordService.resetearPassword(request.getToken(), request.getNuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
+    }
+    
+    @PostMapping("/private/change-password") // LISTO
+    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, Authentication authentication) {
+        // Obtener el usuario autenticado
+        UserAuthDetails userDetails = (UserAuthDetails) authentication.getPrincipal();
+        Usuario usuario = userDetails.getUsuario();
+        
+        try {
+            usuarioService.changePassword(usuario, changePasswordRequest.getCurrentPassword(), changePasswordRequest.getNewPassword());
+            return ResponseEntity.ok("Contraseña cambiada exitosamente.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
     
     @PostMapping("/private/logout") // LISTO

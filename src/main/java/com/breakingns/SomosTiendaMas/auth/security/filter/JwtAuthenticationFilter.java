@@ -99,13 +99,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         System.out.println("UserDetails cargado: " + userDetails);
         
+        System.out.println("por Autenticar");
         //Crea el objeto de autenticación
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        System.out.println("supongo que Autenticado");
         SecurityContextHolder.getContext().setAuthentication(authToken);//Guarda la autenticación en el contexto de seguridad de Spring para que esté disponible mientras dure la sesión de esa request
-        
+        System.out.println("paso el SecurityContextHolder");
         //Deja pasar la request
+        System.out.println("por entrar al doFilter");
         filterChain.doFilter(request, response);
     }
     
