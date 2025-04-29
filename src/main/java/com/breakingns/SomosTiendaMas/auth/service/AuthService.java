@@ -82,27 +82,18 @@ public class AuthService {
     }
     
     public void logout(String accessToken, String refreshToken) {
-        // Revocar refresh token
-        refreshTokenService.logout(refreshToken);
-
-        // Revocar access token
-        tokenEmitidoService.revocarToken(accessToken);
         
-        // Revocar sesion
-        sesionActivaService.revocarSesion(accessToken);
+        refreshTokenService.logout(refreshToken); // Revocar refresh token
+        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
+        sesionActivaService.revocarSesion(accessToken); // Revocar sesion
     }
     
     public void logoutTotal(String accessToken) {
         String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);
-        
-        // Revocar tolos los refresh token de este usuario
-        refreshTokenService.logoutTotal(username);
-        
-        // Revocar todos los access token de este usuario
-        tokenEmitidoService.revocarTodosLosTokensActivos(username);
 
-        // También podés revocar sesiones activas si corresponde
-        sesionActivaService.revocarTodasLasSesiones(username);
+        refreshTokenService.logoutTotal(username); // Revoca todos los refresh tokens
+        tokenEmitidoService.revocarTodosLosTokensActivos(username); // Revoca access tokens
+        sesionActivaService.revocarTodasLasSesiones(username); // Revoca sesiones
     }
     
     public void logoutTotalExceptoSesionActual(Long idUsuario, String accessToken, String refresh){

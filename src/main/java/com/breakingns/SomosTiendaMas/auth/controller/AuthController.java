@@ -123,37 +123,24 @@ public class AuthController {
     @PostMapping("/private/logout")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
-                                    @RequestHeader("Authorization") String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Token faltante o mal formado"));
-        }
-
-        String accessToken = authHeader.substring(7);
-
-        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
-            return TokenUtils.respuestaTokenInvalido();
-        }
-
+                                    @RequestHeader("Authorization") String authorizationHeader) {
+        String accessToken = authorizationHeader.replace("Bearer ", "");
         authService.logout(accessToken, request.getRefreshToken());
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
     
-    @PostMapping("/private/logout-total") // Listo
+    @PostMapping("/private/logout-total")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String authHeader) {
-        String token = authHeader.substring(7); // "Bearer ..."
-        authService.logoutTotal(token);
+        String accessToken = authHeader.replace("Bearer ", "");
+        authService.logoutTotal(accessToken);
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
     
-    // Para usuarios comunes (solo ven las suyas)
-    @GetMapping("/private/activas") // Listo
+    @GetMapping("/private/activas")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public List<SesionActivaDTO> misSesionesActivas() {
-        System.out.println("Entrando al endpoint /activas");
-        Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken(); // Ahora desde el servicio
+        Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
         return sesionActivaService.obtenerSesionesActivasPorUsuario(idUsuario);
     }
 
