@@ -5,6 +5,8 @@ import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.PrincipalInvalidoException;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.security.core.Authentication;
@@ -24,7 +26,7 @@ public class TokenEmitidoService {
 
     public void guardarToken(String token, Instant fechaExpiracion, String username) {
         Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));
 
         TokenEmitido nuevoToken = new TokenEmitido();
         nuevoToken.setToken(token);
@@ -75,7 +77,7 @@ public class TokenEmitidoService {
             Long id = userAuthDetails.getId();
             return id;
         } else {
-            throw new RuntimeException("Principal no es instancia de UserAuthDetails");
+            throw new PrincipalInvalidoException("Principal no es instancia de UserAuthDetails");
         }
     }
 }

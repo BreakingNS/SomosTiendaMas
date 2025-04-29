@@ -10,6 +10,7 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,7 +61,7 @@ public class SesionActivaService {
 
     public void revocarSesion(String token) {
         SesionActiva sesion = sesionActivaRepository.findByToken(token)
-            .orElseThrow(() -> new RuntimeException("Token no encontrado"));
+            .orElseThrow(() -> new TokenNoEncontradoException("Token no encontrado"));
         sesion.setRevocado(true);
         sesionActivaRepository.save(sesion);
     }

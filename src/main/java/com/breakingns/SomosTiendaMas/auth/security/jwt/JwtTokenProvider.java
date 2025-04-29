@@ -6,6 +6,7 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import io.jsonwebtoken.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -98,7 +99,7 @@ public class JwtTokenProvider {
 
         // Asegúrate de asignar el usuario correctamente
         Usuario usuario = usuarioRepository.findById(userPrincipal.getId())
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado al generar token"));
+            .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
         tokenEmitido.setUsuario(usuario);
 
         // Guardar el token en la base de datos

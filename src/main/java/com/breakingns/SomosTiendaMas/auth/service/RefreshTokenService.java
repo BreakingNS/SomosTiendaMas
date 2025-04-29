@@ -9,6 +9,8 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.NotFoundException;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
+import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -53,7 +55,7 @@ public class RefreshTokenService {
 
     public RefreshToken crearRefreshToken(Long userId, HttpServletRequest request) {
         Usuario usuario = usuarioRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con id: " + userId));
         
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
@@ -135,7 +137,7 @@ public class RefreshTokenService {
     
     public void borrarTokensDeUsuario(Long userId) {
         Usuario usuario = usuarioRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con id: " + userId));
         refreshTokenRepository.deleteByUsuario(usuario);
     }
     
@@ -169,7 +171,7 @@ public class RefreshTokenService {
     private String extraerAccessTokenDesdeHeader(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Token de acceso no encontrado o mal formado.");
+            throw new TokenNoEncontradoException("Token de acceso no encontrado o mal formado.");
         }
         return authHeader.substring(7); // Quita "Bearer "
     }
