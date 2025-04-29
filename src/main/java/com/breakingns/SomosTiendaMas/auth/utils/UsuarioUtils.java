@@ -1,15 +1,22 @@
 package com.breakingns.SomosTiendaMas.auth.utils;
 
-import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class UsuarioUtils {
     
-    private UsuarioUtils() {
-        // Constructor privado para evitar instanciación
+    private final IUsuarioRepository usuarioRepository;
+
+    @Autowired
+    public UsuarioUtils(IUsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
     }
 
-    public static boolean existeUsuario(String token, JwtTokenProvider jwtTokenProvider) {
-        return jwtTokenProvider.validarToken(token);
+    public Usuario findByUsername(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
     }
-    
+
 }

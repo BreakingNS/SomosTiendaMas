@@ -30,11 +30,5 @@ public class JwtAuthUtil {
         String json = objectMapper.writeValueAsString(Map.of("error", mensaje));
         response.getWriter().write(json);
     }
-    
-    
-    
 
-    
-    
-    
 }

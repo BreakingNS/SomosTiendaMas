@@ -8,6 +8,7 @@ import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenReposito
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
+import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +20,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,28 +31,25 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final TokenEmitidoService tokenEmitidoService;
     private final SesionActivaService sesionActivaService;
-   
+    private final PasswordResetService passwordResetService;
+    
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
 
-    public AuthService(
-            JwtTokenProvider jwtTokenProvider,
-            RefreshTokenService refreshTokenService,
-            IUsuarioRepository usuarioRepository,
-            AuthenticationManager authenticationManager,
-            ISesionActivaRepository sesionActivaRepository,
-            TokenEmitidoService tokenEmitidoService,
-            SesionActivaService sesionActivaService,
-            IPasswordResetTokenRepository passwordResetTokenRepository) {
+    private final UsuarioUtils UsuarioUtils;
+
+    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, UsuarioUtils UsuarioUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.refreshTokenService = refreshTokenService;
-        this.usuarioRepository = usuarioRepository;
         this.authenticationManager = authenticationManager;
-        this.sesionActivaRepository = sesionActivaRepository;
+        this.refreshTokenService = refreshTokenService;
         this.tokenEmitidoService = tokenEmitidoService;
         this.sesionActivaService = sesionActivaService;
+        this.passwordResetService = passwordResetService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.sesionActivaRepository = sesionActivaRepository;
+        this.UsuarioUtils = UsuarioUtils;
     }
     
     // ---
@@ -66,8 +63,7 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtTokenProvider.generarToken(authentication);
 
-        Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        Usuario usuario = UsuarioUtils.findByUsername(loginRequest.getUsername());
 
         String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
@@ -108,25 +104,7 @@ public class AuthService {
     }
     
     public void solicitarRecuperacionPassword(String email) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-
-        if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            String token = UUID.randomUUID().toString();
-
-            TokenResetPassword tokenReset = new TokenResetPassword();
-            tokenReset.setToken(token);
-            tokenReset.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES)); // expira en 15 minutos
-            tokenReset.setUsado(false);
-            tokenReset.setUsuario(usuario);
-
-            passwordResetTokenRepository.save(tokenReset);
-
-            // Acá deberías enviar un email real, pero por ahora podemos hacer un print:
-            System.out.println("Token para resetear contraseña (enviarlo por email en producción): " + token);
-        }else{
-            System.out.println("No hay usuario con ese correo registrado.");
-        }
+        passwordResetService.solicitarRecuperacionPassword(email);
         // Siempre devolver OK aunque no exista (por seguridad).
         
         /*

@@ -161,7 +161,7 @@ public class AuthController {
             throw new TokenInvalidoException("Token faltante o mal formado");
         }
 
-        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
+        if (!jwtTokenProvider.validarToken(accessToken)) {
             throw new TokenInvalidoException("Token inválido o expirado");
         }
 
