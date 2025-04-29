@@ -137,5 +137,12 @@ public class AuthService {
             System.out.println("No hay usuario con ese correo registrado.");
         }
         // Siempre devolver OK aunque no exista (por seguridad).
+        
+        /*
+            Sugerencia mínima (no urgente):
+            Podrías extraer la lógica del token a un PasswordResetService o 
+            TokenResetService si querés dejar el AuthService más limpio, pero 
+            no es necesario ahora.
+        */
     }
 }

@@ -4,6 +4,7 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.TokenResetPasswordInvalidoException;
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class ResetPasswordService {
         Optional<TokenResetPassword> optional = tokenResetPasswordRepository.findByToken(token);
 
         if (optional.isEmpty() || optional.get().isExpirado() || optional.get().isUsado()) {
-            throw new RuntimeException("Token inválido o expirado");
+            throw new TokenResetPasswordInvalidoException("El token es inválido, ya fue usado o expiró.");
         }
 
         TokenResetPassword tokenEntity = optional.get();

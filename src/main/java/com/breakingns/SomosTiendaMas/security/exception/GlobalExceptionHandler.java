@@ -80,4 +80,13 @@ public class GlobalExceptionHandler {
                 "timestamp", Instant.now().toString()
         ));
     }
+    
+    @ExceptionHandler(TokenResetPasswordInvalidoException.class)
+    public ResponseEntity<?> manejarTokenResetPasswordInvalido(TokenResetPasswordInvalidoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Token inválido",
+            "mensaje", ex.getMessage(),
+            "timestamp", Instant.now().toString()
+        ));
+    }
 }

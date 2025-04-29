@@ -98,11 +98,16 @@ public class AuthController {
     public ResponseEntity<?> solicitarRecuperacionPassword(@RequestBody OlvidePasswordRequest request) {
         authService.solicitarRecuperacionPassword(request.email());
         return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
+        /*
+            Sugerencia mínima (no urgente):
+            Podrías extraer la lógica del token a un PasswordResetService o 
+            TokenResetService si querés dejar el AuthService más limpio, pero 
+            no es necesario ahora.
+        */
     }
     
     @PostMapping("/public/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        System.out.println("token recibido: " + request.getToken());
         resetPasswordService.resetearPassword(request.getToken(), request.getNuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
