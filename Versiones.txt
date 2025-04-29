@@ -50,3 +50,5 @@ beta 0.0.8.0: implementacion de funcion: olvide-password
 beta 0.0.8.1: implementacion de funcion: reset-password
 
 beta 0.0.8.2: implementacion final de funciones/endpoints se seguridad (COMIENZO DE LIMPIEZA Y ORDENAMIENTO)
+
+beta 0.0.8.3: Ordenamiento y limpieza: JwtAuthenticationFilter completado.

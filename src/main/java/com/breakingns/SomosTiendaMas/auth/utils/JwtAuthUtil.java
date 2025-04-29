@@ -1,0 +1,40 @@
+package com.breakingns.SomosTiendaMas.auth.utils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
+
+public class JwtAuthUtil {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    // Responde con 401 para no autenticado
+    public static void noAutenticado(HttpServletResponse response, String mensaje) throws IOException {
+        enviarRespuesta(response, HttpServletResponse.SC_UNAUTHORIZED, mensaje);
+    }
+
+    // Responde con 403 para no autorizado
+    public static void noAutorizado(HttpServletResponse response, String mensaje) throws IOException {
+        enviarRespuesta(response, HttpServletResponse.SC_FORBIDDEN, mensaje);
+    }
+
+    // Rechaza el acceso con un mensaje
+    public static void rechazar(HttpServletResponse response, String mensaje) throws IOException {
+        enviarRespuesta(response, HttpServletResponse.SC_BAD_REQUEST, mensaje);
+    }
+
+    private static void enviarRespuesta(HttpServletResponse response, int status, String mensaje) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        String json = objectMapper.writeValueAsString(Map.of("error", mensaje));
+        response.getWriter().write(json);
+    }
+    
+    
+    
+
+    
+    
+    
+}

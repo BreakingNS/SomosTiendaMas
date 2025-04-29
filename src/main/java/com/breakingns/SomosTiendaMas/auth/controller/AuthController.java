@@ -16,6 +16,7 @@ import com.breakingns.SomosTiendaMas.auth.service.ResetPasswordService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
+import com.breakingns.SomosTiendaMas.auth.utils.TokenUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
@@ -165,9 +166,8 @@ public class AuthController {
         String accessToken = authorizationHeader.replace("Bearer ", "");
 
         // Verifica si el token es válido antes de hacer logout
-        if (!jwtTokenProvider.validarToken(accessToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Token inválido o expirado"));
+        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
+            return TokenUtils.respuestaTokenInvalido();
         }
 
         authService.logout(accessToken, request.getRefreshToken());
@@ -228,9 +228,8 @@ public class AuthController {
         String accessToken = authorizationHeader.replace("Bearer ", "");
 
         // Verifica si el token es válido antes de hacer logout
-        if (!jwtTokenProvider.validarToken(accessToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Token inválido o expirado"));
+        if (!TokenUtils.validarToken(accessToken, jwtTokenProvider)) {
+            return TokenUtils.respuestaTokenInvalido();
         }
 
         String refresh = request.getRefreshToken();
