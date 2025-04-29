@@ -144,15 +144,10 @@ public class AuthController {
         return sesionActivaService.obtenerSesionesActivasPorUsuario(idUsuario);
     }
 
-    // Para admins (ven todas o las de un usuario)
-    @GetMapping("/private/admin/activas") // Listo
+    @GetMapping("/private/admin/activas")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
-        if (idUsuario != null) {
-            return sesionActivaService.obtenerSesionesActivasPorUsuario(idUsuario);
-        } else {
-            return sesionActivaService.obtenerTodasLasSesionesActivas();
-        }
+        return sesionActivaService.obtenerSesionesActivas(idUsuario);
     }
     
     /*

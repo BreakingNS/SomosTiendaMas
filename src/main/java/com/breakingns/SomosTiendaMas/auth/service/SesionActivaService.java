@@ -65,18 +65,28 @@ public class SesionActivaService {
         sesionActivaRepository.save(sesion);
     }
 
-    public List<SesionActivaResponse> obtenerSesionesActivas(Usuario usuario) {
-        List<SesionActiva> sesiones = sesionActivaRepository.findByUsuario(usuario);
+    public List<SesionActivaDTO> obtenerSesionesActivas(Long idUsuario) {
+        if (idUsuario != null) {
+            return obtenerSesionesActivasPorUsuario(idUsuario);
+        } else {
+            return obtenerTodasLasSesionesActivas();
+        }
+    }
 
-        return sesiones.stream()
-            .map(s -> new SesionActivaResponse(
-                s.getId(),
-                s.getIp(),
-                s.getUserAgent(),
-                s.getFechaInicioSesion(),
-                s.isRevocado()
-            ))
-            .collect(Collectors.toList());
+    public List<SesionActivaDTO> obtenerSesionesActivasPorUsuario(Long idUsuario) {
+        return sesionActivaRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream()
+                .filter(sesion -> !sesion.isRevocado())
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<SesionActivaDTO> obtenerTodasLasSesionesActivas() {
+        return sesionActivaRepository.findAll()
+                .stream()
+                .filter(sesion -> !sesion.isRevocado())
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
     }
     
     public void cerrarSesion(Long idSesion) {
@@ -131,24 +141,6 @@ public class SesionActivaService {
         sesion.setRevocado(false);
 
         sesionActivaRepository.save(sesion);
-    }
-    
-    // Para usuarios comunes
-    public List<SesionActivaDTO> obtenerSesionesActivasPorUsuario(Long idUsuario) {
-        return sesionActivaRepository.findByUsuario_IdUsuario(idUsuario)
-                .stream()
-                .filter(sesion -> !sesion.isRevocado())  // Filtra las sesiones activas
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
-
-    // Para admins
-    public List<SesionActivaDTO> obtenerTodasLasSesionesActivas() {
-        return sesionActivaRepository.findAll()
-                .stream()
-                .filter(sesion -> !sesion.isRevocado())
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
     }
 
     private SesionActivaDTO convertirADTO(SesionActiva sesion) {

@@ -66,3 +66,5 @@ beta 0.0.8.8: Ordenamiento y limpieza: change-password completado.
 beta 0.0.8.9: Ordenamiento y limpieza: logout completado.
 
 beta 0.0.9.0: Ordenamiento y limpieza: mis sesiones activas completado.
+
+beta 0.0.9.1: Ordenamiento y limpieza: sesiones activas ADMINS completado.
