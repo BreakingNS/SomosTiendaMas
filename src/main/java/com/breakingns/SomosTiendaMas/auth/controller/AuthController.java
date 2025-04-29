@@ -71,42 +71,14 @@ public class AuthController {
     // ---
     
     @PostMapping("/public/registro/usuario")
-    public ResponseEntity<?> registerUser(@RequestBody Usuario usuario) {
-        if (usuarioService.existeUsuario(usuario.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("El nombre de usuario ya está en uso");
-        }
-
-        // Asignar el rol por defecto
-        Rol rolUser = rolService.getByNombre(RolNombre.ROLE_USUARIO)
-                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
-        usuario.getRoles().add(rolUser);
-
-        usuarioService.registrar(usuario);
-        
-        carritoService.crearCarrito(usuario.getIdUsuario());
-        
+    public ResponseEntity<String> registerUser(@RequestBody Usuario usuario) {
+        usuarioService.registrarConRol(usuario, RolNombre.ROLE_USUARIO);
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
-    
+
     @PostMapping("/public/registro/admin")
-    public ResponseEntity<?> registerAdmin(@RequestBody Usuario usuario) {
-        if (usuarioService.existeUsuario(usuario.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("El nombre de usuario ya está en uso");
-        }
-
-        // Asignar el rol por defecto
-        Rol rolAdmin = rolService.getByNombre(RolNombre.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado."));
-        usuario.getRoles().add(rolAdmin);
-
-        usuarioService.registrar(usuario);
-        
-        carritoService.crearCarrito(usuario.getIdUsuario());
-
+    public ResponseEntity<String> registerAdmin(@RequestBody Usuario usuario) {
+        usuarioService.registrarConRol(usuario, RolNombre.ROLE_ADMIN);
         return ResponseEntity.ok("Administrador registrado correctamente");
     }
     
