@@ -7,6 +7,7 @@ import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.time.Instant;
@@ -21,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class SesionActivaService {
 
+    private final JwtTokenProvider jwtTokenProvider;
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
@@ -32,13 +34,15 @@ public class SesionActivaService {
                                 ISesionActivaRepository sesionActivaRepository, 
                                 ITokenEmitidoRepository tokenEmitidoRepository,
                                 IRefreshTokenRepository refreshTokenRepository,
-                                TokenEmitidoService tokenEmitidoService
+                                TokenEmitidoService tokenEmitidoService,
+                                JwtTokenProvider jwtTokenProvider
                                 ) {
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenEmitidoService = tokenEmitidoService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
     
     public List<SesionActivaDTO> listarSesionesPorUsuario(Long usuarioId) {
@@ -112,15 +116,20 @@ public class SesionActivaService {
         });
         sesionActivaRepository.saveAll(sesiones);
     }
-    public void registrarSesion(String jwt, Usuario usuario, String ip, String userAgent) {
+    
+    public void registrarSesion(Usuario usuario, String token, String ip, String userAgent) {
+        Instant now = Instant.now();
+        Instant expiry = now.plusMillis(jwtTokenProvider.getJwtExpirationMs());
+
         SesionActiva sesion = new SesionActiva();
-        sesion.setToken(jwt);
         sesion.setUsuario(usuario);
+        sesion.setToken(token);
         sesion.setIp(ip);
         sesion.setUserAgent(userAgent);
-        sesion.setFechaInicioSesion(Instant.now());
-        sesion.setFechaExpiracion(Instant.now().plusSeconds(3600)); // o lo que dure tu token
+        sesion.setFechaInicioSesion(now);
+        sesion.setFechaExpiracion(expiry);
         sesion.setRevocado(false);
+
         sesionActivaRepository.save(sesion);
     }
     

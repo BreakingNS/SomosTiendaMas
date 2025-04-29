@@ -54,3 +54,5 @@ beta 0.0.8.2: implementacion final de funciones/endpoints se seguridad (COMIENZO
 beta 0.0.8.3: Ordenamiento y limpieza: JwtAuthenticationFilter completado.
 
 beta 0.0.8.4: Ordenamiento y limpieza: registros User y Admin completado.
+
+beta 0.0.8.5: Ordenamiento y limpieza: login completado.

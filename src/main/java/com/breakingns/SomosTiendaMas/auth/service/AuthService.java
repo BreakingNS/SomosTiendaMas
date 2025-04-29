@@ -7,6 +7,7 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,42 +60,23 @@ public class AuthService {
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                loginRequest.getUsername(),
-                loginRequest.getPassword()
+                loginRequest.getUsername(), loginRequest.getPassword()
             )
         );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtTokenProvider.generarToken(authentication);
 
         Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        String refreshToken = refreshTokenService
-            .crearRefreshToken(usuario.getIdUsuario(), request)
-            .getToken();
+        String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
-        // 🔸 Captura de IP y User-Agent
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank()) {
-            ip = request.getRemoteAddr();
-        }
+        // Extraer IP y user-agent con helper
+        String ip = RequestUtil.obtenerIpCliente(request);
         String userAgent = request.getHeader("User-Agent");
 
-        // 🔸 Fecha actual y expiración (mismo tiempo que token)
-        Instant now = Instant.now();
-        Instant expiryDate = now.plusMillis(jwtTokenProvider.getJwtExpirationMs());
-
-        // 🔸 Guardar sesión activa
-        SesionActiva sesion = new SesionActiva();
-        sesion.setToken(accessToken);
-        sesion.setIp(ip);
-        sesion.setUserAgent(userAgent);
-        sesion.setUsuario(usuario);
-        sesion.setFechaInicioSesion(now);
-        sesion.setFechaExpiracion(expiryDate);
-        sesion.setRevocado(false);
-        sesionActivaRepository.save(sesion);
+        // Crear sesión activa con servicio dedicado
+        sesionActivaService.registrarSesion(usuario, accessToken, ip, userAgent);
 
         return new AuthResponse(accessToken, refreshToken);
     }

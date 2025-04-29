@@ -175,7 +175,7 @@ public class RefreshTokenService {
         String nuevoRefreshToken = crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
         // 7. Registrar nueva sesión
-        sesionActivaService.registrarSesion(nuevoAccessToken, usuario, ip, userAgent);
+        sesionActivaService.registrarSesion(usuario, nuevoAccessToken, ip, userAgent);
 
         // 8. Devolver ambos tokens
         Map<String, String> response = new HashMap<>();

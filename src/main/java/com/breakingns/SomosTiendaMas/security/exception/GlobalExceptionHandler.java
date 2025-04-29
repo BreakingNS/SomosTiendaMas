@@ -41,6 +41,37 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(UsuarioYaExisteException.class)
+    public ResponseEntity<?> handleUsuarioYaExisteException(UsuarioYaExisteException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Usuario duplicado",
+                "mensaje", ex.getMessage(),
+                "timestamp", Instant.now().toString()
+        ));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleNotFoundException(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "Recurso no encontrado",
+                "mensaje", ex.getMessage(),
+                "timestamp", Instant.now().toString()
+        ));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        StringBuilder errorMessage = new StringBuilder("Errores de validación: ");
+        ex.getBindingResult().getAllErrors().forEach(error ->
+            errorMessage.append(error.getDefaultMessage()).append(" ")
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Validación fallida",
+                "mensaje", errorMessage.toString().trim(),
+                "timestamp", Instant.now().toString()
+        ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> manejarExcepcionesGenerales(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
@@ -48,41 +79,5 @@ public class GlobalExceptionHandler {
                 "mensaje", ex.getMessage(),
                 "timestamp", Instant.now().toString()
         ));
-    }
-
-    // Maneja excepciones personalizadas de tipo UsuarioYaExisteException
-    @ExceptionHandler(UsuarioYaExisteException.class)
-    public ResponseEntity<?> handleUsuarioYaExisteException(UsuarioYaExisteException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // Código de respuesta 400
-                .body("El nombre de usuario ya está en uso: " + ex.getMessage());
-    }
-
-    // Maneja excepciones genéricas (Exception)
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGenericException(Exception ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR) // Código de respuesta 500
-                .body("Ocurrió un error inesperado: " + ex.getMessage());
-    }
-
-    // Maneja NotFoundException, devuelve 404
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<?> handleNotFoundException(NotFoundException ex) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("Recurso no encontrado: " + ex.getMessage());
-    }
-
-    // Manejo de excepciones de validación (por ejemplo: @Valid en el controller)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        StringBuilder errorMessage = new StringBuilder("Errores de validación: ");
-        ex.getBindingResult().getAllErrors().forEach(error -> 
-            errorMessage.append(error.getDefaultMessage()).append(" ")
-        );
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorMessage.toString());
     }
 }
