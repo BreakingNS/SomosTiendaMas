@@ -88,10 +88,10 @@ public class AuthController {
         return ResponseEntity.ok(tokens);
     }
     
-    @PostMapping("/public/refresh-token") // LISTO
-    public ResponseEntity<?> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
-        Map<String, String> nuevosTokens = refreshTokenService.refrescarTokens(refresh.getRefreshToken(), request);
-        return ResponseEntity.ok(nuevosTokens);
+    @PostMapping("/public/refresh-token")
+    public ResponseEntity<AuthResponse> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
+        AuthResponse response = refreshTokenService.refrescarTokens(refresh.getRefreshToken(), request);
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/public/olvide-password")

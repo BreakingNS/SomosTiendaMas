@@ -1,22 +1,25 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
+import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.NotFoundException;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
 
 @Service
 public class RefreshTokenService {
@@ -136,52 +139,31 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteByUsuario(usuario);
     }
     
-    public Map<String, String> refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
-        // 1. Extraer access token del header
+    public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
         String tokenAnterior = extraerAccessTokenDesdeHeader(request);
-        System.out.println("1. Token recibido (JWT): " + tokenAnterior);
+        Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior);
 
-        // 2. Obtener usuario desde el access token (aunque esté expirado)
-        Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior); // Ahora devuelve el ID como Long
-        System.out.println("2. Usuario ID extraído del token: " + usuarioId);
-
-        // Buscar al usuario en la base de datos
         Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
-        
-        // 3. Validar y revocar el refresh token
+            .orElseThrow(() -> new NotFoundException("Usuario no encontrado."));
+
         RefreshToken refreshToken = refreshTokenRepository.findByToken(requestRefreshToken)
             .map(this::verificarExpiracion)
-            .orElseThrow(() -> new RuntimeException("Refresh token no válido."));
-        System.out.println("3. Refresh recibido: " + requestRefreshToken);
-        System.out.println("4. Usuario encontrado: " + usuario.getUsername());
-        
+            .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
+
         refreshToken.setUsado(true);
         refreshToken.setRevocado(true);
         refreshToken.setFechaRevocado(Instant.now());
         refreshTokenRepository.save(refreshToken);
 
-        // 4. Revocar el access token usado en esta sesión
         tokenEmitidoService.revocarToken(tokenAnterior);
-
-        // 5. Revocar la sesión activa correspondiente al access token
         sesionActivaService.revocarSesion(tokenAnterior);
 
-        // 6. Crear nuevos tokens
-        String ip = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
-
-        String nuevoAccessToken = jwtTokenProvider.generarTokenConUsuario(usuario); // genera nuevo JWT
+        String nuevoAccessToken = jwtTokenProvider.generarTokenConUsuario(usuario);
         String nuevoRefreshToken = crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
-        // 7. Registrar nueva sesión
-        sesionActivaService.registrarSesion(usuario, nuevoAccessToken, ip, userAgent);
+        sesionActivaService.registrarSesion(usuario, nuevoAccessToken, request.getRemoteAddr(), request.getHeader("User-Agent"));
 
-        // 8. Devolver ambos tokens
-        Map<String, String> response = new HashMap<>();
-        response.put("accessToken", nuevoAccessToken);
-        response.put("refreshToken", nuevoRefreshToken);
-        return response;
+        return new AuthResponse(nuevoAccessToken, nuevoRefreshToken);
     }
     
     private String extraerAccessTokenDesdeHeader(HttpServletRequest request) {

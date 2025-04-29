@@ -56,3 +56,5 @@ beta 0.0.8.3: Ordenamiento y limpieza: JwtAuthenticationFilter completado.
 beta 0.0.8.4: Ordenamiento y limpieza: registros User y Admin completado.
 
 beta 0.0.8.5: Ordenamiento y limpieza: login completado.
+
+beta 0.0.8.6: Ordenamiento y limpieza: refresh completado.
