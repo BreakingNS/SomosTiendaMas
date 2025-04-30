@@ -6,6 +6,7 @@ import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -133,6 +134,15 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
     
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<?> manejarAuthenticationException(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "error", "Autenticación fallida",
+                "mensaje", ex.getMessage(),
+                "timestamp", Instant.now().toString()
+        ));
+    }
+    
     /*
     
     @ExceptionHandler(TokenExpiradoException.class)
@@ -140,10 +150,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", ex.getMessage()));
     }
-    
-    
 
-    
     @ExceptionHandler(CarritoNoEncontradoException.class)
     public ResponseEntity<?> manejarCarritoNoEncontrado(CarritoNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

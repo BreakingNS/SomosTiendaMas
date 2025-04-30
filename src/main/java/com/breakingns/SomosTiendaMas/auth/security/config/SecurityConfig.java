@@ -4,7 +4,6 @@ import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,8 +20,16 @@ public class SecurityConfig {
 
     private static final String[] RUTAS_PUBLICAS = {
         "/api/auth/public/**"
-        // podés agregar más rutas públicas acá
+        // puedes agregar más rutas públicas aquí
     };
+
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint cCustomAuthenticationEntryPoint;
+
+    public SecurityConfig(CustomAccessDeniedHandler customAccessDeniedHandler, CustomAuthenticationEntryPoint cCustomAuthenticationEntryPoint) {
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.cCustomAuthenticationEntryPoint = cCustomAuthenticationEntryPoint;
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -43,13 +50,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, excep) ->
-                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token faltante o vencido (401)"))
-                .accessDeniedHandler((req, res, excep) -> {
-                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    res.setContentType("application/json");
-                    res.getWriter().write("{\"error\": \"No autorizado\"}");
-                })
+                .authenticationEntryPoint(cCustomAuthenticationEntryPoint)
+                .accessDeniedHandler(customAccessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(RUTAS_PUBLICAS).permitAll()

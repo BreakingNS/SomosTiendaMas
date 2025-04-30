@@ -92,3 +92,7 @@ beta 0.1.0.1: Ordenamiento y limpieza: todos los repository completados.
 beta 0.1.0.2: Ordenamiento y limpieza: toda la limpiaza completada.
 
 beta 0.1.0.3: Ordenamiento y limpieza: se separo endpoints de AuthController en otros controllers especificos.
+
+beta 0.1.0.4: Pruebas y Tests: AdminInitializer agregado (JUNTO CON USER PARA REGISTRO AUTOMATICO).
+
+beta 0.1.0.5: Pruebas y Tests: AccessDeniedHandler y AuthenticationEntryPoint agregados.
