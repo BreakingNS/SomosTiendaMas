@@ -7,7 +7,6 @@ import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
-import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
@@ -26,8 +25,6 @@ import com.breakingns.SomosTiendaMas.service.CarritoService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -92,7 +89,7 @@ public class AuthController {
     
     @PostMapping("/public/refresh-token")
     public ResponseEntity<AuthResponse> refrescarToken(@RequestBody RefreshTokenRequest refresh, HttpServletRequest request) {
-        AuthResponse response = refreshTokenService.refrescarTokens(refresh.getRefreshToken(), request);
+        AuthResponse response = refreshTokenService.refrescarTokens(refresh.refreshToken(), request);
         return ResponseEntity.ok(response);
     }
     
@@ -110,7 +107,7 @@ public class AuthController {
     
     @PostMapping("/public/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        resetPasswordService.resetearPassword(request.getToken(), request.getNuevaPassword());
+        resetPasswordService.resetearPassword(request.token(), request.nuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
@@ -118,7 +115,7 @@ public class AuthController {
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest req, Authentication auth) {
         Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
-        usuarioService.changePassword(usuario, req.getCurrentPassword(), req.getNewPassword());
+        usuarioService.changePassword(usuario, req.currentPassword(), req.newPassword());
         return ResponseEntity.ok("Contraseña cambiada exitosamente.");
     }
     
@@ -127,7 +124,7 @@ public class AuthController {
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
                                     @RequestHeader("Authorization") String authorizationHeader) {
         String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
-        authService.logout(accessToken, request.getRefreshToken());
+        authService.logout(accessToken, request.refreshToken());
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
     
@@ -166,7 +163,7 @@ public class AuthController {
         }
 
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
-        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, request.getRefreshToken());
+        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, request.refreshToken());
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }
     

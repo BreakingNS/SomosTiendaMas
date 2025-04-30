@@ -1,3 +1,5 @@
 package com.breakingns.SomosTiendaMas.auth.dto;
 
-public record OlvidePasswordRequest(String email) {}
+public record OlvidePasswordRequest(
+        String email
+) {}

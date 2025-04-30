@@ -51,13 +51,13 @@ public class AuthService {
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                loginRequest.getUsername(), loginRequest.getPassword()
+                loginRequest.username(), loginRequest.password()
             )
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
 
-        Usuario usuario = UsuarioUtils.findByUsername(loginRequest.getUsername());
+        Usuario usuario = UsuarioUtils.findByUsername(loginRequest.username());
 
         String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
