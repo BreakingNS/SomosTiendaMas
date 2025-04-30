@@ -11,8 +11,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter @Setter
 @Table(name = "tokens_reset_password")
 public class TokenResetPassword {
 
@@ -44,41 +47,6 @@ public class TokenResetPassword {
     }
 
     // Getters y setters
-    public Long getId() {
-        return id;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public Instant getFechaExpiracion() {
-        return fechaExpiracion;
-    }
-
-    public void setFechaExpiracion(Instant fechaExpiracion) {
-        this.fechaExpiracion = fechaExpiracion;
-    }
-
-    public boolean isUsado() {
-        return usado;
-    }
-
-    public void setUsado(boolean usado) {
-        this.usado = usado;
-    }
 
     public boolean isExpirado() {
         return Instant.now().isAfter(this.fechaExpiracion);

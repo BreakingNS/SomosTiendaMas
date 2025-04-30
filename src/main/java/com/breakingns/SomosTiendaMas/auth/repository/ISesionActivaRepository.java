@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Long> {
+    
     List<SesionActiva> findByUsuario_IdUsuario(Long usuarioId);
+    
     Optional<SesionActiva> findByToken(String token);
 
     List<SesionActiva> findByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
@@ -20,5 +22,6 @@ public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Lon
 
     SesionActiva findByUsuarioAndIpAndUserAgentAndRevocadoFalse(Usuario usuario, String ip, String userAgent);
 
-    public List<SesionActiva> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+    List<SesionActiva> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+
 }

@@ -7,11 +7,11 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 
 public class UserAuthDetails implements UserDetails {
 
-    private Long id;
-    private String username;
-    private String password;
-    private Collection<? extends GrantedAuthority> authorities;
-    private Usuario usuario; // 👈 nuevo campo
+    private final Long id;
+    private final String username;
+    private final String password;
+    private final Collection<? extends GrantedAuthority> authorities;
+    private final Usuario usuario; // 👈 nuevo campo
 
     public UserAuthDetails(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities, Usuario usuario) {
         this.id = id;

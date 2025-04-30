@@ -5,7 +5,9 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByToken(String token);
@@ -18,5 +20,5 @@ public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Lon
 
     List<RefreshToken> findAllByUsuario_UsernameAndRevocadoFalse(String username);
 
-    public List<RefreshToken> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+    List<RefreshToken> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
 }
