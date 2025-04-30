@@ -7,9 +7,15 @@ import java.util.Optional;
 public interface IUsuarioService {
     
     Optional<Usuario> findById(Long id);
-    public Usuario registrar(Usuario usuario);
-    public Boolean existeUsuario(String nombreUsuario);
-    public Usuario findByUsername(String username);
-    public void registrarConRol(Usuario usuario, RolNombre rolNombre);
-    public void changePassword(Usuario usuario, String currentPassword, String newPassword);
+    
+    Usuario registrar(Usuario usuario);
+    
+    Boolean existeUsuario(String nombreUsuario);
+    
+    Usuario findByUsername(String username);
+    
+    void registrarConRol(Usuario usuario, RolNombre rolNombre);
+    
+    void changePassword(Usuario usuario, String currentPassword, String newPassword);
+    
 }

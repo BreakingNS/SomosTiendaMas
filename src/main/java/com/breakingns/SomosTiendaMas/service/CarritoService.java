@@ -6,28 +6,26 @@ import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CarritoService implements ICarritoService{
-    
-    @Autowired
-    IUsuarioRepository repoUsu;
-    
-    @Autowired
-    ICarritoRepository repoCarrito;
+
+    private final IUsuarioRepository repoUsu;
+    private final ICarritoRepository repoCarrito;
+
+    public CarritoService(IUsuarioRepository repoUsu, ICarritoRepository repoCarrito) {
+        this.repoUsu = repoUsu;
+        this.repoCarrito = repoCarrito;
+    }
     
     @Override
     public String crearCarrito(Long id_usuario) {
-
-        Carrito carrito = new Carrito();
-
         Usuario usuario = repoUsu.findById(id_usuario)
                                  .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));
 
+        Carrito carrito = new Carrito();
         carrito.setUsuario(usuario);
-
         repoCarrito.save(carrito);
 
         return "Carrito creado correctamente!";
@@ -35,8 +33,7 @@ public class CarritoService implements ICarritoService{
     
     @Override
     public Optional<Carrito> traerCarritoPorIdUsuario(Long id_usuario) {
-
-        return  repoCarrito.findById(repoUsu.findById(id_usuario).orElse(null).getCarrito().getId_carrito());
+        return repoCarrito.findByUsuarioId(id_usuario);
     }
     
 }

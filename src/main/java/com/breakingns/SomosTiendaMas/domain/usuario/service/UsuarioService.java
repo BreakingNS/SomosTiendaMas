@@ -10,7 +10,6 @@ import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioYaExisteException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
 import java.util.Optional;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

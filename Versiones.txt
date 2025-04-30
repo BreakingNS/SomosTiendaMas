@@ -86,3 +86,7 @@ beta 0.0.9.8: Ordenamiento y limpieza: RokenEmitidoService y UserDetailsServiceI
 beta 0.0.9.9: Ordenamiento y limpieza: JwtTokenProvider y JwtAuthenticationFilter completados (RSAKEYSUTIL AGREGADO).
 
 beta 0.1.0.0: Ordenamiento y limpieza: todos los DTOs completados.
+
+beta 0.1.0.1: Ordenamiento y limpieza: todos los repository completados.
+
+beta 0.1.0.2: Ordenamiento y limpieza: toda la limpiaza completada.
