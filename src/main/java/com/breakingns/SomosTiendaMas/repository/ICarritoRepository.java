@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ICarritoRepository extends JpaRepository<Carrito, Long>{
 
-    public Optional<Carrito> findByUsuarioId(Long id_usuario);
-    
+    Optional<Carrito> findByUsuario_IdUsuario(Long idUsuario);
+
 }

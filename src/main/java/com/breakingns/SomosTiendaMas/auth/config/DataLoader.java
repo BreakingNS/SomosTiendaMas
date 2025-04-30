@@ -1,26 +1,33 @@
 package com.breakingns.SomosTiendaMas.auth.config;
 
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
-import com.breakingns.SomosTiendaMas.auth.service.RolService;
-import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataLoader {
+@Order(1)
+public class DataLoader implements CommandLineRunner {
 
-    private final RolService rolService;
+    private final IRolRepository rolRepository;
 
-    public DataLoader(RolService rolService) {
-        this.rolService = rolService;
+    public DataLoader(IRolRepository rolRepository) {
+        this.rolRepository = rolRepository;
     }
 
-    @PostConstruct
-    public void cargarRoles() {
-        for (RolNombre nombre : RolNombre.values()) {
-            if (rolService.getByNombre(nombre).isEmpty()) {
-                rolService.guardar(new Rol(nombre));
-            }
+    @Override
+    public void run(String... args) throws Exception {
+        if (rolRepository.count() == 0) {
+            // Cargar roles si no existen
+            Rol adminRole = new Rol(RolNombre.ROLE_ADMIN);
+            Rol userRole = new Rol(RolNombre.ROLE_USUARIO);
+            rolRepository.save(adminRole);
+            rolRepository.save(userRole);
+            System.out.println("Roles cargados correctamente.");
+        } else {
+            System.out.println("Los roles ya existen.");
         }
     }
 }

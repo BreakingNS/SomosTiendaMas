@@ -33,7 +33,7 @@ public class CarritoService implements ICarritoService{
     
     @Override
     public Optional<Carrito> traerCarritoPorIdUsuario(Long id_usuario) {
-        return repoCarrito.findByUsuarioId(id_usuario);
+        return repoCarrito.findByUsuario_IdUsuario(id_usuario);
     }
     
 }
