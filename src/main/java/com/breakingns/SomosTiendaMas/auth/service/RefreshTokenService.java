@@ -14,12 +14,14 @@ import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoExcep
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class RefreshTokenService {
     @Value("${app.jwt-refresh-expiration-ms}")
@@ -49,6 +51,8 @@ public class RefreshTokenService {
     }
 
     public RefreshToken crearRefreshToken(Long userId, HttpServletRequest request) {
+        log.info("Creando nuevo refresh token para userId: {}", userId);
+        
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con id: " + userId));
 
@@ -60,6 +64,8 @@ public class RefreshTokenService {
     }
 
     public void logout(String token) {
+        log.info("Logout individual para token: {}", token);
+        
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new RefreshTokenException("Token no encontrado."));
         if (refreshToken.getRevocado() || refreshToken.getUsado()) {
@@ -69,14 +75,19 @@ public class RefreshTokenService {
         refreshToken.setUsado(false);
         refreshToken.setFechaRevocado(Instant.now());
         refreshTokenRepository.save(refreshToken);
+        
     }
 
     public void logoutTotal(String username) {
+        log.info("Logout total para usuario: {}", username);
+        
         List<RefreshToken> tokens = refreshTokenRepository.findAllByUsuario_UsernameAndRevocadoFalse(username);
         revocarTokens(tokens);
     }
 
     public void logoutTotalExceptoSesionActual(Long idUsuario, String refresh) {
+        log.info("Revocando todos los tokens menos el actual para userId: {}", idUsuario);
+        
         List<RefreshToken> tokens = refreshTokenRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
         Instant ahora = Instant.now();
         tokens.forEach(token -> {
@@ -120,6 +131,8 @@ public class RefreshTokenService {
     }
 
     public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
+        log.info("Llamando a refrescarTokens con token: {}", requestRefreshToken);
+        
         String tokenAnterior = extraerAccessTokenDesdeHeader(request);
         Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior);
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -130,6 +143,9 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
 
         revocarTokensAnteriores(tokenAnterior, refreshToken);
+        
+        log.info("Token de refresh usado: {}", refreshToken);
+        
         return generarYRegistrarTokens(usuario, request);
     }
 

@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -26,6 +28,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.info("Cargando usuario desde username: {}", username);
+        
         Usuario usuario = usuarioRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
@@ -39,6 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     private Collection<? extends GrantedAuthority> mapearRoles(Set<Rol> roles) {
+        log.info("Se mapean los roles: {}", roles);
         return roles.stream()
             .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
             .collect(Collectors.toList());

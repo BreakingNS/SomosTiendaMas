@@ -7,6 +7,7 @@ import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import static java.lang.Math.log;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

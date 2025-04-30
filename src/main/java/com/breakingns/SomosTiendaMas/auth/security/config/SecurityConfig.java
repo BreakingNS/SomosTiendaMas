@@ -19,7 +19,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private static final String[] RUTAS_PUBLICAS = {
-        "/api/auth/public/**"
+        "/api/auth/public/**",
+        "/api/password/public/**",
+        "/api/registro/public/**",
+        "/api/sesiones/public/**"
         // puedes agregar más rutas públicas aquí
     };
 

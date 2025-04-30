@@ -42,7 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     // Rutas públicas
-    private static final List<String> RUTAS_PUBLICAS = List.of("/api/auth/public/**");
+    private static final List<String> RUTAS_PUBLICAS = List.of(
+            "/api/auth/public/**",
+            "/api/password/public/**",
+            "/api/registro/public/**",
+            "/api/sesiones/public/**"
+    );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
                                    UserDetailsServiceImpl userDetailsService,

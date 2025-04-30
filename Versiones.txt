@@ -96,3 +96,5 @@ beta 0.1.0.3: Ordenamiento y limpieza: se separo endpoints de AuthController en 
 beta 0.1.0.4: Pruebas y Tests: AdminInitializer agregado (JUNTO CON USER PARA REGISTRO AUTOMATICO).
 
 beta 0.1.0.5: Pruebas y Tests: AccessDeniedHandler y AuthenticationEntryPoint agregados.
+
+beta 0.1.0.6: Pruebas y Tests: Listo para comenzar la realizacion de los tests unitarios.

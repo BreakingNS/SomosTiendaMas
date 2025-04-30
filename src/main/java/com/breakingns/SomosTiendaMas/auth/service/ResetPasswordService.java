@@ -8,7 +8,9 @@ import com.breakingns.SomosTiendaMas.security.exception.TokenResetPasswordInvali
 import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ResetPasswordService {
     
@@ -23,6 +25,8 @@ public class ResetPasswordService {
     }
     
     public void resetearPassword(String token, String nuevaPassword) {
+        log.info("Por resetear password con token: {}", token);
+        
         Optional<TokenResetPassword> optional = tokenResetPasswordRepository.findByToken(token);
 
         if (optional.isEmpty() || optional.get().isExpirado() || optional.get().isUsado()) {

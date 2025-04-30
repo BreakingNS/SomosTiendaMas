@@ -8,7 +8,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class PasswordResetService {
 
@@ -26,7 +28,11 @@ public class PasswordResetService {
 
     // Solicitar recuperación de contraseña
     public void solicitarRecuperacionPassword(String email) {
+        log.info("Buscando usuario con email: {}", email);
+        
         usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+            log.info("Mail encontrado: {}", email);
+            
             String token = UUID.randomUUID().toString();
             TokenResetPassword tokenReset = new TokenResetPassword();
             tokenReset.setToken(token);
