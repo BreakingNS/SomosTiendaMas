@@ -16,9 +16,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity // Opcional: te permite usar @PreAuthorize en métodos
+@EnableMethodSecurity
 public class SecurityConfig {
-    
+
+    private static final String[] RUTAS_PUBLICAS = {
+        "/api/auth/public/**"
+        // podés agregar más rutas públicas acá
+    };
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -30,28 +35,27 @@ public class SecurityConfig {
                                                            ITokenEmitidoRepository tokenEmitidoRepository) {
         return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService, tokenEmitidoRepository);
     }
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-        http
+        return http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) ->
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Acceso no autorizado: no hay token o está vencido (401)"))
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"No autorizado para acceder a este recurso\"}");
+                .authenticationEntryPoint((req, res, excep) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token faltante o vencido (401)"))
+                .accessDeniedHandler((req, res, excep) -> {
+                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"error\": \"No autorizado\"}");
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/public/**").permitAll()
+                .requestMatchers(RUTAS_PUBLICAS).permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
     }
 }

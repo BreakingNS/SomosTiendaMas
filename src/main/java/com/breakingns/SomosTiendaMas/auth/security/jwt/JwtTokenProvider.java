@@ -4,17 +4,15 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
+import com.breakingns.SomosTiendaMas.auth.utils.RsaKeyUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import io.jsonwebtoken.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,132 +20,77 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
+    
+    private final IUsuarioRepository usuarioRepository;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
 
     @Value("${app.jwt-expiration-ms}")
     private int jwtExpirationMs;
-    
-    @Autowired
-    private IUsuarioRepository usuarioRepository;
-    
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
-    
-    @Autowired
-    private ITokenEmitidoRepository tokenEmitidoRepository;
-    
-    public JwtTokenProvider() throws Exception {
-        this.privateKey = loadPrivateKey("src/main/resources/keys/private.pem");
-        this.publicKey = loadPublicKey("src/main/resources/keys/public.pem");
-    }
-    
-    // Método para cargar clave privada
-    private PrivateKey loadPrivateKey(String filepath) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(Paths.get(filepath));
-        String privateKeyPEM = new String(keyBytes)
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s", "");
 
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(privateKeyPEM));
-        return keyFactory.generatePrivate(keySpec);
+    public JwtTokenProvider(
+            IUsuarioRepository usuarioRepository,
+            UserDetailsServiceImpl userDetailsService,
+            ITokenEmitidoRepository tokenEmitidoRepository,
+            RsaKeyUtil rsaKeyUtil
+    ) throws Exception {
+        this.usuarioRepository = usuarioRepository;
+        this.userDetailsService = userDetailsService;
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.privateKey = rsaKeyUtil.loadPrivateKey("src/main/resources/keys/private.pem");
+        this.publicKey = rsaKeyUtil.loadPublicKey("src/main/resources/keys/public.pem");
     }
-    
-    // Método para cargar clave publica
-    private PublicKey loadPublicKey(String filepath) throws Exception {
-        byte[] keyBytes = Files.readAllBytes(Paths.get(filepath));
-        String publicKeyPEM = new String(keyBytes)
-                .replace("-----BEGIN PUBLIC KEY-----", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .replaceAll("\\s", "");
 
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(java.util.Base64.getDecoder().decode(publicKeyPEM));
-        return keyFactory.generatePublic(keySpec);
-    }
-    
-    //Metodo para generar Token por Authentication
-    public String generarToken(Authentication authentication) {
+    public String generarTokenDesdeAuthentication(Authentication authentication) {
         UserAuthDetails userPrincipal = (UserAuthDetails) authentication.getPrincipal();
-
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
-        String token = Jwts.builder()
-            .setSubject(String.valueOf(userPrincipal.getId())) // 👈 Guardamos el ID como subject
-            .claim("username", userPrincipal.getUsername())     // 👈 Guardamos el username como claim adicional
-            .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(privateKey, SignatureAlgorithm.RS256)
-            .compact();
-
-        // Guardar el token emitido en la base de datos
-        TokenEmitido tokenEmitido = new TokenEmitido();
-        tokenEmitido.setToken(token);
-        tokenEmitido.setRevocado(false);
-        tokenEmitido.setFechaEmision(now.toInstant());
-        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
-
-        // Asegúrate de asignar el usuario correctamente
-        Usuario usuario = usuarioRepository.findById(userPrincipal.getId())
-            .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
-        tokenEmitido.setUsuario(usuario);
-
-        // Guardar el token en la base de datos
-        tokenEmitidoRepository.save(tokenEmitido);
-
-        return token;
+        return generarTokenParaUsuario(userPrincipal.getId(), userPrincipal.getUsername());
     }
-    
+
     public String generarTokenConUsuario(Usuario usuario) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
-        String token = Jwts.builder()
-            .setSubject(String.valueOf(usuario.getIdUsuario()))
-            .claim("id", usuario.getIdUsuario())
-            .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(privateKey, SignatureAlgorithm.RS256)
-            .compact();
-
-        // Guardar el token emitido
-        TokenEmitido tokenEmitido = new TokenEmitido();
-        tokenEmitido.setToken(token);
-        tokenEmitido.setRevocado(false);
-        tokenEmitido.setFechaEmision(now.toInstant());
-        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
-        tokenEmitido.setUsuario(usuario);
-
-        tokenEmitidoRepository.save(tokenEmitido);
-
-        return token;
+        return generarTokenParaUsuario(usuario.getIdUsuario(), usuario.getUsername());
     }
-    
+
     public String generarTokenDesdeUsername(String username) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-            userDetails, null, userDetails.getAuthorities()
-        );
-        return generarToken(auth); // usás tu método existente
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        return generarTokenDesdeAuthentication(auth);
     }
 
-    public String obtenerUsernameDelToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("username", String.class); // Cambié sub por username
+    private String generarTokenParaUsuario(Long id, String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        String token = Jwts.builder()
+                .setSubject(String.valueOf(id))
+                .claim("username", username)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+
+        // Guardar el token emitido
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
+
+        TokenEmitido tokenEmitido = new TokenEmitido();
+        tokenEmitido.setToken(token);
+        tokenEmitido.setRevocado(false);
+        tokenEmitido.setFechaEmision(now.toInstant());
+        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
+        tokenEmitido.setUsuario(usuario);
+
+        tokenEmitidoRepository.save(tokenEmitido);
+        return token;
     }
 
     public boolean validarToken(String token) {
@@ -157,51 +100,35 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token);
             return true;
-        } catch (ExpiredJwtException | UnsupportedJwtException |
-                 MalformedJwtException | SignatureException | IllegalArgumentException e) {
-            e.printStackTrace();
+        } catch (JwtException | IllegalArgumentException e) {
+            logger.warn("Token inválido: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
-    /*
-    public Long obtenerIdDelToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("id", Long.class);
-    }
-    */
-    
-    public Long obtenerIdDelToken(String token) {
-        Claims claims = Jwts.parser().setSigningKey(publicKey).parseClaimsJws(token).getBody();
-        return Long.valueOf(claims.get("sub", String.class));  // Extrae "sub" y lo convierte a Long
-    }
-    
-    public List<String> obtenerRolesDelToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
 
-        Object roles = claims.get("roles");
+    public String obtenerUsernameDelToken(String token) {
+        return obtenerClaims(token).get("username", String.class);
+    }
+
+    public Long obtenerIdDelToken(String token) {
+        return Long.valueOf(obtenerClaims(token).getSubject());
+    }
+
+    public List<String> obtenerRolesDelToken(String token) {
+        Object roles = obtenerClaims(token).get("roles");
         if (roles instanceof List<?> lista) {
             return lista.stream().map(Object::toString).toList();
         }
         return Collections.emptyList();
     }
-    
+
     public Instant obtenerFechaExpiracion(String token) {
-        Claims claims = obtenerClaims(token);
-        Date fecha = claims.getExpiration();
-        return fecha.toInstant();
+        return obtenerClaims(token).getExpiration().toInstant();
     }
-    
+
     private Claims obtenerClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(publicKey) // tu clave pública si usás RSA
+                .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -210,5 +137,4 @@ public class JwtTokenProvider {
     public long getJwtExpirationMs() {
         return jwtExpirationMs;
     }
-
 }

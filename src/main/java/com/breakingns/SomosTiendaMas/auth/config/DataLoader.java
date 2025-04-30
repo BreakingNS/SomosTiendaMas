@@ -4,14 +4,16 @@ import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataLoader {
 
-    @Autowired
-    private RolService rolService;
+    private final RolService rolService;
+
+    public DataLoader(RolService rolService) {
+        this.rolService = rolService;
+    }
 
     @PostConstruct
     public void cargarRoles() {
