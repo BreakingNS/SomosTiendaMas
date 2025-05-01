@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaExcept
 import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioYaExisteException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,15 +31,33 @@ public class UsuarioService implements IUsuarioService{
     }
     
     @Override
+    @Transactional
     public Usuario registrar(Usuario usuario) {
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return usuarioRepository.save(usuario);
     }
 
     @Override
+    @Transactional
     public void registrarConRol(Usuario usuario, RolNombre rolNombre) {
+        if (usuario.getUsername() == null || usuario.getUsername().isBlank()) {
+            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío");
+        }
+
+        if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío");
+        }
+
         if (existeUsuario(usuario.getUsername())) {
             throw new UsuarioYaExisteException("El nombre de usuario ya está en uso");
+        }
+
+        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+            throw new UsuarioYaExisteException("El correo electrónico ya está en uso");
         }
 
         Rol rol = rolService.getByNombre(rolNombre)

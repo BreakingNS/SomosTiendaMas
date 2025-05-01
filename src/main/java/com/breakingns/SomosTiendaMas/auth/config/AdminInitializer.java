@@ -1,3 +1,4 @@
+/*
 package com.breakingns.SomosTiendaMas.auth.config;
 
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
@@ -49,3 +50,4 @@ public class AdminInitializer implements CommandLineRunner {
         }
     }
 }
+*/

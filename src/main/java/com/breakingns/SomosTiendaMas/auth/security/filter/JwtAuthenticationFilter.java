@@ -62,6 +62,67 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            String path = request.getRequestURI();
+            System.out.println("🔍 JwtAuthFilter - Request URI: " + path);
+
+            if (path == null || path.isEmpty()) {
+                System.out.println("❌ Path vacío o nulo");
+            } else {
+                for (String ruta : RUTAS_PUBLICAS) {
+                    if (pathMatcher.match(ruta, path)) {
+                        System.out.println("✅ Ruta pública detectada: " + path + " — No aplico filtro JWT");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                }
+            }
+
+            String header = request.getHeader("Authorization");
+            if (header == null || !header.startsWith("Bearer ")) {
+                JwtAuthUtil.noAutenticado(response, "Token faltante o mal formado");
+                return;
+            }
+
+            String token = header.substring(7);
+            if (!jwtTokenProvider.validarToken(token)) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o expirado");
+                return;
+            }
+
+            Optional<TokenEmitido> tokenDb = tokenEmitidoRepository.findByToken(token);
+            if (tokenDb.isEmpty() || tokenDb.get().isRevocado()) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o revocado");
+                return;
+            }
+
+            String username = jwtTokenProvider.obtenerUsernameDelToken(token);
+            UserDetails userDetails;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(username);
+            } catch (UsernameNotFoundException ex) {
+                JwtAuthUtil.rechazar(response, "Usuario no encontrado.");
+                return;
+            }
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            filterChain.doFilter(request, response);
+
+        } catch (ServletException | IOException e) {
+            JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
+            System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
+        }
+    }
+    /* EL QUE VA
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
             String path = request.getServletPath();
             for (String rutaPublica : RUTAS_PUBLICAS) {
                 if (pathMatcher.match(rutaPublica, path)) {
@@ -109,5 +170,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
             System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
         }
-    }
+    }*/
 }

@@ -1,0 +1,10 @@
+Lo único a considerar a futuro (opcional, no urgente)
+
+Auditoría o logging fino (solo si el proyecto lo amerita): Ya tenés los estados 
+revocado y usado, lo cual es ideal. Si algún día necesitás más trazabilidad, 
+podrías guardar cuándo y por quién se revocó o usó cada token, con updated_at 
+y revocado_por_usuario_id, por ejemplo.
+
+Control sobre la cantidad de tokens por usuario (opcional): Limitar a, 
+por ejemplo, 5 refresh tokens activos por usuario puede evitar que alguien 
+genere cientos de tokens desde múltiples dispositivos si no hacés limpieza regular.

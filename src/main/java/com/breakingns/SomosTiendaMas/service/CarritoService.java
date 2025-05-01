@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
+import jakarta.transaction.Transactional;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class CarritoService implements ICarritoService{
     }
     
     @Override
+    @Transactional
     public String crearCarrito(Long id_usuario) {
         Usuario usuario = repoUsu.findById(id_usuario)
                                  .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));

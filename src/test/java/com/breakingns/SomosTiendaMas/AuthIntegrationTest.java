@@ -45,7 +45,7 @@ import org.springframework.test.context.TestConstructor;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AuthIntegrationTest {
     
-    /*      Metodos:
+    /*          Metodos:
         
         status().isOk() → 200
         status().isUnauthorized() → 401
