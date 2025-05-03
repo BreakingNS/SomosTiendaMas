@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -10,6 +11,7 @@ import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -127,5 +129,9 @@ public class AuthService {
             TokenResetService si querés dejar el AuthService más limpio, pero 
             no es necesario ahora.
         */
+    }
+    
+    public Integer numeroSesionesActivas(Long idUsuario){ // SOLO PRUEBAS, no produccion
+        return sesionActivaService.numeroSesionesActivas(idUsuario);
     }
 }

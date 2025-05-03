@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.security.exception;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,18 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(RefreshTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleRefreshTokenException(RefreshTokenException ex) {
+        System.out.println(">>>>> Entró al handler de RefreshTokenException");
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "Token Inválido");
+        body.put("message", ex.getMessage()); // <-- clave esperada por el test
+        body.put("timestamp", Instant.now().toString());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+    
     @ExceptionHandler(UsuarioNoEncontradoException.class)
     public ResponseEntity<?> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
@@ -37,15 +50,6 @@ public class GlobalExceptionHandler {
             "error", "Contraseña incorrecta",
             "mensaje", ex.getMessage(),
             "timestamp", Instant.now().toString()
-        ));
-    }
-    
-    @ExceptionHandler(RefreshTokenException.class)
-    public ResponseEntity<?> manejarRefreshTokenException(RefreshTokenException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                "error", "Token Inválido",
-                "mensaje", ex.getMessage(),
-                "timestamp", Instant.now().toString()
         ));
     }
 

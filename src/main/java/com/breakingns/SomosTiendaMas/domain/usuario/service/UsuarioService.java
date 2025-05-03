@@ -67,6 +67,34 @@ public class UsuarioService implements IUsuarioService{
         registrar(usuario);
         carritoService.crearCarrito(usuario.getIdUsuario());
     }
+    
+    @Override
+    @Transactional // SOLO PRUEBA, no producciion
+    public void registrarSinRol(Usuario usuario) {
+        if (usuario.getUsername() == null || usuario.getUsername().isBlank()) {
+            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío");
+        }
+
+        if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío");
+        }
+
+        if (existeUsuario(usuario.getUsername())) {
+            throw new UsuarioYaExisteException("El nombre de usuario ya está en uso");
+        }
+
+        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
+            throw new UsuarioYaExisteException("El correo electrónico ya está en uso");
+        }
+
+        usuario.getRoles().add(null);
+        registrar(usuario);
+        carritoService.crearCarrito(usuario.getIdUsuario());
+    }
 
     @Override
     public Boolean existeUsuario(String nombreUsuario) {

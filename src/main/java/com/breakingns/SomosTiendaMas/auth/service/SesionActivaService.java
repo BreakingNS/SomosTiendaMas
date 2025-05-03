@@ -125,4 +125,10 @@ public class SesionActivaService {
             sesion.isRevocado()
         );
     }
+    
+    public Integer numeroSesionesActivas(Long idUsuario){
+        List<SesionActiva> sesionesActivas = sesionActivaRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
+        
+        return sesionesActivas.size();
+    }
 }

@@ -16,6 +16,8 @@ public interface IUsuarioService {
     
     void registrarConRol(Usuario usuario, RolNombre rolNombre);
     
+    void registrarSinRol(Usuario usuario); // SOLO PRUEBA, no produccion
+    
     void changePassword(Usuario usuario, String currentPassword, String newPassword);
     
 }

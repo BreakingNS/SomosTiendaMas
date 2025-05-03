@@ -57,9 +57,7 @@ public class AuthController {
         authService.logoutTotal(accessToken);
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
-    
-    
-    
+
     /*
     @DeleteMapping("/private/logout/{idSesion}")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
@@ -79,4 +77,3 @@ public class AuthController {
     */
     
 }
-

@@ -98,3 +98,5 @@ beta 0.1.0.4: Pruebas y Tests: AdminInitializer agregado (JUNTO CON USER PARA RE
 beta 0.1.0.5: Pruebas y Tests: AccessDeniedHandler y AuthenticationEntryPoint agregados.
 
 beta 0.1.0.6: Pruebas y Tests: Listo para comenzar la realizacion de los tests unitarios.
+
+beta 0.1.1.0: Pruebas y Tests: Test Unitario realizado y finalizado - AuthIntegrationTest.

@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import io.jsonwebtoken.*;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.security.PrivateKey;
@@ -73,6 +74,7 @@ public class JwtTokenProvider {
         String token = Jwts.builder()
                 .setSubject(String.valueOf(id))
                 .claim("username", username)
+                .claim("jti", UUID.randomUUID().toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(privateKey, SignatureAlgorithm.RS256)

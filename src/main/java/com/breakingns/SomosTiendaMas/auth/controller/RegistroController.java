@@ -24,6 +24,12 @@ public class RegistroController {
         usuarioService.registrarConRol(usuario, RolNombre.ROLE_USUARIO);
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
+    
+    @PostMapping("/public/sinrol") // SOLO PRUEBA, no produccion
+    public ResponseEntity<String> registerUserSinRol(@RequestBody Usuario usuario) {
+        usuarioService.registrarSinRol(usuario);
+        return ResponseEntity.ok("Usuario registrado correctamente");
+    }
 
     @PostMapping("/public/admin")
     public ResponseEntity<String> registerAdmin(@RequestBody Usuario usuario) {

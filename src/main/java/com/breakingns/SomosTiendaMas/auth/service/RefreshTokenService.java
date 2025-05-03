@@ -12,6 +12,7 @@ import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -130,6 +131,7 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteByUsuario(usuario);
     }
 
+    @Transactional
     public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
         log.info("Llamando a refrescarTokens con token: {}", requestRefreshToken);
         
