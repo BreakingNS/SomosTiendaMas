@@ -134,4 +134,12 @@ public class AuthService {
     public Integer numeroSesionesActivas(Long idUsuario){ // SOLO PRUEBAS, no produccion
         return sesionActivaService.numeroSesionesActivas(idUsuario);
     }
+
+    public void generarTokenExpirado(String email) { //SOLO PRUEBAS
+        passwordResetService.solicitarRecuperacionPasswordExpirado(email);
+    }
+
+    public void generarTokenUsado(String email) { //SOLO PRUEBAS
+        passwordResetService.solicitarRecuperacionPasswordUsado(email);
+    }
 }

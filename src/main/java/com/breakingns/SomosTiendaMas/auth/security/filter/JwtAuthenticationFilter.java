@@ -49,7 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/auth/public/**",
             "/api/password/public/**",
             "/api/registro/public/**",
-            "/api/sesiones/public/**"
+            "/api/sesiones/public/**",
+            "/test/**" //SOLO PRUEBAS
     );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,

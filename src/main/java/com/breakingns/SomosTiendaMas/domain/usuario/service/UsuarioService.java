@@ -111,19 +111,5 @@ public class UsuarioService implements IUsuarioService{
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
-    
-    @Override
-    public void changePassword(Usuario usuario, String currentPassword, String newPassword) {
-        if (!passwordEncoder.matches(currentPassword, usuario.getPassword())) {
-            throw new PasswordIncorrectaException("La contraseña actual es incorrecta.");
-        }
-        if (passwordEncoder.matches(newPassword, usuario.getPassword())) {
-            throw new PasswordIncorrectaException("La nueva contraseña no puede ser igual a la actual.");
-        }
-        usuario.setPassword(passwordEncoder.encode(newPassword));
-        usuarioRepository.save(usuario);
-    }
-    
-    
-    
+
 }

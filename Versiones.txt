@@ -100,3 +100,5 @@ beta 0.1.0.5: Pruebas y Tests: AccessDeniedHandler y AuthenticationEntryPoint ag
 beta 0.1.0.6: Pruebas y Tests: Listo para comenzar la realizacion de los tests unitarios.
 
 beta 0.1.1.0: Pruebas y Tests: Test Unitario realizado y finalizado - AuthIntegrationTest.
+
+beta 0.1.2.0: Pruebas y Tests: Test Unitario realizado y finalizado - AuthPasswordControllerSecurityTest.

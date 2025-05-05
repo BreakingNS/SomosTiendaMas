@@ -22,7 +22,8 @@ public class SecurityConfig {
         "/api/auth/public/**",
         "/api/password/public/**",
         "/api/registro/public/**",
-        "/api/sesiones/public/**"
+        "/api/sesiones/public/**",
+        "/test/**" //SOLO PRUEBAS
         // puedes agregar más rutas públicas aquí
     };
 

@@ -18,6 +18,4 @@ public interface IUsuarioService {
     
     void registrarSinRol(Usuario usuario); // SOLO PRUEBA, no produccion
     
-    void changePassword(Usuario usuario, String currentPassword, String newPassword);
-    
 }

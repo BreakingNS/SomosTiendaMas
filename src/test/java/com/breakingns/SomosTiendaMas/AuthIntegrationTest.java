@@ -30,6 +30,50 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
+/*                                                  AuthIntegrationTest
+
+        1. Verifica que un usuario cuando se registra, si existe en la BD - registroUsuario_deberiaCrearUsuario()
+
+        2. Registro con campos invalidos - registroConCamposInvalidos()
+
+                            Autenticacion (Login y Tokens)
+
+        1. Login con credenciales incorrectas - loginIncorrecto()
+
+        2. Login con usuario sin roles asignados - loginSinRolesAsignados()
+
+        3. Verifica que se generaron correctamente los tokens - loginGeneraTokensCorrectamente()
+
+        4. Obtiene un nuevo refresh (y un nuevo jwt) - nuevoRefresh()
+
+        5. Intentar generar refresh con tokens invalidos - refreshTokenInvalido()
+
+                            Logout
+
+        6. Logout simple, un solo logout - logoutSimple()
+
+        7. Logout simple con token invalido - logoutSimpleConTokenInvalido()
+
+        8. Logout total - logoutTotal()
+
+        9. Logout total con token invalido - logoutTotalConTokenInvalido()
+
+                            Acceso y Autorizacion
+        10. Acceso a Carrito de Usuario por Admin (Autorizado) - accesoACarritoUaA()
+
+        11. Acceso a Carrito de Admin por Usuario (No Autorizado) - accesoACarritoAaU()
+
+        12. Acceso a Carrito de Admin por Admin (Autorizado) - accesoACarritoAaA()
+
+        13. Acceso a Carrito de Usuario por Usuario (Autorizado) - accesoACarritoUaU()
+
+        14. Accede a ruta protegida sin token - accesoARutaProtegidaSinToken()
+
+        15. Accede a ruta inexistente - accesoARutaInexistente()
+
+        16. Accede a ruta protegida con token invalido - accesoARutaProtegidaConTokenInvalido()
+
+*/
 
 @RequiredArgsConstructor
 @SpringBootTest
@@ -112,7 +156,7 @@ public class AuthIntegrationTest {
         idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
     }
 
-    // Método para registrar un usuario
+    // Método para registrar un usuario sin roles
     private void registrarUsuarioSinRoles(String username, String password, String email) throws Exception {
         Usuario usuario = new Usuario();
         usuario.setUsername(username);
@@ -171,50 +215,7 @@ public class AuthIntegrationTest {
         return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
     }
 
-    /*
-
-    1. Verifica que un usuario cuando se registra, si existe en la BD - registroUsuario_deberiaCrearUsuario()
-
-    2. Registro con campos invalidos - registroConCamposInvalidos()
-
-                        Autenticacion (Login y Tokens)
-
-    1. Login con credenciales incorrectas - loginIncorrecto()
-
-    2. Login con usuario sin roles asignados - loginSinRolesAsignados()
-
-    3. Verifica que se generaron correctamente los tokens - loginGeneraTokensCorrectamente()
-
-    4. Obtiene un nuevo refresh (y un nuevo jwt) - nuevoRefresh()
-
-    5. Intentar generar refresh con tokens invalidos - refreshTokenInvalido()
-
-                        Logout
-
-    6. Logout simple, un solo logout - logoutSimple()
-
-    7. Logout simple con token invalido - logoutSimpleConTokenInvalido()
-
-    8. Logout total - logoutTotal()
-
-    9. Logout total con token invalido - logoutTotalConTokenInvalido()
-
-                        Acceso y Autorizacion
-    10. Acceso a Carrito de Usuario por Admin (Autorizado) - accesoACarritoUaA()
-
-    11. Acceso a Carrito de Admin por Usuario (No Autorizado) - accesoACarritoAaU()
-
-    12. Acceso a Carrito de Admin por Admin (Autorizado) - accesoACarritoAaA()
-
-    13. Acceso a Carrito de Usuario por Usuario (Autorizado) - accesoACarritoUaU()
-
-    14. Accede a ruta protegida sin token - accesoARutaProtegidaSinToken()
-
-    15. Accede a ruta inexistente - accesoARutaInexistente()
-
-    16. Accede a ruta protegida con token invalido - accesoARutaProtegidaConTokenInvalido()
-
-    */
+    
     
     // Verifica que un usuario cuando se registra, si existe en la BD
     @Test
@@ -523,3 +524,5 @@ public class AuthIntegrationTest {
     }
     
 }
+
+

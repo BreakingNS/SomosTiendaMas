@@ -3,6 +3,7 @@ package com.breakingns.SomosTiendaMas.security.exception;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,52 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(TokenExpiradoException.class)
+    public ResponseEntity<?> manejarTokenExpirado(TokenExpiradoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Token expirado",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString()
+        ));
+    }
 
+    @ExceptionHandler(TokenYaUsadoException.class)
+    public ResponseEntity<?> manejarTokenYaUsado(TokenYaUsadoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Token usado",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString()
+        ));
+    }
+    
+    @ExceptionHandler(PasswordIgualAAnteriorException.class)
+    public ResponseEntity<?> handlePasswordIgualAAnterior(PasswordIgualAAnteriorException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Contraseña repetida",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now()
+        ));
+    }
+    
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String mensaje = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .findFirst()
+                .orElse("Error de validación.");
+        return ResponseEntity.badRequest().body(Map.of("message", mensaje));
+    }
+    
+    @ExceptionHandler(PasswordInvalidaException.class)
+    public ResponseEntity<?> manejarPasswordInvalida(PasswordInvalidaException ex) {
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(respuesta);
+    }
+    
     @ExceptionHandler(RefreshTokenException.class)
     public ResponseEntity<Map<String, Object>> handleRefreshTokenException(RefreshTokenException ex) {
         System.out.println(">>>>> Entró al handler de RefreshTokenException");
@@ -35,10 +81,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TokenNoEncontradoException.class)
-    public ResponseEntity<?> handleTokenNoEncontrado(TokenNoEncontradoException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", ex.getMessage()));
+    public ResponseEntity<?> manejarTokenNoEncontrado(TokenNoEncontradoException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+            "error", "Token no encontrado",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString()
+        ));
     }
-
+    
     @ExceptionHandler(PrincipalInvalidoException.class)
     public ResponseEntity<?> handlePrincipalInvalido(PrincipalInvalidoException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", ex.getMessage()));
@@ -48,7 +98,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> manejarPasswordIncorrecta(PasswordIncorrectaException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
             "error", "Contraseña incorrecta",
-            "mensaje", ex.getMessage(),
+            "message", ex.getMessage(),
             "timestamp", Instant.now().toString()
         ));
     }
@@ -57,7 +107,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> manejarUsernameNotFound(UsernameNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", "Usuario no encontrado",
-                "mensaje", ex.getMessage(),
+                "message", ex.getMessage(),
                 "timestamp", Instant.now().toString()
         ));
     }
@@ -66,7 +116,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> manejarAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                 "error", "Acceso denegado",
-                "mensaje", "No tenés permisos para acceder a este recurso.",
+                "message", "No tenés permisos para acceder a este recurso.",
                 "timestamp", Instant.now().toString()
         ));
     }
@@ -75,7 +125,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleUsuarioYaExisteException(UsuarioYaExisteException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "error", "Usuario duplicado",
-                "mensaje", ex.getMessage(),
+                "message", ex.getMessage(),
                 "timestamp", Instant.now().toString()
         ));
     }
@@ -84,20 +134,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleNotFoundException(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", "Recurso no encontrado",
-                "mensaje", ex.getMessage(),
-                "timestamp", Instant.now().toString()
-        ));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        StringBuilder errorMessage = new StringBuilder("Errores de validación: ");
-        ex.getBindingResult().getAllErrors().forEach(error ->
-            errorMessage.append(error.getDefaultMessage()).append(" ")
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                "error", "Validación fallida",
-                "mensaje", errorMessage.toString().trim(),
+                "message", ex.getMessage(),
                 "timestamp", Instant.now().toString()
         ));
     }
@@ -106,17 +143,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> manejarExcepcionesGenerales(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "Error interno",
-                "mensaje", ex.getMessage(),
+                "message", ex.getMessage(),
                 "timestamp", Instant.now().toString()
-        ));
-    }
-    
-    @ExceptionHandler(TokenResetPasswordInvalidoException.class)
-    public ResponseEntity<?> manejarTokenResetPasswordInvalido(TokenResetPasswordInvalidoException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-            "error", "Token inválido",
-            "mensaje", ex.getMessage(),
-            "timestamp", Instant.now().toString()
         ));
     }
     
@@ -143,7 +171,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> manejarAuthenticationException(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "error", "Autenticación fallida",
-                "mensaje", ex.getMessage(),
+                "message", ex.getMessage(),
                 "timestamp", Instant.now().toString()
         ));
     }

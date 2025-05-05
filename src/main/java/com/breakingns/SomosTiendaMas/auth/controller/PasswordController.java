@@ -5,9 +5,10 @@ import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
-import com.breakingns.SomosTiendaMas.auth.service.ResetPasswordService;
+import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,18 +24,19 @@ public class PasswordController {
     private final AuthService authService;
     private final UsuarioService usuarioService;
 
-    private final ResetPasswordService resetPasswordService;
+    private final PasswordResetService passwordResetService;
 
-    public PasswordController(AuthService authService, UsuarioService usuarioService, ResetPasswordService resetPasswordService) {
+    public PasswordController(AuthService authService, UsuarioService usuarioService, PasswordResetService passwordResetService) {
         this.authService = authService;
         this.usuarioService = usuarioService;
-        this.resetPasswordService = resetPasswordService;
+        this.passwordResetService = passwordResetService;
     }
     
     @PostMapping("/public/olvide-password")
-    public ResponseEntity<?> solicitarRecuperacionPassword(@RequestBody OlvidePasswordRequest request) {
+    public ResponseEntity<?> solicitarRecuperacionPassword(@Valid @RequestBody OlvidePasswordRequest request) {
         authService.solicitarRecuperacionPassword(request.email());
         return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
+
         /*
             Sugerencia mínima (no urgente):
             Podrías extraer la lógica del token a un PasswordResetService o 
@@ -45,7 +47,7 @@ public class PasswordController {
     
     @PostMapping("/public/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        resetPasswordService.resetearPassword(request.token(), request.nuevaPassword());
+        passwordResetService.resetearPassword(request.token(), request.nuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
@@ -53,8 +55,20 @@ public class PasswordController {
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest req, Authentication auth) {
         Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
-        usuarioService.changePassword(usuario, req.currentPassword(), req.newPassword());
+        passwordResetService.changePassword(usuario, req.currentPassword(), req.newPassword());
         return ResponseEntity.ok("Contraseña cambiada exitosamente.");
+    }
+    
+    @PostMapping("/public/generartokenexpirado") // SOLO PRUEBAS
+    public ResponseEntity<?> generarTokenExpirado(@Valid @RequestBody OlvidePasswordRequest request) {
+        authService.generarTokenExpirado(request.email());
+        return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
+    }
+    
+    @PostMapping("/public/generartokenusado") // SOLO PRUEBAS
+    public ResponseEntity<?> generarTokenUsado(@Valid @RequestBody OlvidePasswordRequest request) {
+        authService.generarTokenUsado(request.email());
+        return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
     }
     
 }
