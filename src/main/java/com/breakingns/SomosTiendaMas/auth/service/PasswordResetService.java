@@ -100,7 +100,7 @@ public class PasswordResetService {
         if (tokenEntity.isUsado()) {
             throw new TokenYaUsadoException("El token ya fue usado.");
         }
-        
+        /*
         // Validación de la contraseña nueva (por ejemplo, longitud mínima)
         if (nuevaPassword.length() < 6) { 
             throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
@@ -110,7 +110,7 @@ public class PasswordResetService {
         if (nuevaPassword.length() > 16) { 
             throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
         }
-        
+        */
         Usuario usuario = tokenEntity.getUsuario();
 
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));

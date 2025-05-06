@@ -46,14 +46,14 @@ public class PasswordController {
     }
     
     @PostMapping("/public/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetearPassword(request.token(), request.nuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
     @PostMapping("/private/change-password")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest req, Authentication auth) {
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest req, Authentication auth) {
         Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
         passwordResetService.changePassword(usuario, req.currentPassword(), req.newPassword());
         return ResponseEntity.ok("Contraseña cambiada exitosamente.");

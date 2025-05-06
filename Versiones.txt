@@ -129,3 +129,5 @@ hasPermission o similar). Asegúrate de que el acceso a recursos privados esté 
 generales como 'ROLE_ADMIN'.
 
 beta 0.1.4.3.1: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - AuthController verificado.
+
+beta 0.1.4.3.2: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - PasswordController verificado.
