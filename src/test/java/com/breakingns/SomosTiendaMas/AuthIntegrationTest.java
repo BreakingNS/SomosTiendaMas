@@ -8,7 +8,7 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
@@ -128,7 +128,7 @@ public class AuthIntegrationTest {
     private final JwtTokenProvider jwtTokenProvider;
     private final IUsuarioRepository usuarioRepository;
     private final SesionActivaService sesionActivaService;
-    private final UsuarioService usuarioService;
+    private final UsuarioServiceImpl usuarioService;
     private final PasswordEncoder passwordEncoder;
     private final RolService rolService;
     
@@ -524,5 +524,3 @@ public class AuthIntegrationTest {
     }
     
 }
-
-

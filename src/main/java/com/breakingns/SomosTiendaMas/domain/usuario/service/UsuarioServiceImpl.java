@@ -5,7 +5,12 @@ import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
+import com.breakingns.SomosTiendaMas.security.exception.ContrasenaVaciaException;
+import com.breakingns.SomosTiendaMas.security.exception.EmailInvalidoException;
+import com.breakingns.SomosTiendaMas.security.exception.EmailYaRegistradoException;
+import com.breakingns.SomosTiendaMas.security.exception.NombreUsuarioVacioException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
+import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
 import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioYaExisteException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
@@ -16,14 +21,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UsuarioService implements IUsuarioService{
+public class UsuarioServiceImpl implements IUsuarioService{
     
     private final CarritoService carritoService;
     private final RolService rolService;
     private final IUsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(CarritoService carritoService, RolService rolService, IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioServiceImpl(CarritoService carritoService, RolService rolService, IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.carritoService = carritoService;
         this.rolService = rolService;
         this.usuarioRepository = usuarioRepository;
@@ -40,16 +45,22 @@ public class UsuarioService implements IUsuarioService{
     @Override
     @Transactional
     public void registrarConRol(Usuario usuario, RolNombre rolNombre) {
+        
         if (usuario.getUsername() == null || usuario.getUsername().isBlank()) {
-            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío");
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede estar vacío");
         }
 
         if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
-            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+            throw new ContrasenaVaciaException("La contraseña no puede estar vacía");
         }
 
         if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
             throw new IllegalArgumentException("El correo electrónico no puede estar vacío");
+        }
+
+        // Validación de formato de correo electrónico
+        if (!usuario.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new EmailInvalidoException("El correo electrónico no tiene un formato válido");
         }
 
         if (existeUsuario(usuario.getUsername())) {
@@ -57,9 +68,23 @@ public class UsuarioService implements IUsuarioService{
         }
 
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new UsuarioYaExisteException("El correo electrónico ya está en uso");
+            throw new EmailYaRegistradoException("El correo electrónico ya está en uso");
         }
 
+        // Validación de la contraseña nueva (por ejemplo, longitud mínima)
+        if (usuario.getPassword().length() < 6) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        }
+        
+        // Validación de la contraseña nueva (por ejemplo, longitud maxima)
+        if (usuario.getPassword().length() > 16) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        }
+        
+        if (usuario.getUsername().equals("forzar-error")){ // SOLO PRUEBAS
+            throw new RuntimeException("Error interno en el servidor");
+        }
+        
         Rol rol = rolService.getByNombre(rolNombre)
                 .orElseThrow(() -> new RolNoEncontradoException("Error: Rol no encontrado."));
 
@@ -112,4 +137,6 @@ public class UsuarioService implements IUsuarioService{
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
 
+    
+    
 }

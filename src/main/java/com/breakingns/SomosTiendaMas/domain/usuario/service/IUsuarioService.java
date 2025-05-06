@@ -18,4 +18,6 @@ public interface IUsuarioService {
     
     void registrarSinRol(Usuario usuario); // SOLO PRUEBA, no produccion
     
+    
+    
 }

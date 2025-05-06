@@ -9,7 +9,7 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
@@ -135,7 +135,7 @@ public class AuthPasswordControllerSecurityTest {
     private final AuthController authController;
     
     private final SesionActivaService sesionActivaService;
-    private final UsuarioService usuarioService;
+    private final UsuarioServiceImpl usuarioService;
     private final RolService rolService;
     
     private final IUsuarioRepository usuarioRepository;

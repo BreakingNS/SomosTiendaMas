@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/registro")
 public class RegistroController {
     
-    private final UsuarioService usuarioService;
+    private final UsuarioServiceImpl usuarioService;
 
-    public RegistroController(UsuarioService usuarioService) {
+    public RegistroController(UsuarioServiceImpl usuarioService) {
         this.usuarioService = usuarioService;
     }
     
@@ -31,7 +31,7 @@ public class RegistroController {
         return ResponseEntity.ok("Usuario registrado correctamente");
     }
 
-    @PostMapping("/public/admin")
+    @PostMapping("/public/admin") // SOLO PRUEBA, no produccion
     public ResponseEntity<String> registerAdmin(@RequestBody Usuario usuario) {
         usuarioService.registrarConRol(usuario, RolNombre.ROLE_ADMIN);
         return ResponseEntity.ok("Administrador registrado correctamente");

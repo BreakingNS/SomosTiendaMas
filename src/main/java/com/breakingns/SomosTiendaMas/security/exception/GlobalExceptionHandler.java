@@ -18,6 +18,34 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
+        // Puedes personalizar el mensaje o estructura de la respuesta según lo que necesites
+        Map<String, String> response = new HashMap<>();
+        response.put("mensaje", ex.getMessage());  // Esto es lo que estás buscando
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    @ExceptionHandler(EmailInvalidoException.class)
+    public ResponseEntity<String> handleEmailInvalidoException(EmailInvalidoException e) {
+        return ResponseEntity.badRequest().body("{\"mensaje\": \"" + e.getMessage() + "\"}");
+    }
+
+    @ExceptionHandler(NombreUsuarioVacioException.class)
+    public ResponseEntity<String> handleNombreUsuarioVacioException(NombreUsuarioVacioException e) {
+        return ResponseEntity.badRequest().body("{\"mensaje\": \"" + e.getMessage() + "\"}");
+    }
+
+    @ExceptionHandler(ContrasenaVaciaException.class)
+    public ResponseEntity<String> handleContrasenaVaciaException(ContrasenaVaciaException e) {
+        return ResponseEntity.badRequest().body("{\"mensaje\": \"" + e.getMessage() + "\"}");
+    }
+
+    @ExceptionHandler(EmailYaRegistradoException.class)
+    public ResponseEntity<String> handleEmailYaRegistradoException(EmailYaRegistradoException e) {
+        return ResponseEntity.badRequest().body("{\"mensaje\": \"" + e.getMessage() + "\"}");
+    }
+    
     @ExceptionHandler(TokenExpiradoException.class)
     public ResponseEntity<?> manejarTokenExpirado(TokenExpiradoException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(

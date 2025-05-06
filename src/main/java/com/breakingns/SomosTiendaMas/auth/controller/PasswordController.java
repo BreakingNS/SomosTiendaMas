@@ -7,7 +7,7 @@ import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PasswordController {
     
     private final AuthService authService;
-    private final UsuarioService usuarioService;
+    private final UsuarioServiceImpl usuarioService;
 
     private final PasswordResetService passwordResetService;
 
-    public PasswordController(AuthService authService, UsuarioService usuarioService, PasswordResetService passwordResetService) {
+    public PasswordController(AuthService authService, UsuarioServiceImpl usuarioService, PasswordResetService passwordResetService) {
         this.authService = authService;
         this.usuarioService = usuarioService;
         this.passwordResetService = passwordResetService;
