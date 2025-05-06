@@ -47,6 +47,18 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
+    /*
+    @PostMapping("/private/logout")
+    //@PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("@permiso.puedeCerrarSesion(request, authorizationHeader)")
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
+                                    @RequestHeader("Authorization") String authorizationHeader) {
+        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
+        authService.logout(accessToken, request.refreshToken());
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+    */
+    
     @PostMapping("/private/logout")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
@@ -56,16 +68,6 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
     
-    /*
-    @PostMapping("/private/logout")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
-                                    @RequestHeader("Authorization") String authorizationHeader) {
-        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
-        authService.logout(accessToken, request.refreshToken());
-        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
-    }
-    */
     @PostMapping("/private/logout-total")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String authorizationHeader) {

@@ -122,3 +122,10 @@ Para los endpoints de refresh token, asegúrate de que la renovación de tokens 
 revocación o si el refresh token no está asociado a un usuario activo o válido. Para esto, podrías considerar mantener una lista 
 de tokens revocados.
 
+beta 0.1.4.3: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales (FALTA TEST).
+Ya estás usando @PreAuthorize para muchas rutas, lo cual es excelente. Sin embargo, en algunos casos, podrías agregar más 
+validaciones de acceso a nivel de servicio (por ejemplo, validando si el usuario tiene acceso al recurso específico con un 
+hasPermission o similar). Asegúrate de que el acceso a recursos privados esté perfectamente controlado, más allá de roles 
+generales como 'ROLE_ADMIN'.
+
+beta 0.1.4.3.1: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - AuthController verificado.

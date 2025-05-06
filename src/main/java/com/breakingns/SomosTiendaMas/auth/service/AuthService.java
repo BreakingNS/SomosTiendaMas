@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Slf4j
 @Service
@@ -88,6 +89,35 @@ public class AuthService {
     }
     
     public void logout(String accessToken, String refreshToken) {
+        // Extraer username desde el accessToken para identificar al usuario
+        String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);
+
+        // Buscar el usuario en la base de datos
+        Usuario usuario = usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        // Buscar el refreshToken en la base de datos
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+            .orElseThrow(() -> new TokenException("Refresh token no encontrado"));
+
+        // Verificar que el refreshToken pertenece al mismo usuario
+        if (!token.getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
+            throw new TokenException("El refresh token no pertenece al usuario autenticado");
+        }
+
+        // Verificar si el refreshToken está revocado
+        if (token.getRevocado()) {
+            throw new TokenException("Refresh token ya fue revocado o usado.");
+        }
+
+        // Revocar el refresh token, el access token y la sesión activa
+        refreshTokenService.logout(refreshToken); // Revocar refresh token
+        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
+        sesionActivaService.revocarSesion(accessToken); // Revocar sesión 
+    }
+    
+    /*
+    public void logout(String accessToken, String refreshToken) {
         RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
             .orElseThrow(() -> new TokenException("Refresh token no encontrado."));
 
@@ -98,18 +128,6 @@ public class AuthService {
         refreshTokenService.logout(refreshToken); // Revocar refresh token
         tokenEmitidoService.revocarToken(accessToken); // Revocar access token
         sesionActivaService.revocarSesion(accessToken); // Revocar sesion 
-    }
-    
-    /*
-    public void logout(String accessToken, String refreshToken) {
-        log.info("Logout solicitado. AccessToken parcial: {}..., RefreshToken parcial: {}...", 
-            accessToken.substring(0, 10), refreshToken.substring(0, 10));
-
-        refreshTokenService.logout(refreshToken); // Revocar refresh token
-        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
-        sesionActivaService.revocarSesion(accessToken); // Revocar sesion 
-        
-        log.info("Tokens y sesión revocados con éxito para logout.");
     }*/
     
     public void logoutTotal(String accessToken) {
