@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.security.config;
 
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
+import com.breakingns.SomosTiendaMas.auth.security.filter.OlvidePasswordRateLimitFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -49,7 +50,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+                                               JwtAuthenticationFilter jwtAuthenticationFilter,
+                                               OlvidePasswordRateLimitFilter rateLimitFilter) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -61,6 +63,7 @@ public class SecurityConfig {
                 .requestMatchers(RUTAS_PUBLICAS).permitAll()
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
