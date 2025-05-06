@@ -328,7 +328,8 @@ public class AuthIntegrationTest {
 
         mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+                .content(objectMapper.writeValueAsString(loginRequest))
+                .header("User-Agent", "JUnit-Test"))
             .andExpect(status().isUnauthorized()); // 401 esperado si no tiene roles
     }
     

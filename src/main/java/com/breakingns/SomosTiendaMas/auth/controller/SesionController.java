@@ -52,8 +52,10 @@ public class SesionController {
     
     @PostMapping("/private/logout-otras-sesiones")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> logoutOtrasSesiones(@RequestBody RefreshTokenRequest request,
-                                                  @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<?> logoutOtrasSesiones(
+        @RequestHeader("Authorization") String authorizationHeader,
+        @RequestHeader("Refresh-Token") String refreshTokenHeader) {
+        
         String accessToken = TokenUtils.extractTokenFromHeader(authorizationHeader);
         if (accessToken == null) {
             throw new TokenInvalidoException("Token faltante o mal formado");
@@ -64,7 +66,8 @@ public class SesionController {
         }
 
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
-        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, request.refreshToken());
+
+        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, refreshTokenHeader);
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }
     

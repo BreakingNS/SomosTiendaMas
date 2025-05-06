@@ -14,6 +14,7 @@ import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaExcept
 import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -130,5 +131,9 @@ public class SesionActivaService {
         List<SesionActiva> sesionesActivas = sesionActivaRepository.findAllByUsuario_IdUsuarioAndRevocadoFalse(idUsuario);
         
         return sesionesActivas.size();
+    }
+
+    public Optional<SesionActiva> buscarPorToken(String tokenAnterior) {
+        return sesionActivaRepository.findByToken(tokenAnterior);
     }
 }

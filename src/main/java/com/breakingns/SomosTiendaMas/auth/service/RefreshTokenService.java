@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
+import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -134,20 +135,26 @@ public class RefreshTokenService {
     @Transactional
     public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
         log.info("Llamando a refrescarTokens con token: {}", requestRefreshToken);
-        
+    
         String tokenAnterior = extraerAccessTokenDesdeHeader(request);
         Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior);
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado."));
 
+        // Verificar si el refresh token es válido (no expirado y no revocado)
         RefreshToken refreshToken = refreshTokenRepository.findByToken(requestRefreshToken)
                 .map(this::verificarExpiracion)
                 .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
 
+        SesionActiva sesion = sesionActivaService.buscarPorToken(tokenAnterior)
+                .orElseThrow(() -> new RefreshTokenException("No se encontró sesión para este token."));
+        
+        // Revocar tokens anteriores
         revocarTokensAnteriores(tokenAnterior, refreshToken);
-        
+
         log.info("Token de refresh usado: {}", refreshToken);
-        
+
+        // Generar y registrar los nuevos tokens
         return generarYRegistrarTokens(usuario, request);
     }
 

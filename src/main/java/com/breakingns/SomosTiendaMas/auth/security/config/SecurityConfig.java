@@ -63,8 +63,8 @@ public class SecurityConfig {
                 .requestMatchers(RUTAS_PUBLICAS).permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
             .build();
     }
 }

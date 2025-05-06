@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Slf4j
 @Service
@@ -37,17 +38,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         // Verificar si el usuario tiene roles asignados
         if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-            // Si el usuario no tiene roles, asignamos un rol predeterminado
-            log.warn("El usuario {} no tiene roles asignados, asignando ROLE_NONE", username);
-
-            // Asignamos un rol predeterminado
-            return new UserAuthDetails(
-                usuario.getIdUsuario(),
-                usuario.getUsername(),
-                usuario.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_NONE")), // Aquí asignamos un rol predeterminado
-                usuario
-            );
+            log.warn("El usuario {} no tiene roles asignados", username);
+            throw new BadCredentialsException("El usuario no tiene roles asignados");
         }
 
         // Si tiene roles, devolvemos el usuario con los roles asignados

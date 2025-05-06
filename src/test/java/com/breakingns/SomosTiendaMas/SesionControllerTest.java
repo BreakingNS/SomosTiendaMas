@@ -202,11 +202,11 @@ public class SesionControllerTest {
     void misSesionesActivas_sinRolAdecuado_deberiaRetornar4033() throws Exception {
         // Registrar y loguear un usuario sin roles
         registrarUsuarioSinRoles("sinrol", "000000", "sinrol@test.com");
-        AuthResponse auth = loginYGuardarDatos("sinrol", "000000");
 
-        mockMvc.perform(get("/api/sesiones/private/activas")
-                .header("Authorization", "Bearer " + auth.accessToken()))
-            .andExpect(status().isForbidden()); // 403
+        mockMvc.perform(post("/api/auth/public/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new LoginRequest("sinrol", "000000"))))
+            .andExpect(status().isUnauthorized()); // 401 esperado si no tiene roles
     }
     
     // 3) 
@@ -243,22 +243,20 @@ public class SesionControllerTest {
         AuthResponse otraSesion = loginYGuardarDatos("usuario", "123456");
 
         // Llamar al logout desde la sesión principal, pasando su refresh token
-        RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshUsuario);
-
         mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshRequest))
-                .header("Authorization", "Bearer " + tokenUsuario))
-            .andExpect(status().isOk())
-            .andExpect(content().string("Sesiones cerradas excepto la actual"));
+                .header("Authorization", "Bearer " + tokenUsuario) // Aquí el header con el token de acceso
+                .header("Refresh-Token", refreshUsuario)) // Agregar el header 'Refresh-Token' con el valor del refresh token
+                .andExpect(status().isOk())
+                .andExpect(content().string("Sesiones cerradas excepto la actual"));
 
         // Verificar que solo queda 1 sesión activa (la actual)
         mockMvc.perform(get("/api/sesiones/private/activas")
                 .header("Authorization", "Bearer " + tokenUsuario))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
     }
-    
+
     // 6) 
     @Test
     void logoutOtrasSesiones_tokenInvalido_deberiaLanzarExcepcion() throws Exception {
@@ -273,6 +271,7 @@ public class SesionControllerTest {
                 .header("Authorization", tokenInvalido))
             .andExpect(status().isUnauthorized()); // o .isForbidden(), según cómo manejes la TokenInvalidoException
     }
+    
     // 7) 
     @Test
     void logoutOtrasSesiones_tokenFaltanteOMalFormado_deberiaLanzarExcepcion() throws Exception {
@@ -288,16 +287,12 @@ public class SesionControllerTest {
     @Test
     void logoutOtrasSesiones_usuarioSinRolAdecuado_deberiaRetornar403() throws Exception {
         // Registrar un usuario sin rol
-        registrarUsuarioSinRoles("sinrol", "abcdef", "sinrol@test.com");
-        AuthResponse auth = loginYGuardarDatos("sinrol", "abcdef");
-
-        RefreshTokenRequest refreshRequest = new RefreshTokenRequest(auth.refreshToken());
-
-        mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
+        registrarUsuarioSinRoles("sinrol", "sinrol", "sinrol@test.com");
+        
+        mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshRequest))
-                .header("Authorization", "Bearer " + auth.accessToken()))
-            .andExpect(status().isForbidden()); // No tiene ROLE_USUARIO ni ROLE_ADMIN
+                .content(objectMapper.writeValueAsString(new LoginRequest("sinrol", "sinrol"))))
+            .andExpect(status().isUnauthorized()); // 401 esperado si no tiene roles
     }
     
 }
