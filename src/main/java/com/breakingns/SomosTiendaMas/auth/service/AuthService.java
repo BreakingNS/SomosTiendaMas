@@ -2,15 +2,20 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
+import com.breakingns.SomosTiendaMas.security.exception.TokenException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,10 +39,11 @@ public class AuthService {
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
+    private final IRefreshTokenRepository refreshTokenRepository;
 
     private final UsuarioUtils UsuarioUtils;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, UsuarioUtils UsuarioUtils) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
@@ -47,6 +53,7 @@ public class AuthService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.UsuarioUtils = UsuarioUtils;
     }
     
@@ -81,6 +88,20 @@ public class AuthService {
     }
     
     public void logout(String accessToken, String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+            .orElseThrow(() -> new TokenException("Refresh token no encontrado."));
+
+        if (token.getRevocado()) {
+            throw new TokenException("Refresh token ya fue revocado o usado.");
+        }
+
+        refreshTokenService.logout(refreshToken); // Revocar refresh token
+        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
+        sesionActivaService.revocarSesion(accessToken); // Revocar sesion 
+    }
+    
+    /*
+    public void logout(String accessToken, String refreshToken) {
         log.info("Logout solicitado. AccessToken parcial: {}..., RefreshToken parcial: {}...", 
             accessToken.substring(0, 10), refreshToken.substring(0, 10));
 
@@ -89,7 +110,7 @@ public class AuthService {
         sesionActivaService.revocarSesion(accessToken); // Revocar sesion 
         
         log.info("Tokens y sesión revocados con éxito para logout.");
-    }
+    }*/
     
     public void logoutTotal(String accessToken) {
         String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);

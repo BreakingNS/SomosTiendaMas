@@ -18,6 +18,16 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(TokenException.class)
+    public ResponseEntity<?> handleTokenException(TokenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+            "error", "Token Inválido",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now(),
+            "status", HttpStatus.FORBIDDEN.value()
+        ));
+    }
+    
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
         // Puedes personalizar el mensaje o estructura de la respuesta según lo que necesites

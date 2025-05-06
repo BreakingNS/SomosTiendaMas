@@ -108,3 +108,17 @@ beta 0.1.3.0: Pruebas y Tests: Test Unitario realizado y finalizado - RegisterCo
 beta 0.1.4.0: Pruebas y Tests: Test Unitario realizado y finalizado - SesionControllerTest.
 
 beta 0.1.4.1: Seguridad y Endpoints en los Controllers: Protección de los Endpoints de Recuperación de Contraseña (FALTA TEST).
+El endpoint /public/olvide-password y /public/reset-password deben tener medidas de seguridad adicionales para evitar abusos. 
+Aunque son públicos, sería bueno agregar un límite de intentos para evitar ataques de fuerza bruta (por ejemplo, bloquear un 
+email después de ciertos intentos fallidos o tener un límite de tiempo entre intentos).
+
+beta 0.1.4.2: Seguridad y Endpoints en los Controllers: Logout de Sesiones Activas (FALTA TEST).
+El endpoint /private/logout-otras-sesiones parece muy completo, pero podría ser útil añadir protección contra la manipulación 
+de tokens por un usuario malintencionado. En lugar de permitir que el token se pase en el cuerpo de la solicitud (@RequestBody), 
+podrías hacer que sea parte de los encabezados, que generalmente es más seguro.
+
+beta 0.1.4.3: Seguridad y Endpoints en los Controllers: Seguridad en la Gestión de Tokens (FALTA TEST). 
+Para los endpoints de refresh token, asegúrate de que la renovación de tokens no sea posible si el token está en una lista de 
+revocación o si el refresh token no está asociado a un usuario activo o válido. Para esto, podrías considerar mantener una lista 
+de tokens revocados.
+

@@ -92,7 +92,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
-    ),
+    )/*,
     @Sql(
         statements = {
             "DELETE FROM tokens_reset_password",
@@ -104,7 +104,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )
+    )*/
 })
 public class AuthIntegrationTest {
     

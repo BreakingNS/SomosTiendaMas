@@ -3,10 +3,14 @@ package com.breakingns.SomosTiendaMas.auth.controller;
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
+import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
+import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +27,12 @@ public class AuthController {
     private final AuthService authService;
     
     private final RefreshTokenService refreshTokenService;
+    private final IRefreshTokenRepository refreshTokenRepository;
 
-    public AuthController(AuthService authService, RefreshTokenService refreshTokenService) {
+    public AuthController(AuthService authService, RefreshTokenService refreshTokenService, IRefreshTokenRepository refreshTokenRepository) {
         this.authService = authService;
         this.refreshTokenService = refreshTokenService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
     
     @PostMapping("/public/login")
@@ -50,6 +56,16 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
     }
     
+    /*
+    @PostMapping("/private/logout")
+    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
+                                    @RequestHeader("Authorization") String authorizationHeader) {
+        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
+        authService.logout(accessToken, request.refreshToken());
+        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+    */
     @PostMapping("/private/logout-total")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logoutTotal(@RequestHeader("Authorization") String authorizationHeader) {

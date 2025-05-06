@@ -7,6 +7,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.PrincipalInvalidoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.security.core.Authentication;
@@ -41,6 +42,7 @@ public class TokenEmitidoService {
         tokenEmitidoRepository.save(nuevoToken);
     }
 
+    @Transactional
     public void revocarToken(String jwt) {
         log.info("Revocando token: {}", jwt);
         tokenEmitidoRepository.findByToken(jwt).ifPresent(tokenEmitido -> {

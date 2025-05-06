@@ -64,7 +64,8 @@ public class RefreshTokenService {
         RefreshToken refreshToken = buildRefreshToken(usuario, ip, userAgent);
         return refreshTokenRepository.save(refreshToken);
     }
-
+    
+    @Transactional
     public void logout(String token) {
         log.info("Logout individual para token: {}", token);
         
@@ -111,15 +112,21 @@ public class RefreshTokenService {
                 .filter(rt -> rt.getFechaExpiracion().isAfter(Instant.now()));
     }
 
-    public RefreshToken verificarExpiracion(RefreshToken token) {
-        if (token.getFechaExpiracion().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(token);
-            throw new RefreshTokenException("El refresh token ha expirado. Por favor, inicie sesión nuevamente.");
+    @Transactional
+    public RefreshToken verificarExpiracion(RefreshToken refreshToken) {
+        Instant ahora = Instant.now();
+
+        // Verificar si el token ha expirado
+        if (refreshToken.getFechaExpiracion().isBefore(ahora)) {
+            throw new RefreshTokenException("El refresh token ha expirado.");
         }
-        if (token.getRevocado() || token.getUsado()) {
-            throw new RefreshTokenException("El refresh token ya fue usado o revocado.");
+
+        // Verificar si el token ha sido revocado
+        if (refreshToken.getRevocado()) {
+            throw new RefreshTokenException("El refresh token ha sido revocado.");
         }
-        return token;
+
+        return refreshToken;
     }
 
     public RefreshToken guardar(RefreshToken refreshToken) {
