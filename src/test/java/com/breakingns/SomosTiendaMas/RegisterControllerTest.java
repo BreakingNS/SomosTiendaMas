@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas;
 
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
-import com.breakingns.SomosTiendaMas.auth.controller.RegistroController;
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -11,29 +10,19 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.IUsuarioService;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
-import org.mockito.Mockito;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 import lombok.RequiredArgsConstructor;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
@@ -41,8 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.SqlGroup;
-import org.springframework.test.web.servlet.MvcResult;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
 
 /*
                                             RegisterControllerTest
