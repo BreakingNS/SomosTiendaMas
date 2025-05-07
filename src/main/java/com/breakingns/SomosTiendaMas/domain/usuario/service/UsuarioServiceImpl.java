@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
+import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
@@ -41,7 +42,59 @@ public class UsuarioServiceImpl implements IUsuarioService{
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return usuarioRepository.save(usuario);
     }
+    
+    @Override
+    @Transactional
+    public void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, RolNombre rolNombre) {
+        if (dto.getUsername() == null || dto.getUsername().isBlank()) {
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede estar vacío");
+        }
 
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new ContrasenaVaciaException("La contraseña no puede estar vacía");
+        }
+
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío");
+        }
+
+        if (!dto.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new EmailInvalidoException("El correo electrónico no tiene un formato válido");
+        }
+
+        if (existeUsuario(dto.getUsername())) {
+            throw new UsuarioYaExisteException("El nombre de usuario ya está en uso");
+        }
+
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailYaRegistradoException("El correo electrónico ya está en uso");
+        }
+
+        if (dto.getPassword().length() < 6) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        }
+
+        if (dto.getPassword().length() > 16) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        }
+
+        if (dto.getUsername().equals("forzar-error")) {
+            throw new RuntimeException("Error interno en el servidor");
+        }
+
+        Rol rol = rolService.getByNombre(rolNombre)
+                .orElseThrow(() -> new RolNoEncontradoException("Error: Rol no encontrado."));
+
+        Usuario usuario = new Usuario();
+        usuario.setUsername(dto.getUsername());
+        usuario.setPassword(dto.getPassword()); // Asegurate que después se encripta
+        usuario.setEmail(dto.getEmail());
+        usuario.getRoles().add(rol);
+
+        registrar(usuario);
+        carritoService.crearCarrito(usuario.getIdUsuario());
+    }
+    
     @Override
     @Transactional
     public void registrarConRol(Usuario usuario, RolNombre rolNombre) {
@@ -137,6 +190,4 @@ public class UsuarioServiceImpl implements IUsuarioService{
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
 
-    
-    
 }

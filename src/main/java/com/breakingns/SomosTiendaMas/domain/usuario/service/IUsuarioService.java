@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
+import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import java.util.Optional;
@@ -18,6 +19,6 @@ public interface IUsuarioService {
     
     void registrarSinRol(Usuario usuario); // SOLO PRUEBA, no produccion
     
-    
+    void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, RolNombre rolNombre);
     
 }
