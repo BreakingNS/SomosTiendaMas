@@ -143,3 +143,5 @@ beta 0.1.4.3.4: Seguridad y Endpoints en los Controllers: Verificación de Permi
 		- beta 0.1.4.3.4.3.1: SesionController verificado - Endpoint private/logout-otras-sesiones - Verificación del accessToken y idUsuario.
 
 		- beta 0.1.4.3.4.3.2: SesionController verificado - Endpoint private/logout-otras-sesiones - Verificación en el servicio logoutTotalExceptoSesionActual.
+
+beta 0.1.4.4: Seguridad y Endpoints en los Controllers: Listo, finalizado. Siguiente paso Tests de Seguridad

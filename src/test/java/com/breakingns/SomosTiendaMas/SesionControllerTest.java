@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.SqlGroup;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 /*                                                  SesionControllerTest
 
@@ -285,7 +286,56 @@ public class SesionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
+    
+    // Verificar que si se intenta hacer logout sin el token de acceso, se devuelve un error
+    @Test
+    void logoutOtrasSesiones_deberiaRetornarErrorSiNoSeProporcionaToken() throws Exception {
+        // Llamar al logout sin enviar el token de acceso
+        mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Refresh-Token", refreshUsuario)) // Solo enviamos el refresh token
+                .andExpect(status().isUnauthorized()) // Debe devolver un 401 Unauthorized
+                .andExpect(jsonPath("$.error").value("Token inválido o expirado")) // Verificar el error en formato JSON
+                .andExpect(jsonPath("$.message").value("Token faltante o mal formado")); // O el mensaje relacionado
+    }
+    
+    // Verificar que si el token de acceso no coincide con la sesión actual, se lanza una excepción
+    @Test
+    void logoutOtrasSesiones_deberiaRetornarErrorSiTokenNoCoincideConSesionActual() throws Exception {
+        // Supón que tenemos un token incorrecto para otro usuario
+        String tokenIncorrecto = "incorrecto_token_de_acceso";
 
+        // Llamar al logout con un token incorrecto
+        mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + tokenIncorrecto) // Aquí pasamos un token incorrecto
+                .header("Refresh-Token", refreshUsuario))
+                .andExpect(status().isUnauthorized()) // El status esperado es 401 Unauthorized
+                .andExpect(jsonPath("$.message").value("Token inválido o expirado"));
+    }
+    
+    // Verificar que solo se revocan las sesiones y no los tokens activos para la sesión actual
+    @Test
+    void logoutOtrasSesiones_deberiaNoAfectarSesionActual() throws Exception {
+        // Iniciar otra sesión (segunda sesión activa)
+        loginYGuardarDatos("usuario", "123456");
+
+        // Llamar al logout desde la sesión principal, pasando su refresh token
+        mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + tokenUsuario) // Aquí el header con el token de acceso
+                .header("Refresh-Token", refreshUsuario)) // Agregar el header 'Refresh-Token' con el valor del refresh token
+                .andExpect(status().isOk())
+                .andExpect(content().string("Sesiones cerradas excepto la actual"));
+
+        // Verificar que la sesión actual no fue afectada
+        mockMvc.perform(get("/api/sesiones/private/activas")
+                .header("Authorization", "Bearer " + tokenUsuario)) // Usamos el mismo token de sesión
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1)) // Verificamos que solo quede la sesión actual
+                .andExpect(jsonPath("$[0].revocado").value(false)); // Verificar que la sesión activa no está revocada
+    }
+    
     // 6) 
     @Test
     void logoutOtrasSesiones_tokenInvalido_deberiaLanzarExcepcion() throws Exception {
