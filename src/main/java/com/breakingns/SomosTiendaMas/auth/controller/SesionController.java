@@ -67,6 +67,11 @@ public class SesionController {
 
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
 
+        // Verificar que el ID extraído del token corresponda al accessToken actual
+        if (!jwtTokenProvider.validarTokenPorId(accessToken, idUsuario)) {
+            throw new TokenInvalidoException("El token no corresponde a la sesión actual.");
+        }
+        
         authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, refreshTokenHeader);
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }

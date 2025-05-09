@@ -64,7 +64,7 @@ import org.springframework.test.context.jdbc.SqlGroup;
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
-    ),
+    )/*,
     @Sql(
         statements = {
             "DELETE FROM tokens_reset_password",
@@ -76,7 +76,7 @@ import org.springframework.test.context.jdbc.SqlGroup;
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )
+    )*/
 })
 public class SesionControllerTest {
     
@@ -266,8 +266,11 @@ public class SesionControllerTest {
     @Test
     void logoutOtrasSesiones_deberiaCerrarTodasMenosLaActual() throws Exception {
         // Iniciar otra sesión (segunda sesión activa)
-        AuthResponse otraSesion = loginYGuardarDatos("usuario", "123456");
+        loginYGuardarDatos("usuario", "123456");
 
+        System.out.println("token: " + tokenUsuario);
+        System.out.println("refresh: " + refreshUsuario);
+        
         // Llamar al logout desde la sesión principal, pasando su refresh token
         mockMvc.perform(post("/api/sesiones/private/logout-otras-sesiones")
                 .contentType(MediaType.APPLICATION_JSON)

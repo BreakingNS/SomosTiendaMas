@@ -21,9 +21,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -97,10 +99,19 @@ public class JwtTokenProvider {
 
     public boolean validarToken(String token) {
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token);
+            // Parsear el JWT
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            // Verificar si el token está expirado
+            Date expirationDate = claimsJws.getBody().getExpiration();
+            if (expirationDate.before(new Date())) {
+                logger.warn("Token expirado: {}", token);
+                return false;
+            }
+
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             logger.warn("Token inválido: {}", e.getMessage());
@@ -138,5 +149,30 @@ public class JwtTokenProvider {
 
     public long getJwtExpirationMs() {
         return jwtExpirationMs;
+    }
+
+    public boolean validarTokenPorId(String token, Long idUsuario) {
+        try {
+            // Verificar si el token es válido (sin expiración)
+            if (!validarToken(token)) {
+                return false;
+            }
+
+            // Extraer el ID del usuario del token
+            Long idDelToken = obtenerIdDesdeToken(token);
+
+            // Verificar si el ID extraído del token coincide con el ID proporcionado
+            return idDelToken.equals(idUsuario);
+        } catch (Exception e) {
+            // Manejar cualquier error en la validación
+            log.error("Error validando el token", e);
+            return false;
+        }
+    }
+    
+    public Long obtenerIdDesdeToken(String token) {
+        Claims claims = obtenerClaims(token); // Usa tu método que funciona correctamente
+        String sub = claims.getSubject();     // getSubject() es equivalente a claims.get("sub", String.class)
+        return Long.valueOf(sub);           // Conversión manual
     }
 }
