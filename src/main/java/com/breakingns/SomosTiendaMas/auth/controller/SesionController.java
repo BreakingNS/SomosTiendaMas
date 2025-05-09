@@ -47,7 +47,7 @@ public class SesionController {
     @GetMapping("/private/admin/activas")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
-        return sesionActivaService.listarSesionesActivas(idUsuario);
+        return sesionActivaService.listarSesionesActivasComoAdmin(idUsuario);
     }
     
     @PostMapping("/private/logout-otras-sesiones")

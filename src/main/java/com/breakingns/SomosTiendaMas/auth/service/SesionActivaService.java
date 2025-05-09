@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,29 +27,50 @@ import lombok.extern.slf4j.Slf4j;
 public class SesionActivaService {
 
     private final JwtTokenProvider jwtTokenProvider;
+    
+    private final TokenEmitidoService tokenEmitidoService;
+    
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final IRefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    public SesionActivaService(IUsuarioRepository usuarioRepository, 
-                               ISesionActivaRepository sesionActivaRepository, 
-                               ITokenEmitidoRepository tokenEmitidoRepository,
-                               IRefreshTokenRepository refreshTokenRepository,
-                               JwtTokenProvider jwtTokenProvider) {
+    public SesionActivaService(JwtTokenProvider jwtTokenProvider, TokenEmitidoService tokenEmitidoService, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, ITokenEmitidoRepository tokenEmitidoRepository, IRefreshTokenRepository refreshTokenRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.tokenEmitidoService = tokenEmitidoService;
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
     }
     
-    // Listar sesiones activas de un usuario
+    // Método actual reforzado: solo para uso normal de usuario autenticado
     public List<SesionActivaDTO> listarSesionesActivas(Long usuarioId) {
-        log.info("Por listar sesiones activas de user id: {}", usuarioId);
+        Long idAutenticado = tokenEmitidoService.obtenerIdDesdeToken();
+
+        if (!usuarioId.equals(idAutenticado)) {
+            throw new AccesoDenegadoException("No puedes ver sesiones de otro usuario.");
+        }
+
         return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
-            .filter(sesion -> !sesion.isRevocado()) // Filtrar solo las activas
+            .filter(s -> !s.isRevocado())
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
+    // Nuevo método exclusivo para ADMIN
+    public List<SesionActivaDTO> listarSesionesActivasComoAdmin(Long idUsuario) {
+        Stream<SesionActiva> sesiones;
+
+        if (idUsuario != null) {
+            sesiones = sesionActivaRepository.findByUsuario_IdUsuario(idUsuario).stream();
+        } else {
+            sesiones = sesionActivaRepository.findAll().stream();
+        }
+
+        return sesiones
+            .filter(s -> !s.isRevocado())
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }

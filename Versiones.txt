@@ -133,3 +133,5 @@ beta 0.1.4.3.1: Seguridad y Endpoints en los Controllers: Verificación de Permi
 beta 0.1.4.3.2: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - PasswordController verificado.
 
 beta 0.1.4.3.3: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - RegistroController verificado.
+
+beta 0.1.4.3.4: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - SesionController verificado.
