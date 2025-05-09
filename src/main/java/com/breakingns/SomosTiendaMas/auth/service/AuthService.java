@@ -13,6 +13,7 @@ import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
+import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -143,6 +144,10 @@ public class AuthService {
     
     public void logoutTotalExceptoSesionActual(Long idUsuario, String accessToken, String refresh){
         log.info("Logout total excepto sesión actual para usuario ID: {}", idUsuario);
+        
+        if (!tokenEmitidoService.validarSesionActual(accessToken, idUsuario)) {
+            throw new SesionNoValidaException("La sesión no es válida o ha sido manipulada.");
+        }
         
         // Revocar tolos los refresh token de este usuario
         refreshTokenService.logoutTotalExceptoSesionActual(idUsuario, refresh); //Listo

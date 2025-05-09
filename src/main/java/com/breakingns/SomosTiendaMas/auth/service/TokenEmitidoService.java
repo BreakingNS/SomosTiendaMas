@@ -3,11 +3,15 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import com.breakingns.SomosTiendaMas.auth.utils.RsaKeyUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.PrincipalInvalidoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
+import java.security.PublicKey;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.security.core.Authentication;
@@ -19,12 +23,19 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class TokenEmitidoService {
 
+    private final PublicKey publicKey;
+    
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final IUsuarioRepository usuarioRepository;
-
-    public TokenEmitidoService(ITokenEmitidoRepository tokenEmitidoRepository, IUsuarioRepository usuarioRepository) {
+    
+    public TokenEmitidoService(
+            ITokenEmitidoRepository tokenEmitidoRepository, 
+            IUsuarioRepository usuarioRepository, 
+            RsaKeyUtil rsaKeyUtil
+    ) throws Exception {
         this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.publicKey = rsaKeyUtil.loadPublicKey("src/main/resources/keys/public.pem");
     }
 
     public void guardarToken(String token, Instant fechaExpiracion, String username) {
@@ -85,5 +96,23 @@ public class TokenEmitidoService {
         } else {
             throw new PrincipalInvalidoException("Principal no es instancia de UserAuthDetails");
         }
+    }
+    
+    public boolean validarSesionActual(String token, Long idUsuario) {
+        try {
+            Claims claims = obtenerClaims(token);
+            String sub = claims.getSubject(); // el ID fue guardado como String
+            return sub != null && sub.equals(idUsuario.toString());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    private Claims obtenerClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(publicKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

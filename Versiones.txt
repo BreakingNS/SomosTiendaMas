@@ -135,3 +135,11 @@ beta 0.1.4.3.2: Seguridad y Endpoints en los Controllers: Verificación de Permi
 beta 0.1.4.3.3: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - RegistroController verificado.
 
 beta 0.1.4.3.4: Seguridad y Endpoints en los Controllers: Verificación de Permisos Adicionales - SesionController verificado.
+
+	- beta 0.1.4.3.4.1: Verificación de Permisos Adicionales - SesionController verificado - Endpoint private/activas verficado.
+
+	- beta 0.1.4.3.4.2: Verificación de Permisos Adicionales - SesionController verificado - Endpoint private/admin/activas verficado.
+
+		- beta 0.1.4.3.4.3.1: SesionController verificado - Endpoint private/logout-otras-sesiones - Verificación del accessToken y idUsuario.
+
+		- beta 0.1.4.3.4.3.2: SesionController verificado - Endpoint private/logout-otras-sesiones - Verificación en el servicio logoutTotalExceptoSesionActual.

@@ -18,6 +18,11 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(SesionNoValidaException.class)
+    public ResponseEntity<String> manejarSesionNoValidaException(SesionNoValidaException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+    
     @ExceptionHandler(SesionActivaNoEncontradaException.class)
     public ResponseEntity<String> manejarSesionActivaNoEncontradaException(SesionActivaNoEncontradaException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
