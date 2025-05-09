@@ -226,8 +226,34 @@ public class SesionControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray());
-    }
+
+        // Caso donde el usuario no existe
+        mockMvc.perform(get("/api/sesiones/private/admin/activas")
+                .param("idUsuario", "9999")
+                .header("Authorization", "Bearer " + tokenAdmin))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.mensaje").value("El usuario con ID 9999 no existe"));
+    }   
     
+    /*
+    @Test
+    void listarSesionesActivas_adminPuedeVerTodasLasSesiones() throws Exception {
+        // Sin idUsuario (debería devolver todas las sesiones activas existentes)
+        mockMvc.perform(get("/api/sesiones/private/admin/activas")
+                .header("Authorization", "Bearer " + tokenAdmin))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray());
+
+        // Con idUsuario (debería devolver solo las sesiones del usuario especificado)
+        mockMvc.perform(get("/api/sesiones/private/admin/activas")
+                .param("idUsuario", idUsuario.toString())
+                .header("Authorization", "Bearer " + tokenAdmin))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray());
+    }
+    */
     // 4) 
     @Test
     void listarSesionesActivas_usuarioSinRolAdmin_deberiaRetornar403() throws Exception {

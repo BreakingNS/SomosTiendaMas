@@ -18,6 +18,11 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(SesionActivaNoEncontradaException.class)
+    public ResponseEntity<String> manejarSesionActivaNoEncontradaException(SesionActivaNoEncontradaException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+    
     @ExceptionHandler(TokenException.class)
     public ResponseEntity<?> handleTokenException(TokenException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
@@ -115,7 +120,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(UsuarioNoEncontradoException.class)
     public ResponseEntity<?> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensaje", ex.getMessage()));
     }
 
     @ExceptionHandler(TokenNoEncontradoException.class)

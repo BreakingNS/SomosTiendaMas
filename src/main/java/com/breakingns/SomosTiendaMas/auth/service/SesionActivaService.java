@@ -10,8 +10,10 @@ import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.AccesoDenegadoException;
+import com.breakingns.SomosTiendaMas.security.exception.SesionActivaNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -61,16 +63,29 @@ public class SesionActivaService {
 
     // Nuevo método exclusivo para ADMIN
     public List<SesionActivaDTO> listarSesionesActivasComoAdmin(Long idUsuario) {
-        Stream<SesionActiva> sesiones;
-
-        if (idUsuario != null) {
-            sesiones = sesionActivaRepository.findByUsuario_IdUsuario(idUsuario).stream();
-        } else {
-            sesiones = sesionActivaRepository.findAll().stream();
+        // Si idUsuario es null, devolvemos todas las sesiones activas
+        if (idUsuario == null) {
+            return sesionActivaRepository.findAll().stream()
+                .filter(sesion -> !sesion.isRevocado())
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
         }
 
-        return sesiones
-            .filter(s -> !s.isRevocado())
+        // Validamos que el usuario exista
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario con ID " + idUsuario + " no existe"));
+
+        // Si el usuario existe, buscamos sus sesiones activas
+        List<SesionActiva> sesionesActivas = sesionActivaRepository.findByUsuario_IdUsuario(idUsuario)
+            .stream()
+            .filter(sesion -> !sesion.isRevocado())
+            .collect(Collectors.toList());
+
+        if (sesionesActivas.isEmpty()) {
+            throw new SesionActivaNoEncontradaException("No hay sesiones activas para el usuario con ID " + idUsuario);
+        }
+
+        return sesionesActivas.stream()
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
