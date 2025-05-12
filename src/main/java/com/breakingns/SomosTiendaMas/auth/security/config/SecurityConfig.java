@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.security.config;
 
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import static com.breakingns.SomosTiendaMas.auth.security.config.PublicRoutes.RUTAS_PUBLICAS;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.filter.OlvidePasswordRateLimitFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -18,15 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-
-    private static final String[] RUTAS_PUBLICAS = {
-        "/api/auth/public/**",
-        "/api/password/public/**",
-        "/api/registro/public/**",
-        "/api/sesiones/public/**",
-        "/test/**" //SOLO PRUEBAS
-        // puedes agregar más rutas públicas aquí
-    };
 
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint cCustomAuthenticationEntryPoint;

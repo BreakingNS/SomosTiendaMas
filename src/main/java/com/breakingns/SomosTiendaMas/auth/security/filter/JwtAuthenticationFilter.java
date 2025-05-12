@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.security.filter;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import static com.breakingns.SomosTiendaMas.auth.security.config.PublicRoutes.RUTAS_PUBLICAS;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.utils.JwtAuthUtil;
@@ -43,15 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsService;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-    // Rutas públicas
-    private static final List<String> RUTAS_PUBLICAS = List.of(
-            "/api/auth/public/**",
-            "/api/password/public/**",
-            "/api/registro/public/**",
-            "/api/sesiones/public/**",
-            "/test/**" //SOLO PRUEBAS
-    );
 
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
                                    UserDetailsServiceImpl userDetailsService,
