@@ -15,6 +15,8 @@ import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepositor
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenException;
+import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
+import com.breakingns.SomosTiendaMas.security.rate.RateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.List;
@@ -37,6 +39,7 @@ public class AuthService {
     private final TokenEmitidoService tokenEmitidoService;
     private final SesionActivaService sesionActivaService;
     private final PasswordResetService passwordResetService;
+    private final RateLimiterService rateLimiterService;
     
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUsuarioRepository usuarioRepository;
@@ -45,13 +48,14 @@ public class AuthService {
 
     private final UsuarioUtils UsuarioUtils;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, RateLimiterService rateLimiterService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
         this.tokenEmitidoService = tokenEmitidoService;
         this.sesionActivaService = sesionActivaService;
         this.passwordResetService = passwordResetService;
+        this.rateLimiterService = rateLimiterService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
@@ -161,7 +165,13 @@ public class AuthService {
         log.info("Logout parcial (excepto sesión actual) completado para usuario ID: {}", idUsuario);
     }
     
-    public void solicitarRecuperacionPassword(String email) {
+    public void solicitarRecuperacionPassword(String email, HttpServletRequest request) {
+        String key = email.toLowerCase(); // o podrías usar IP: RequestUtil.obtenerIpCliente(request)
+
+        if (rateLimiterService.isBlocked(key)) {
+            throw new TooManyRequestsException("Demasiadas solicitudes, intenta más tarde.");
+        }
+        
         log.info("Solicitud de recuperación de contraseña para email: {}", email);
         passwordResetService.solicitarRecuperacionPassword(email);
         log.info("Token de recuperación enviado si el email existe.");

@@ -13,7 +13,7 @@ public class RateLimiterService {
     private final Map<String, List<Instant>> attempts = new ConcurrentHashMap<>();
 
     private final int MAX_ATTEMPTS = 5;
-    private final Duration WINDOW = Duration.ofMinutes(15);
+    private final Duration WINDOW = Duration.ofMinutes(1);
 
     public boolean isBlocked(String key) {
         List<Instant> timestamps = attempts.getOrDefault(key, new ArrayList<>());

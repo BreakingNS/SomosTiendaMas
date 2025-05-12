@@ -58,6 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            
             String path = request.getRequestURI();
             System.out.println("🔍 JwtAuthFilter - Request URI: " + path);
 
@@ -72,7 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
             }
-
+            
             String header = request.getHeader("Authorization");
             if (header == null || !header.startsWith("Bearer ")) {
                 JwtAuthUtil.noAutenticado(response, "Token faltante o mal formado");

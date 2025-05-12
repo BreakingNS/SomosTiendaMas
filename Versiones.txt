@@ -153,7 +153,7 @@ beta 0.1.4.4: Seguridad y Endpoints en los Controllers: Listo, finalizado. Sigui
 
 beta 0.1.4.5: Implementacion de la clase PublicRoutes (Rutas Publicas como clase compartida).
 
-
+beta 0.1.4.6: Tests de Seguridad - Pruebas de Límite de Intentos para Contraseña: Implementado en memoria.
 
 
 

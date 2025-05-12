@@ -238,6 +238,64 @@ public class AuthPasswordControllerSecurityTest {
         return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
     }
     
+    // Simular múltiples intentos fallidos:
+    @Test
+    public void testLimiteIntentosFallidosOlvidePassword() throws Exception {
+        
+        OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste@noexiste.com"); // sin @, sin dominio
+
+        // Intentos fallidos (simulamos que el código es incorrecto)
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/password/public/olvide-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+        }
+
+        // El sexto intento debería devolver un error de "Too Many Requests" (429)
+        
+        mockMvc.perform(post("/api/password/public/olvide-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.error").value("Demasiadas solicitudes, intenta más tarde."));
+    }
+    
+    // Simular un bloqueo y esperar el reseteo:
+    @Test
+    public void testReseteoIntentosFallidos() throws Exception {
+        OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste@noexiste.com"); // sin @, sin dominio
+
+        // Realizar 5 intentos fallidos
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(post("/api/password/public/olvide-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+        }
+
+        // Intento de sexto acceso debe fallar con código 429
+        mockMvc.perform(post("/api/password/public/olvide-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.error").value("Demasiadas solicitudes, intenta más tarde."));
+
+        // Esperar a que el sistema resetee los intentos (simulamos el paso de tiempo)
+        Thread.sleep(60000);  // Simula espera de 1 minuto (ajusta según el tiempo real de reseteo)
+
+        // Verificar que el usuario puede volver a intentarlo después del reset
+        mockMvc.perform(post("/api/password/public/olvide-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+
+    }
+    
+    
     //                                      /public/olvide-password
     // 1) Solicitud válida sin autenticación
     @Test

@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.ChangePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.EmailRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
@@ -8,7 +9,9 @@ import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -33,17 +36,24 @@ public class PasswordController {
     }
     
     @PostMapping("/public/olvide-password")
+    public ResponseEntity<?> solicitarRecuperacionPassword(@Valid @RequestBody EmailRequest emailRequest, HttpServletRequest request) {
+        authService.solicitarRecuperacionPassword(emailRequest.email(), request);
+        return ResponseEntity.ok(Map.of("message", "Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+    }
+        
+    /*
+    @PostMapping("/public/olvide-password")
     public ResponseEntity<?> solicitarRecuperacionPassword(@Valid @RequestBody OlvidePasswordRequest request) {
         authService.solicitarRecuperacionPassword(request.email());
-        return ResponseEntity.ok("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña.");
-
+        return ResponseEntity.ok(Map.of("message", "Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+        */
         /*
             Sugerencia mínima (no urgente):
             Podrías extraer la lógica del token a un PasswordResetService o 
             TokenResetService si querés dejar el AuthService más limpio, pero 
             no es necesario ahora.
         */
-    }
+    //}
     
     @PostMapping("/public/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {

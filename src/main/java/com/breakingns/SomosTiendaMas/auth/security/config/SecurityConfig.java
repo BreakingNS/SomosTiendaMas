@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.security.config;
 
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import static com.breakingns.SomosTiendaMas.auth.security.config.PublicRoutes.RUTAS_PUBLICAS;
 import com.breakingns.SomosTiendaMas.auth.security.filter.JwtAuthenticationFilter;
 import com.breakingns.SomosTiendaMas.auth.security.filter.OlvidePasswordRateLimitFilter;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -52,7 +51,7 @@ public class SecurityConfig {
                 .accessDeniedHandler(customAccessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(RUTAS_PUBLICAS).permitAll()
+                .requestMatchers(PublicRoutes.RUTAS_PUBLICAS).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

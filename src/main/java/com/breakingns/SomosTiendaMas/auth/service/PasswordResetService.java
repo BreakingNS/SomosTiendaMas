@@ -33,7 +33,29 @@ public class PasswordResetService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
     }
+    
+    public void solicitarRecuperacionPassword(String email) {
+        log.info("Buscando usuario con email: {}", email);
 
+        // Aquí evitamos loggear si el usuario existe o no
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isPresent()) {
+            String token = UUID.randomUUID().toString();
+            TokenResetPassword tokenReset = new TokenResetPassword();
+            tokenReset.setToken(token);
+            tokenReset.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES));
+            tokenReset.setUsado(false);
+            tokenReset.setUsuario(usuarioOpt.get());
+            passwordResetTokenRepository.save(tokenReset);
+            // Envía el token por correo o en alguna otra parte del flujo.
+            log.info("Token de recuperación generado.");
+        }
+
+        // Siempre responder OK aunque no exista, por seguridad
+        // No indicar si el email existe o no para evitar ataques de enumeración
+    }
+    
+    /*
     // Solicitar recuperación de contraseña
     public void solicitarRecuperacionPassword(String email) {
         log.info("Buscando usuario con email: {}", email);
@@ -52,7 +74,7 @@ public class PasswordResetService {
         });
 
         // Siempre responder OK aunque no exista, por seguridad
-    }
+    }*/
 
     public void changePassword(Usuario usuario, String currentPassword, String newPassword) {
         // Verificación de contraseña actual
