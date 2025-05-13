@@ -18,6 +18,24 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<?> manejarUsuarioBloqueado(UsuarioBloqueadoException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "TOO_MANY_REQUESTS");
+        body.put("mensaje", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
+    }
+    
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<?> manejarCredencialesInvalidas(CredencialesInvalidasException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "UNAUTHORIZED");
+        body.put("mensaje", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+    
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<Map<String, String>> handleTooManyRequests(TooManyRequestsException ex) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)

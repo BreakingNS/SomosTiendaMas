@@ -63,6 +63,7 @@ import org.springframework.test.context.jdbc.SqlGroup;
 @SqlGroup({
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
@@ -75,6 +76,7 @@ import org.springframework.test.context.jdbc.SqlGroup;
     ),
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",

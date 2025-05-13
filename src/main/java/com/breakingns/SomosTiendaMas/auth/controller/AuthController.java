@@ -1,17 +1,23 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
+import com.breakingns.SomosTiendaMas.auth.dto.EmailRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
+import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
+import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
+import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,11 +34,15 @@ public class AuthController {
     
     private final RefreshTokenService refreshTokenService;
     private final IRefreshTokenRepository refreshTokenRepository;
+    private final IUsuarioRepository usuarioRepository;
+    private final LoginAttemptService loginAttemptService;
 
-    public AuthController(AuthService authService, RefreshTokenService refreshTokenService, IRefreshTokenRepository refreshTokenRepository) {
+    public AuthController(AuthService authService, RefreshTokenService refreshTokenService, IRefreshTokenRepository refreshTokenRepository, IUsuarioRepository usuarioRepository, LoginAttemptService loginAttemptService) {
         this.authService = authService;
         this.refreshTokenService = refreshTokenService;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.loginAttemptService = loginAttemptService;
     }
     
     @PostMapping("/public/login")

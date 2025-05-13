@@ -3,7 +3,6 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
@@ -12,20 +11,21 @@ import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
+import com.breakingns.SomosTiendaMas.security.exception.CredencialesInvalidasException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenException;
 import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
-import com.breakingns.SomosTiendaMas.security.rate.RateLimiterService;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioBloqueadoException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
-import java.util.List;
+import jakarta.transaction.Transactional;
+import java.util.Optional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Slf4j
@@ -39,7 +39,8 @@ public class AuthService {
     private final TokenEmitidoService tokenEmitidoService;
     private final SesionActivaService sesionActivaService;
     private final PasswordResetService passwordResetService;
-    private final RateLimiterService rateLimiterService;
+    //private final RateLimiterService rateLimiterService;
+    private final LoginAttemptService loginAttemptService;
     
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUsuarioRepository usuarioRepository;
@@ -48,14 +49,14 @@ public class AuthService {
 
     private final UsuarioUtils UsuarioUtils;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, RateLimiterService rateLimiterService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, LoginAttemptService loginAttemptService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
         this.tokenEmitidoService = tokenEmitidoService;
         this.sesionActivaService = sesionActivaService;
         this.passwordResetService = passwordResetService;
-        this.rateLimiterService = rateLimiterService;
+        this.loginAttemptService = loginAttemptService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
@@ -68,12 +69,61 @@ public class AuthService {
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         log.info("Intento de login para usuario: {}", loginRequest.username());
         
+        if (loginAttemptService.isBlocked(loginRequest.username(), RequestUtil.obtenerIpCliente(request))) {
+            throw new UsuarioBloqueadoException("Usuario temporalmente bloqueado por múltiples intentos fallidos.");
+        }
+        
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.username(), loginRequest.password()
+                )
+            );
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+            String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
+
+            Usuario usuario = UsuarioUtils.findByUsername(loginRequest.username());
+
+            String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
+
+            // Extraer IP y user-agent con helper
+            String ip = RequestUtil.obtenerIpCliente(request);
+            String userAgent = request.getHeader("User-Agent");
+
+            // Crear sesión activa con servicio dedicado
+            sesionActivaService.registrarSesion(usuario, accessToken, ip, userAgent);
+
+            loginAttemptService.loginSucceeded(loginRequest.username(), ip);
+
+            log.info("Login exitoso. Access token emitido para usuario: {}", usuario.getUsername());
+            log.info("IP: {}, User-Agent: {}", ip, userAgent);
+
+            return new AuthResponse(accessToken, refreshToken);
+        } catch (AuthenticationException ex) {
+            String ip = RequestUtil.obtenerIpCliente(request);
+            loginAttemptService.loginFailed(loginRequest.username(), ip);
+            throw new CredencialesInvalidasException("Credenciales inválidas");
+        }
+    }
+    
+    /*
+    public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
+        log.info("Intento de login para usuario: {}", loginRequest.username());
+        
+        if (loginAttemptService.isBlocked(loginRequest.username(), RequestUtil.obtenerIpCliente(request))) {
+            throw new RuntimeException("Usuario temporalmente bloqueado por múltiples intentos fallidos.");
+        }
+        
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 loginRequest.username(), loginRequest.password()
             )
         );
+        
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        
         String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
 
         Usuario usuario = UsuarioUtils.findByUsername(loginRequest.username());
@@ -87,11 +137,13 @@ public class AuthService {
         // Crear sesión activa con servicio dedicado
         sesionActivaService.registrarSesion(usuario, accessToken, ip, userAgent);
 
+        loginAttemptService.loginSucceeded(loginRequest.username(), ip);
+        
         log.info("Login exitoso. Access token emitido para usuario: {}", usuario.getUsername());
         log.info("IP: {}, User-Agent: {}", ip, userAgent);
         
         return new AuthResponse(accessToken, refreshToken);
-    }
+    }*/
     
     public void logout(String accessToken, String refreshToken) {
         // Extraer username desde el accessToken para identificar al usuario
@@ -165,10 +217,26 @@ public class AuthService {
         log.info("Logout parcial (excepto sesión actual) completado para usuario ID: {}", idUsuario);
     }
     
-    public void solicitarRecuperacionPassword(String email, HttpServletRequest request) {
-        String key = email.toLowerCase(); // o podrías usar IP: RequestUtil.obtenerIpCliente(request)
+    @Transactional
+    public void procesarSolicitudOlvidePassword(String email, String ip, HttpServletRequest request) {
+        if (loginAttemptService.isBlocked(email, ip)) {
+            throw new TooManyRequestsException("Demasiadas solicitudes, intenta más tarde.");
+        }
 
-        if (rateLimiterService.isBlocked(key)) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isPresent()) {
+            passwordResetService.solicitarRecuperacionPassword(email); // lógica de envío de email, tokens, etc.
+        } else {
+            loginAttemptService.loginFailed(null, ip);
+        }
+    }
+    
+    /*
+    public void solicitarRecuperacionPassword(String email, HttpServletRequest request) {
+        //String key = email.toLowerCase(); // o podrías usar IP: RequestUtil.obtenerIpCliente(request)
+        String ip = RequestUtil.obtenerIpCliente(request);
+        
+        if (loginAttemptService.isBlocked(email, ip)) {
             throw new TooManyRequestsException("Demasiadas solicitudes, intenta más tarde.");
         }
         
@@ -176,14 +244,14 @@ public class AuthService {
         passwordResetService.solicitarRecuperacionPassword(email);
         log.info("Token de recuperación enviado si el email existe.");
         // Siempre devolver OK aunque no exista (por seguridad).
-        
+        */
         /*
             Sugerencia mínima (no urgente):
             Podrías extraer la lógica del token a un PasswordResetService o 
             TokenResetService si querés dejar el AuthService más limpio, pero 
             no es necesario ahora.
         */
-    }
+    //}
     
     public Integer numeroSesionesActivas(Long idUsuario){ // SOLO PRUEBAS, no produccion
         return sesionActivaService.numeroSesionesActivas(idUsuario);

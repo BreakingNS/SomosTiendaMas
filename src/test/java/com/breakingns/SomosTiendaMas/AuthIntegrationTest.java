@@ -83,6 +83,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @SqlGroup({
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
@@ -92,9 +93,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
-    )/*,
+    ),
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
@@ -104,7 +106,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )*/
+    )
 })
 public class AuthIntegrationTest {
     
@@ -215,8 +217,6 @@ public class AuthIntegrationTest {
         return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
     }
 
-    
-    
     // Verifica que un usuario cuando se registra, si existe en la BD
     @Test
     void registroUsuario_deberiaCrearUsuario() throws Exception {

@@ -155,9 +155,7 @@ beta 0.1.4.5: Implementacion de la clase PublicRoutes (Rutas Publicas como clase
 
 beta 0.1.4.6: Tests de Seguridad - Pruebas de Límite de Intentos para Contraseña: Implementado en memoria.
 
-
-
-
+beta 0.1.4.7: Tests de Seguridad - Pruebas de Límite de Intentos para Contraseña: Persistido en Base de Datos (FALTA MEJORA).
 
 
 

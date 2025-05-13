@@ -56,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @SqlGroup({
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
@@ -65,9 +66,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
-    )/*,
+    ),
     @Sql(
         statements = {
+            "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
@@ -77,7 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
-    )*/
+    )
 })
 public class SesionControllerTest {
     
@@ -200,7 +202,7 @@ public class SesionControllerTest {
     
     // 2) 
     @Test
-    void misSesionesActivas_sinRolAdecuado_deberiaRetornar4033() throws Exception {
+    void misSesionesActivas_sinRolAdecuado_deberiaRetornar403() throws Exception {
         // Registrar y loguear un usuario sin roles
         registrarUsuarioSinRoles("sinrol", "000000", "sinrol@test.com");
 
