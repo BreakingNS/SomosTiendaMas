@@ -157,7 +157,13 @@ beta 0.1.4.6: Tests de Seguridad - Pruebas de Límite de Intentos para Contrase�
 
 beta 0.1.4.7: Tests de Seguridad - Pruebas de Límite de Intentos para Contraseña: Persistido en Base de Datos (FALTA MEJORA).
 
+beta 0.1.4.8: Implementacion de limite de acceso a endpoints por ataque de fuerza bruta 1 (FALTAN TESTS).
+	/api/auth/public/login
+	/api/password/public/olvide-password
+	/api/registro/public/usuario
 
+
+	
 
 
 

@@ -19,62 +19,62 @@ public class LoginAttemptService {
 
     private static final int MAX_ATTEMPTS = 5;
     private static final long INITIAL_BLOCK_MINUTES = 1;
-    
+
     private final Clock clock;
-    
     private final LoginAttemptRepository loginAttemptRepository;
     private final IUsuarioRepository usuarioRepository;
 
     @Autowired
-    public LoginAttemptService(Clock clock, 
-            LoginAttemptRepository loginAttemptRepository,
-            IUsuarioRepository usuarioRepository) {
+    public LoginAttemptService(Clock clock,
+                                LoginAttemptRepository loginAttemptRepository,
+                                IUsuarioRepository usuarioRepository) {
         this.clock = clock;
         this.loginAttemptRepository = loginAttemptRepository;
         this.usuarioRepository = usuarioRepository;
     }
-    /*
-    public boolean isBlocked(String email, String ip) {
-        Optional<LoginAttempt> attemptOpt = loginAttemptRepository.findByUsernameAndIp(email, ip);
 
-        return attemptOpt
-                .map(attempt -> attempt.getBlockedUntil() != null && attempt.getBlockedUntil().isAfter(LocalDateTime.now()))
-                .orElse(false);
-    }*/
-    
+    // * Verifica si un identificador (username o email) e IP están actualmente bloqueados.
+     
     public boolean isBlocked(String identifier, String ip) {
-        // Si el identificador es un email...
+        if (identifier == null || identifier.isBlank()) {
+            return false; // No bloqueamos si no hay identificador válido
+        }
+
+        // Si el identificador es un email
         if (identifier.contains("@")) {
-            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(identifier);
-            if (usuarioOpt.isPresent()) {
-                String username = usuarioOpt.get().getUsername();
-                return isBlockedByUsername(username, ip);
-            } else {
-                // Intentar bloquear solo por IP si el email no existe
-                return isBlockedByUsername(null, ip); // Usa null como username
-            }
+            return usuarioRepository.findByEmail(identifier)
+                    .map(Usuario::getUsername)
+                    .map(username -> isBlockedByUsername(username, ip))
+                    .orElseGet(() -> isBlockedByUsername(null, ip)); // Email inexistente: bloqueo solo por IP
         } else {
             return isBlockedByUsername(identifier, ip);
         }
     }
 
+    // * Verifica si un par usuario-IP o solo IP está bloqueado.
+    
     private boolean isBlockedByUsername(String username, String ip) {
-        Optional<LoginAttempt> attemptOpt;
-        if (username == null) {
-            attemptOpt = loginAttemptRepository.findByUsernameIsNullAndIp(ip);
-        } else {
-            attemptOpt = loginAttemptRepository.findByUsernameAndIp(username, ip);
-        }
+        Optional<LoginAttempt> attemptOpt = (username == null)
+                ? loginAttemptRepository.findByUsernameIsNullAndIp(ip)
+                : loginAttemptRepository.findByUsernameAndIp(username, ip);
 
         return attemptOpt
-                .map(attempt -> attempt.getBlockedUntil() != null && attempt.getBlockedUntil().isAfter(LocalDateTime.now()))
+                .map(attempt -> {
+                    LocalDateTime blockedUntil = attempt.getBlockedUntil();
+                    return blockedUntil != null && blockedUntil.isAfter(LocalDateTime.now(clock));
+                })
                 .orElse(false);
     }
 
+    // * Elimina los intentos fallidos registrados después de un inicio de sesión exitoso.
+     
     @Transactional
     public void loginSucceeded(String username, String ip) {
-        loginAttemptRepository.findByUsernameAndIp(username, ip).ifPresent(loginAttemptRepository::delete);
+        loginAttemptRepository.findByUsernameAndIp(username, ip)
+                .ifPresent(loginAttemptRepository::delete);
     }
+
+    // * Registra un intento fallido y bloquea si se supera el umbral.
 
     @Transactional
     public void loginFailed(String username, String ip) {
@@ -97,14 +97,16 @@ public class LoginAttemptService {
 
         loginAttemptRepository.save(attempt);
     }
-    
+
+    /**
+     * Elimina intentos de login viejos cada hora.
+     */
     @Scheduled(cron = "0 0 * * * *") // Cada hora en punto
     public void eliminarIntentosExpirados() {
-        LocalDateTime hace1Dia = LocalDateTime.now().minusDays(1);
+        LocalDateTime hace1Dia = LocalDateTime.now(clock).minusDays(1);
         int eliminados = loginAttemptRepository.deleteByLastAttemptAntesDe(hace1Dia);
         if (eliminados > 0) {
             log.info("Se eliminaron {} intentos fallidos viejos", eliminados);
         }
     }
-    
 }

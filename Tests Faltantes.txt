@@ -1,0 +1,25 @@
+Ataque de fuerza bruta:
+	1. Mandás 5 veces un email inexistente → a la 6ta devuelve HTTP 429.
+
+	2. Mandás un email válido → responde 200 y nunca se bloquea.
+
+	3. Mandás mails válidos e inválidos mezclados → bloquea según IP o usuario.
+
+
+
+
+AuthIntegrationTest
+
+	- Login: Ataque de fuerza bruta
+
+AuthPasswordControllerSecurityTest
+
+	- Olvide-password : Ataque de fuerza bruta
+
+RegisterTest
+
+	- Registro Usuario : Ataque de fuerza bruta
+
+SesionControllerTest
+
+	- 

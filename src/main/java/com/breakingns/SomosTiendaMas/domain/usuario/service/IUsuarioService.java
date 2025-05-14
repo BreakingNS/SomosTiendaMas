@@ -19,6 +19,7 @@ public interface IUsuarioService {
     
     void registrarSinRol(Usuario usuario); // SOLO PRUEBA, no produccion
     
-    void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, RolNombre rolNombre);
+    //void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, RolNombre rolNombre);
     
+    void registrarConRolDesdeDTO(RegistroUsuarioDTO registroDTO, String ip);
 }

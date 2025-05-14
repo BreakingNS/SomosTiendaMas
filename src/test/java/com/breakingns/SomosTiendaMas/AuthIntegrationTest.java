@@ -231,7 +231,7 @@ public class AuthIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(usuario)))
         .andExpect(status().isOk())
-        .andExpect(content().string("Usuario registrado correctamente"));
+        .andExpect(content().string("Usuario registrado correctamente."));
         
         assertTrue(usuarioService.existeUsuario("usuarioPrueba"));
     }

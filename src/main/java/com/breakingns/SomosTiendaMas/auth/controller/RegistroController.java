@@ -1,9 +1,11 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,18 +23,20 @@ public class RegistroController {
     }
     
     @PostMapping("/public/usuario")
-    public ResponseEntity<String> registerUser(@RequestBody RegistroUsuarioDTO registroDTO) {
-        usuarioService.registrarConRolDesdeDTO(registroDTO, RolNombre.ROLE_USUARIO);
-        return ResponseEntity.ok("Usuario registrado correctamente");
+    public ResponseEntity<String> registerUser(@RequestBody RegistroUsuarioDTO registroDTO,
+                                               HttpServletRequest request) {
+        String ip = RequestUtil.obtenerIpCliente(request);
+        usuarioService.registrarConRolDesdeDTO(registroDTO, ip);
+        return ResponseEntity.ok("Usuario registrado correctamente.");
     }
     
     /*
     @PostMapping("/public/usuario")
-    public ResponseEntity<String> registerUser(@RequestBody Usuario usuario) {
-        usuarioService.registrarConRol(usuario, RolNombre.ROLE_USUARIO);
+    public ResponseEntity<String> registerUser(@RequestBody RegistroUsuarioDTO registroDTO) {
+        usuarioService.registrarConRolDesdeDTO(registroDTO, RolNombre.ROLE_USUARIO);
         return ResponseEntity.ok("Usuario registrado correctamente");
-    }
-    */
+    }*/
+    
     @PostMapping("/public/sinrol") // SOLO PRUEBA, no produccion
     public ResponseEntity<String> registerUserSinRol(@RequestBody Usuario usuario) {
         usuarioService.registrarSinRol(usuario);

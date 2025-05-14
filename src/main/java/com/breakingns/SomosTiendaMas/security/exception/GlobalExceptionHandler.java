@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.security.exception;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -37,9 +38,14 @@ public class GlobalExceptionHandler {
     }
     
     @ExceptionHandler(TooManyRequestsException.class)
-    public ResponseEntity<Map<String, String>> handleTooManyRequests(TooManyRequestsException ex) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(Map.of("error", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleTooManyRequests(TooManyRequestsException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        body.put("error", "Too Many Requests");
+        body.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.TOO_MANY_REQUESTS);
     }
     
     @ExceptionHandler(SesionNoValidaException.class)

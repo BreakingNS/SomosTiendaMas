@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
@@ -13,6 +14,7 @@ import com.breakingns.SomosTiendaMas.security.exception.NombreUsuarioVacioExcept
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
 import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException;
+import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioYaExisteException;
 import com.breakingns.SomosTiendaMas.service.CarritoService;
 import jakarta.transaction.Transactional;
@@ -28,12 +30,14 @@ public class UsuarioServiceImpl implements IUsuarioService{
     private final RolService rolService;
     private final IUsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final LoginAttemptService loginAttemptService;
 
-    public UsuarioServiceImpl(CarritoService carritoService, RolService rolService, IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioServiceImpl(CarritoService carritoService, RolService rolService, IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService) {
         this.carritoService = carritoService;
         this.rolService = rolService;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loginAttemptService = loginAttemptService;
     }
     
     @Override
@@ -42,7 +46,7 @@ public class UsuarioServiceImpl implements IUsuarioService{
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return usuarioRepository.save(usuario);
     }
-    
+    /*
     @Override
     @Transactional
     public void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, RolNombre rolNombre) {
@@ -93,6 +97,73 @@ public class UsuarioServiceImpl implements IUsuarioService{
 
         registrar(usuario);
         carritoService.crearCarrito(usuario.getIdUsuario());
+    }
+    */
+    
+    @Override
+    @Transactional
+    public void registrarConRolDesdeDTO(RegistroUsuarioDTO dto, String ip) {
+        String email = dto.getEmail();
+
+        if (loginAttemptService.isBlocked(email, ip)) {
+            throw new TooManyRequestsException("Demasiados intentos de registro desde esta IP/email. Intenta más tarde.");
+        }
+
+        if (dto.getUsername() == null || dto.getUsername().isBlank()) {
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede estar vacío");
+        }
+
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new ContrasenaVaciaException("La contraseña no puede estar vacía");
+        }
+
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío");
+        }
+
+        if (!dto.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new EmailInvalidoException("El correo electrónico no tiene un formato válido");
+        }
+
+        if (existeUsuario(dto.getUsername())) {
+            throw new UsuarioYaExisteException("El nombre de usuario ya está en uso");
+        }
+
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailYaRegistradoException("El correo electrónico ya está en uso");
+        }
+
+        if (dto.getPassword().length() < 6) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        }
+
+        if (dto.getPassword().length() > 16) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        }
+
+        if (dto.getUsername().equals("forzar-error")) {
+            throw new RuntimeException("Error interno en el servidor");
+        }
+
+        Rol rol = rolService.getByNombre(RolNombre.ROLE_USUARIO)
+                .orElseThrow(() -> new RolNoEncontradoException("Error: Rol no encontrado."));
+        
+        try {
+            // Lógica real de registro (crear usuario, hashear password, etc.)
+            Usuario usuario = new Usuario();
+            usuario.setUsername(dto.getUsername());
+            usuario.setPassword(dto.getPassword()); // Asegurate que después se encripta
+            usuario.setEmail(dto.getEmail());
+            usuario.getRoles().add(rol);
+
+            registrar(usuario);
+            carritoService.crearCarrito(usuario.getIdUsuario());
+
+            loginAttemptService.loginSucceeded(email, ip); // Limpia si hay intento previo
+        } catch (Exception e) {
+            loginAttemptService.loginFailed(email, ip);
+            throw e; // volver a lanzar para que sea manejado por el controller
+        }
     }
     
     @Override

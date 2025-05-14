@@ -211,7 +211,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(nuevoUsuario)))
             .andExpect(status().isOk())
-            .andExpect(content().string("Usuario registrado correctamente"));
+            .andExpect(content().string("Usuario registrado correctamente."));
     }
     
     // 2) Registro con email invalido

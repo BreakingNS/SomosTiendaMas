@@ -108,43 +108,6 @@ public class AuthService {
         }
     }
     
-    /*
-    public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
-        log.info("Intento de login para usuario: {}", loginRequest.username());
-        
-        if (loginAttemptService.isBlocked(loginRequest.username(), RequestUtil.obtenerIpCliente(request))) {
-            throw new RuntimeException("Usuario temporalmente bloqueado por múltiples intentos fallidos.");
-        }
-        
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                loginRequest.username(), loginRequest.password()
-            )
-        );
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        
-        String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
-
-        Usuario usuario = UsuarioUtils.findByUsername(loginRequest.username());
-
-        String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
-
-        // Extraer IP y user-agent con helper
-        String ip = RequestUtil.obtenerIpCliente(request);
-        String userAgent = request.getHeader("User-Agent");
-
-        // Crear sesión activa con servicio dedicado
-        sesionActivaService.registrarSesion(usuario, accessToken, ip, userAgent);
-
-        loginAttemptService.loginSucceeded(loginRequest.username(), ip);
-        
-        log.info("Login exitoso. Access token emitido para usuario: {}", usuario.getUsername());
-        log.info("IP: {}, User-Agent: {}", ip, userAgent);
-        
-        return new AuthResponse(accessToken, refreshToken);
-    }*/
-    
     public void logout(String accessToken, String refreshToken) {
         // Extraer username desde el accessToken para identificar al usuario
         String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);
@@ -172,20 +135,6 @@ public class AuthService {
         tokenEmitidoService.revocarToken(accessToken); // Revocar access token
         sesionActivaService.revocarSesion(accessToken); // Revocar sesión 
     }
-    
-    /*
-    public void logout(String accessToken, String refreshToken) {
-        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
-            .orElseThrow(() -> new TokenException("Refresh token no encontrado."));
-
-        if (token.getRevocado()) {
-            throw new TokenException("Refresh token ya fue revocado o usado.");
-        }
-
-        refreshTokenService.logout(refreshToken); // Revocar refresh token
-        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
-        sesionActivaService.revocarSesion(accessToken); // Revocar sesion 
-    }*/
     
     public void logoutTotal(String accessToken) {
         String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);
@@ -224,35 +173,21 @@ public class AuthService {
         }
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        if (usuarioOpt.isPresent()) {
-            passwordResetService.solicitarRecuperacionPassword(email); // lógica de envío de email, tokens, etc.
-        } else {
-            loginAttemptService.loginFailed(null, ip);
-        }
+        usuarioOpt.ifPresentOrElse(
+            usuario -> procesarSiExiste(usuario, ip),
+            () -> procesarSiNoExiste(ip)
+        );
     }
-    
-    /*
-    public void solicitarRecuperacionPassword(String email, HttpServletRequest request) {
-        //String key = email.toLowerCase(); // o podrías usar IP: RequestUtil.obtenerIpCliente(request)
-        String ip = RequestUtil.obtenerIpCliente(request);
-        
-        if (loginAttemptService.isBlocked(email, ip)) {
-            throw new TooManyRequestsException("Demasiadas solicitudes, intenta más tarde.");
-        }
-        
-        log.info("Solicitud de recuperación de contraseña para email: {}", email);
-        passwordResetService.solicitarRecuperacionPassword(email);
-        log.info("Token de recuperación enviado si el email existe.");
-        // Siempre devolver OK aunque no exista (por seguridad).
-        */
-        /*
-            Sugerencia mínima (no urgente):
-            Podrías extraer la lógica del token a un PasswordResetService o 
-            TokenResetService si querés dejar el AuthService más limpio, pero 
-            no es necesario ahora.
-        */
-    //}
-    
+
+    private void procesarSiExiste(Usuario usuario, String ip) {
+        passwordResetService.solicitarRecuperacionPassword(usuario.getEmail());
+        loginAttemptService.loginSucceeded(usuario.getUsername(), ip);
+    }
+
+    private void procesarSiNoExiste(String ip) {
+        loginAttemptService.loginFailed(null, ip); // Bloqueamos solo por IP
+    }
+
     public Integer numeroSesionesActivas(Long idUsuario){ // SOLO PRUEBAS, no produccion
         return sesionActivaService.numeroSesionesActivas(idUsuario);
     }

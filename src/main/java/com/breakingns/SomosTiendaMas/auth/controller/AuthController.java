@@ -1,23 +1,16 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.EmailRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
-import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
-import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,18 +50,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
-    /*
-    @PostMapping("/private/logout")
-    //@PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    @PreAuthorize("@permiso.puedeCerrarSesion(request, authorizationHeader)")
-    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
-                                    @RequestHeader("Authorization") String authorizationHeader) {
-        String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
-        authService.logout(accessToken, request.refreshToken());
-        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
-    }
-    */
-    
     @PostMapping("/private/logout")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request,
@@ -85,16 +66,6 @@ public class AuthController {
         authService.logoutTotal(accessToken);
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
     }
-
-    /*
-    @DeleteMapping("/private/logout/{idSesion}")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> cerrarSesion(@PathVariable Long idSesion) {
-        sesionActivaService.cerrarSesion(idSesion);
-        return ResponseEntity.ok("Sesión cerrada con éxito");
-    }
-    */
-
     
     /*
     PARA UTILIZAR COOKIESSSSSSSSSSSSSSSSS -------------------------------

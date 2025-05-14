@@ -297,7 +297,8 @@ public class AuthPasswordControllerSecurityTest {
                 .content(objectMapper.writeValueAsString(request))
                 .header("X-Forwarded-For", "192.168.1.9"))
             .andExpect(status().isTooManyRequests())
-            .andExpect(jsonPath("$.error").value("Demasiadas solicitudes, intenta más tarde."));
+            .andExpect(jsonPath("$.error").value("Too Many Requests"))
+            .andExpect(jsonPath("$.message").value("Demasiadas solicitudes, intenta más tarde."));
     }
     
     // Simular un bloqueo y esperar el reseteo:
