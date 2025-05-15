@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
-import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;

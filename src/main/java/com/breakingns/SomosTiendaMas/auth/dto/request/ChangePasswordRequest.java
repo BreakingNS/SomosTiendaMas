@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.auth.dto;
+package com.breakingns.SomosTiendaMas.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;

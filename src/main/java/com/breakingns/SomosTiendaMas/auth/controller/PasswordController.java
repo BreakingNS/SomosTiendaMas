@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.ChangePasswordRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.EmailRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.ChangePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.EmailRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.OlvidePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;

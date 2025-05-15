@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.auth.dto;
+package com.breakingns.SomosTiendaMas.auth.dto.shared;
 
 import java.time.Instant;
 

@@ -1,8 +1,8 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
@@ -56,7 +56,7 @@ public class AuthController {
                                     @RequestHeader("Authorization") String authorizationHeader) {
         String accessToken = HeaderUtils.extraerAccessToken(authorizationHeader);
         authService.logout(accessToken, request.refreshToken());
-        return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+        return ResponseEntity.ok(Map.of("message", "SesiÃ³n cerrada correctamente"));
     }
     
     @PostMapping("/private/logout-total")

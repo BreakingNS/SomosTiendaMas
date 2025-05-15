@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.security.permissions;
 
-import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;

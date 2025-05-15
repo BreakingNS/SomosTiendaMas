@@ -1,8 +1,11 @@
 package com.breakingns.SomosTiendaMas;
 
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
-import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.ChangePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
+import com.breakingns.SomosTiendaMas.auth.dto.request.ChangePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.OlvidePasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.ResetPasswordRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -10,9 +13,6 @@ import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
-import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.OlvidePasswordRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;

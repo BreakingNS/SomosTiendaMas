@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;

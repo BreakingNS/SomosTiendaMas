@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
-import com.breakingns.SomosTiendaMas.auth.dto.SesionActivaDTO;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;

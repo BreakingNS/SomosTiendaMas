@@ -1,7 +1,9 @@
 package com.breakingns.SomosTiendaMas;
 
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
-import com.breakingns.SomosTiendaMas.auth.dto.AuthResponse;
+import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.request.RefreshTokenRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -9,8 +11,6 @@ import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
-import com.breakingns.SomosTiendaMas.auth.dto.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.domain.usuario.service;
 
-import com.breakingns.SomosTiendaMas.auth.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
@@ -11,7 +11,6 @@ import com.breakingns.SomosTiendaMas.security.exception.ContrasenaVaciaException
 import com.breakingns.SomosTiendaMas.security.exception.EmailInvalidoException;
 import com.breakingns.SomosTiendaMas.security.exception.EmailYaRegistradoException;
 import com.breakingns.SomosTiendaMas.security.exception.NombreUsuarioVacioException;
-import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
 import com.breakingns.SomosTiendaMas.security.exception.RolNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
