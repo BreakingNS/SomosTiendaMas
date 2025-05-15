@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/somostiendamas_test
+    username: postgres
+    password: nahuel
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # o validate/update, depende de tu estrategia
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  test:
+    database:
+      replace: none

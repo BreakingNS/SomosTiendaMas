@@ -23,3 +23,20 @@ RegisterTest
 SesionControllerTest
 
 	- 
+
+
+***********FUTURO:
+
+- usar @Valid en el Controller + anotaciones en el DTO, evitemos validar formatos o campos en el service, 
+	dejar que los errores de validación los capture Spring automáticamente.
+
+Qué deberías dejar solo en el Service (validaciones de negocio):
+Si el username o email ya están en uso.
+
+Si hay que bloquear un intento de registro por IP/email.
+
+Si username.equals("forzar-error").
+
+Si el rol no existe.
+
+Si hay lógica condicional que depende del contexto del sistema o de datos externos.

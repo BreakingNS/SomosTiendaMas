@@ -19,7 +19,7 @@ public class Carrito {
     private Long id_carrito;
     
     @OneToOne
-    @JoinColumn(name = "usuario_id")
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
     public Carrito() {
@@ -29,6 +29,5 @@ public class Carrito {
         this.id_carrito = id_carrito;
         this.usuario = usuario;
     }
-    
     
 }

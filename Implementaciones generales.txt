@@ -1,0 +1,112 @@
+✅ SEGURIDAD (autenticación y autorización)
+🔐 Autenticación:
+JWT con RSA Keys (implementado sin variables de entorno).
+
+Refresh Token con rotación segura (revocación al usarse).
+
+Multi-login con gestión por IP y User-Agent.
+
+Filtro de autenticación con JwtAuthenticationFilter.
+
+Control de tokens emitidos y sesiones activas en DB.
+
+Logout total y por sesiones individuales.
+
+🛡️ Autorización:
+Roles de usuario con control en base a @PreAuthorize.
+
+Validación manual de permisos en métodos sensibles.
+
+Protección contra fuerza bruta en endpoints públicos.
+
+Endpoints públicos con control adicional (olvide-password, etc).
+
+✅ GESTIÓN DE TOKENS Y SESIONES
+TokenEmitido (historial).
+
+RefreshToken.
+
+SesionActiva (por IP/User-Agent).
+
+PasswordResetToken (token único por solicitud, un solo uso).
+
+✅ ARQUITECTURA Y ORGANIZACIÓN
+Arquitectura multicapas aplicada a cada entidad (Service, Controller, DTO, etc).
+
+Separación clara de responsabilidades.
+
+Centralización de excepciones en GlobalExceptionHandler.
+
+DTOs y validaciones con @Valid.
+
+División de endpoints en varios controllers especializados (Auth, Password, Register, Sesion).
+
+AdminInitializer con creación de usuario/admin por defecto.
+
+✅ CONTROL DE VERSIONES (BETA HISTORY)
+Muy detallado, ordenado y útil para trazabilidad.
+
+Refleja claramente avances, mejoras, refactors y pendientes.
+
+Usás un sistema semántico válido (incluso con sub-etapas como .3.4.2).
+
+✅ TESTING
+Tests unitarios/integración por controller:
+
+AuthIntegrationTest
+
+AuthPasswordControllerSecurityTest
+
+RegisterControllerTest
+
+SesionControllerTest
+
+Preparado para continuar tests de seguridad más específicos.
+
+🔄 PENDIENTES O POSIBLES SUGERENCIAS A FUTURO
+(Según lo que no se menciona explícitamente aún)
+
+🔍 Seguridad avanzada:
+✅ Listas negras de tokens revocados (ya sugerida, útil si aún no implementada).
+
+❓ Rate limiting por IP en endpoints públicos como /olvide-password (usando un middleware o bucket token).
+
+❓ Implementar un sistema de bloqueo por intentos fallidos (por IP o email).
+
+❓ Seguridad adicional en login con detección de dispositivos desconocidos o ubicación sospechosa (a futuro).
+
+👤 Usuario y permisos:
+❓ Soporte para permisos finos tipo ACL (hasPermission()) con PermissionEvaluator.
+
+❓ Auditoría de acciones por usuario (bitácora/log de cambios sensibles).
+
+🧪 Tests:
+🟡 Tests para endpoints protegidos contra abuso (olvide-password, refresh, logout de otras sesiones).
+
+🟡 Test del JwtAuthenticationFilter y exceptions (AccessDeniedHandler, etc.).
+
+📦 Documentación:
+❓ Agregar documentación OpenAPI (con Swagger) para todos los endpoints protegidos/públicos.
+
+❓ Readme.md con estructura del sistema, flujos de login/refresh/logout y testing.
+
+✅ ESTADO ACTUAL RESUMIDO
+Tu proyecto se encuentra en una fase avanzada de seguridad y ordenamiento, con:
+
+Autenticación y autorización robusta.
+
+Multi-login y control de sesiones completo.
+
+Protección contra fuerza bruta y recuperación de contraseña implementadas.
+
+Testing en curso.
+
+Código ordenado, limpio y bien documentado.
+
+¿Querés que esta guía la pasemos a un archivo .md o .txt como checklist para que puedas ir 
+tachando o actualizando? También puedo ayudarte a planificar la siguiente versión (beta 0.2.0.0) 
+si estás por pasar a otra etapa como gestión de usuarios, productos, carrito, etc.
+
+MAS
+
+GlobalExceptionHandler con @RestControllerAdvice (recomendado para APIs Rest)

@@ -29,4 +29,7 @@ public interface ITokenEmitidoRepository extends JpaRepository<TokenEmitido, Lon
     List<TokenEmitido> findAllByUsuario_UsernameAndRevocadoFalse(String username);
 
     List<TokenEmitido> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+
+    public void deleteByToken(String tokenfalso);
+
 }

@@ -162,6 +162,8 @@ beta 0.1.4.8: Implementacion de limite de acceso a endpoints por ataque de fuerz
 	/api/password/public/olvide-password
 	/api/registro/public/usuario
 
+beta 0.1.4.9: Implementacion de Tests para errores de Base de Datos.
+
 
 	
 

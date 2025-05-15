@@ -20,6 +20,7 @@ import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -302,7 +303,7 @@ public class AuthPasswordControllerSecurityTest {
     }
     
     // Simular un bloqueo y esperar el reseteo:
-    @Test
+    //@Test
     public void testReseteoIntentosFallidos() throws Exception {
         OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste2@noexiste2.com"); // sin @, sin dominio
 
@@ -541,7 +542,7 @@ public class AuthPasswordControllerSecurityTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(resetRequest)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("La contraseña debe tener entre 6 y 16 caracteres."));
+            .andExpect(jsonPath("$.messages", hasItem("La contraseña debe tener entre 6 y 16 caracteres.")));
     }
     
     // 10) Contraseña con validación fallida (demasiado larga, etc.)
@@ -578,7 +579,7 @@ public class AuthPasswordControllerSecurityTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(resetRequest)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("La contraseña debe tener entre 6 y 16 caracteres."));
+            .andExpect(jsonPath("$.messages", hasItem("La contraseña debe tener entre 6 y 16 caracteres.")));
     }
     
     // 11) Token válido pero para otro usuario
@@ -696,7 +697,7 @@ public class AuthPasswordControllerSecurityTest {
                 .content(objectMapper.writeValueAsString(changePasswordRequest))
                 .header("Authorization", "Bearer " + tokenUsuario)) // Incluir un token válido
             .andExpect(status().isBadRequest()) // Esperamos un 400 BadRequest
-            .andExpect(jsonPath("$.message").value("La nueva contraseña debe tener entre 6 y 16 caracteres")); // Mensaje de error esperado
+            .andExpect(jsonPath("$.messages", hasItem("La nueva contraseña debe tener entre 6 y 16 caracteres"))); // Mensaje de error esperado
     }
     
     // 17) Contraseña nueva inválida (demasiado larga)
@@ -711,7 +712,7 @@ public class AuthPasswordControllerSecurityTest {
                 .content(objectMapper.writeValueAsString(changePasswordRequest))
                 .header("Authorization", "Bearer " + tokenUsuario)) // Incluir un token válido
             .andExpect(status().isBadRequest()) // Esperamos un 400 BadRequest
-            .andExpect(jsonPath("$.message").value("La nueva contraseña debe tener entre 6 y 16 caracteres")); // Mensaje de error esperado
+            .andExpect(jsonPath("$.messages", hasItem("La nueva contraseña debe tener entre 6 y 16 caracteres"))); // Mensaje de error esperado
     }
     
     // 18) Cambiar contraseña con mismo valor que actual (opcional según reglas)

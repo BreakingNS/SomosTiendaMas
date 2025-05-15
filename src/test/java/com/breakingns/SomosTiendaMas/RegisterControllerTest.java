@@ -17,6 +17,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.any;
 import org.mockito.Mock;
 import lombok.RequiredArgsConstructor;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -226,7 +227,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.mensaje").value("El correo electrónico no tiene un formato válido"));
+            .andExpect(jsonPath("$.messages", hasItem("El correo electrónico no tiene un formato válido")));
     }
     
     // 3) Registro con nombre vacio
@@ -241,7 +242,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.mensaje").value("El nombre de usuario no puede estar vacío")); // ajustá según tu mensaje
+            .andExpect(jsonPath("$.messages", hasItem("El nombre de usuario no puede estar vacío"))); // ajustá según tu mensaje
     }
     
     // 4) Registro con password corto
@@ -256,7 +257,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres."));
+            .andExpect(jsonPath("$.messages", hasItem("La contraseña debe tener entre 6 y 16 caracteres")));
     }
     
     // 5) Registro con password largo
@@ -271,7 +272,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.")); // ajustá el mensaje si es necesario
+            .andExpect(jsonPath("$.messages", hasItem("La contraseña debe tener entre 6 y 16 caracteres"))); // ajustá el mensaje si es necesario
     }
     
     // 6) Registro con email repetido
@@ -298,7 +299,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuarioDuplicado)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.mensaje").value("El correo electrónico ya está en uso")); // ajustá el mensaje según tu implementación
+            .andExpect(jsonPath("$.message").value("El correo electrónico ya está en uso"));// ajustá el mensaje según tu implementación
     }
     
     // 7) Registro sin rol asignado desde Service
@@ -333,7 +334,9 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBodyInvalido))
             .andExpect(status().isBadRequest()) // Esperamos un error 400 (Bad Request)
-            .andExpect(jsonPath("$.mensaje").value("El nombre de usuario no puede estar vacío"));
+            .andExpect(jsonPath("$.messages", hasItem("El nombre de usuario no puede estar vacío")))
+            .andExpect(jsonPath("$.messages", hasItem("El correo electrónico no puede estar vacío")))
+            .andExpect(jsonPath("$.messages", hasItem("La contraseña no puede estar vacía")));
     }
     
     // 9) Registro lanza excepcion interna
@@ -353,7 +356,7 @@ public class RegisterControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isInternalServerError()) // Esperamos un error 500
-            .andExpect(jsonPath("$.mensaje").value("Error interno en el servidor")); // Verificamos que el mensaje sea correcto
+            .andExpect(jsonPath("$.message").value("Error interno en el servidor")); // Verificamos que el mensaje sea correcto
     }
     
 }

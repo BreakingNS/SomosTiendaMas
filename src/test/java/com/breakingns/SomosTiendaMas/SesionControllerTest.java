@@ -14,6 +14,7 @@ import com.breakingns.SomosTiendaMas.auth.dto.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import static org.hamcrest.CoreMatchers.hasItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -235,7 +236,7 @@ public class SesionControllerTest {
                 .param("idUsuario", "9999")
                 .header("Authorization", "Bearer " + tokenAdmin))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.mensaje").value("El usuario con ID 9999 no existe"));
+            .andExpect(jsonPath("$.message").value("El usuario con ID 9999 no existe"));
     }   
     
     /*
