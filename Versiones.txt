@@ -166,6 +166,8 @@ beta 0.1.4.9: Implementacion de Tests para errores de Base de Datos.
 
 beta 0.1.5.0: Se ordenaron DTOs en paquetes correspondientes.
 
+beta 0.1.5.1: Se agregaron validaciones correspondientes a DTO requests de endpoints en AuthController.
+
 🔹 Diferencia entre Entidad y DTO
 
 Entidad (@Entity)							DTO (Data Transfer Object)

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -91,7 +92,7 @@ public class DatabaseConnectionTest {
     private final ICarritoRepository carritoRepository;
     //private final ITokenEmitidoRepository tokenEmitidoRepository;
     
-    @MockBean
+    @Mock
     private ITokenEmitidoRepository tokenEmitidoRepository;
     
     // Método para registrar un usuario

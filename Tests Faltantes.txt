@@ -40,3 +40,16 @@ Si username.equals("forzar-error").
 Si el rol no existe.
 
 Si hay lógica condicional que depende del contexto del sistema o de datos externos.
+
+*********** FUTURO SEGURIDAD:
+
+Login:
+
+🔍 Validaciones adicionales que podrías agregar (opcional pero recomendadas)
+Validación o control							¿Necesaria para login?								Notas
+Verificar si el usuario existe antes de autenticar			❌ No es estrictamente necesario si UserDetailsService lo maneja bien		Opcional, pero puede ayudarte a loguear motivos de fallo
+Rate limiting por IP / user-agent (nivel más fino que isBlocked)	🔸 Opcional									Especialmente útil si esperás mucho tráfico o ataques
+Registro de intentos con ubicación (geolocalización IP)			🔸 Opcional									Puede sumar a la trazabilidad, pero no es imprescindible
+Validar longitud máxima de campos en el DTO				✔️ Ya está cubierta con @Pattern o podrías usar @Size				-
+Logging detallado de intentos fallidos (sin revelar demasiado)		✔️ Lo hacés bien con los logs actuales						-
+Captcha (si fuera login público con frontend)				🔸 Opcional									Muy útil contra bots si es una app abierta

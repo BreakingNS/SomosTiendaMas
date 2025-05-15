@@ -404,7 +404,7 @@ public class AuthIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Sesión cerrada correctamente"));
+            .andExpect(jsonPath("$.message").value("Sesion cerrada correctamente"));
         
         mockMvc.perform(get("/api/carrito/traer/" + idUsuario)
                 .header("Authorization", "Bearer " + tokenUsuario))

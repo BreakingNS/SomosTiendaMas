@@ -1,13 +1,10 @@
 package com.breakingns.SomosTiendaMas.security.exception;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
@@ -16,10 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
@@ -37,26 +31,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(respuesta);
     }
-    
-    /*
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody  // muy importante para que devuelva JSON en el body
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String mensaje = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
-        return Collections.singletonMap("mensaje", mensaje);
-    }*/
-    /*
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
-        String mensaje = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                .findFirst()
-                .orElse("Error de validación.");
-        return ResponseEntity.badRequest().body(Map.of("message", mensaje));
-    }*/
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<?> handleDatabaseConnectionError(DataAccessException e) {
