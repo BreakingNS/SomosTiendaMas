@@ -356,8 +356,7 @@ public class AuthPasswordControllerSecurityTest {
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."));
+            .andExpect(status().isBadRequest());
     }
     
     // 3) Email no registrado

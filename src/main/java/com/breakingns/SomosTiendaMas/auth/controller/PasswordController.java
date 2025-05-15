@@ -43,7 +43,7 @@ public class PasswordController {
     }
     
     @PostMapping("/public/olvide-password")
-    public ResponseEntity<?> olvidePassword(@RequestBody EmailRequest emailRequest, HttpServletRequest request) {
+    public ResponseEntity<?> olvidePassword(@RequestBody @Valid EmailRequest emailRequest, HttpServletRequest request) {
         String email = emailRequest.email();
         String ip = RequestUtil.obtenerIpCliente(request);
 
@@ -55,14 +55,14 @@ public class PasswordController {
     }
     
     @PostMapping("/public/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         passwordResetService.resetearPassword(request.token(), request.nuevaPassword());
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     
     @PostMapping("/private/change-password")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
-    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest req, Authentication auth) {
+    public ResponseEntity<?> changePassword(@RequestBody @Valid ChangePasswordRequest req, Authentication auth) {
         Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
         passwordResetService.changePassword(usuario, req.currentPassword(), req.newPassword());
         return ResponseEntity.ok("Contraseña cambiada exitosamente.");
