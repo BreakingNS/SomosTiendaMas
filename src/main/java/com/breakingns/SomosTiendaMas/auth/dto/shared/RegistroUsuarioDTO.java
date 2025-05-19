@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.dto.shared;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter @Setter
 public class RegistroUsuarioDTO {
     @NotBlank(message = "El nombre de usuario no puede estar vacío")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "El nombre de usuario solo puede contener letras, números y guion bajo")
     private String username;
 
     @Email(message = "El correo electrónico no tiene un formato válido")
@@ -17,6 +19,7 @@ public class RegistroUsuarioDTO {
 
     @NotBlank(message = "La contraseña no puede estar vacía")
     @Size(min = 6, max = 16, message = "La contraseña debe tener entre 6 y 16 caracteres")
+    @Pattern(regexp = "^\\S+$", message = "La contraseña no debe contener espacios")
     private String password;
 
     // Getters y setters

@@ -170,6 +170,9 @@ beta 0.1.5.1: Se agregaron validaciones correspondientes a DTO requests de endpo
 
 beta 0.1.5.2: Se agregaron validaciones correspondientes a DTO requests de endpoints en PasswordController.
 
+beta 0.1.5.3: Se agregaron validaciones correspondientes a DTO requests de endpoints en RegistroController.
+
+
 🔹 Diferencia entre Entidad y DTO
 
 Entidad (@Entity)							DTO (Data Transfer Object)

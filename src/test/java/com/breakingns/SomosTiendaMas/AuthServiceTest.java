@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas;
 
+import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
@@ -14,7 +15,9 @@ import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.security.exception.TokenException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,10 +29,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,12 +63,14 @@ class AuthServiceTest {
     @Mock
     private IUsuarioRepository usuarioRepository;
     @Mock
+    private UsuarioServiceImpl usuarioService;
+    @Mock
     private ISesionActivaRepository sesionActivaRepository;
     @Mock
     private IRefreshTokenRepository refreshTokenRepository;
     @Mock
     private UsuarioUtils usuarioUtils;
-
+    
     private final String accessToken = "accessTokenEjemplo";
     private final String refreshTokenStr = "refreshTokenEjemplo";
 
@@ -159,4 +167,5 @@ class AuthServiceTest {
         // Verificamos que no se llamó al passwordResetService porque falló antes
         verifyNoInteractions(passwordResetService);
     }
+    
 }

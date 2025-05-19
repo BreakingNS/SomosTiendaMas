@@ -3,6 +3,7 @@ package com.breakingns.SomosTiendaMas;
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
@@ -11,7 +12,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
-import com.breakingns.SomosTiendaMas.model.RolNombre;
+import static org.mockito.ArgumentMatchers.anyString;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.any;
@@ -339,25 +340,18 @@ public class RegisterControllerTest {
             .andExpect(jsonPath("$.messages", hasItem("La contraseña no puede estar vacía")));
     }
     
-    // 9) Registro lanza excepcion interna
+    // Test 1: Validación de campos inválidos (espera 400 Bad Request)
     @Test
-        void registroLanzaExcepcionInterna() throws Exception {
-        // Simulamos una excepción interna en el servicio
-        doThrow(new RuntimeException("Error interno en el servidor"))
-            .when(usuarioService).registrarConRol(any(Usuario.class), any(RolNombre.class));
-
-        // Preparar el cuerpo de la solicitud con un usuario que provocará la excepción
-        Usuario usuario = new Usuario();
-        usuario.setUsername("forzar-error");
-        usuario.setPassword("123456");
-        usuario.setEmail("error@prueba.com");
-
+    void registroConUsernameInvalido_devuelveBadRequest() throws Exception {
+        RegistroUsuarioDTO dtoInvalido = new RegistroUsuarioDTO("user-con-guion", "email@valido.com", "123456");
         mockMvc.perform(post("/api/registro/public/usuario")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(usuario)))
-            .andExpect(status().isInternalServerError()) // Esperamos un error 500
-            .andExpect(jsonPath("$.message").value("Error interno en el servidor")); // Verificamos que el mensaje sea correcto
+                .content(objectMapper.writeValueAsString(dtoInvalido)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages").exists())
+            .andExpect(jsonPath("$.messages[0]").value("El nombre de usuario solo puede contener letras, números y guion bajo"));
     }
+    
     
 }
 

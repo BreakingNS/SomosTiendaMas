@@ -103,6 +103,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        Map<String, String> body = Map.of("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+    
+    /*
+    @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
             "error", "Error interno",
@@ -110,7 +117,7 @@ public class GlobalExceptionHandler {
             "timestamp", Instant.now().toString(),
             "status", HttpStatus.INTERNAL_SERVER_ERROR.value()
         ));
-    }
+    }*/
 
     @ExceptionHandler(EmailInvalidoException.class)
     public ResponseEntity<?> handleEmailInvalidoException(EmailInvalidoException e) {
