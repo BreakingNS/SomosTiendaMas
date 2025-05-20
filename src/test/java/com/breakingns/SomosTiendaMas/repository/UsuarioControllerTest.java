@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas;
+package com.breakingns.SomosTiendaMas.repository;
 
 import com.breakingns.SomosTiendaMas.auth.controller.RegistroController;
 import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;

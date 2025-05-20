@@ -172,6 +172,7 @@ beta 0.1.5.2: Se agregaron validaciones correspondientes a DTO requests de endpo
 
 beta 0.1.5.3: Se agregaron validaciones correspondientes a DTO requests de endpoints en RegistroController.
 
+beta 0.1.5.4: Orgenizacion de Tests en paquetes y endpoints temporales de pruebas.
 
 🔹 Diferencia entre Entidad y DTO
 

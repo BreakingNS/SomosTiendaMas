@@ -1,6 +1,5 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
@@ -15,9 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.request.RefreshTokenRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
-import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
 import com.breakingns.SomosTiendaMas.auth.utils.HeaderUtils;
 import jakarta.validation.Valid;
@@ -29,16 +26,10 @@ public class AuthController {
     private final AuthService authService;
     
     private final RefreshTokenService refreshTokenService;
-    private final IRefreshTokenRepository refreshTokenRepository;
-    private final IUsuarioRepository usuarioRepository;
-    private final LoginAttemptService loginAttemptService;
 
-    public AuthController(AuthService authService, RefreshTokenService refreshTokenService, IRefreshTokenRepository refreshTokenRepository, IUsuarioRepository usuarioRepository, LoginAttemptService loginAttemptService) {
+    public AuthController(AuthService authService, RefreshTokenService refreshTokenService) {
         this.authService = authService;
         this.refreshTokenService = refreshTokenService;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.loginAttemptService = loginAttemptService;
     }
     
     @PostMapping("/public/login")

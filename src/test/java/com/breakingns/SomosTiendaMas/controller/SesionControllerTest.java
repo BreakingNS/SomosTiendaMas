@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas;
+package com.breakingns.SomosTiendaMas.controller;
 
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;

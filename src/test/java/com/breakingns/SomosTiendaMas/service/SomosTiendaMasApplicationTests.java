@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas;
+package com.breakingns.SomosTiendaMas.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

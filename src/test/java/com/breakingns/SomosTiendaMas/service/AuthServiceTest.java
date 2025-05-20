@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas;
+package com.breakingns.SomosTiendaMas.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
