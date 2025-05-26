@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,17 @@ public class JwtTokenProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    private final PrivateKey privateKey;
-    private final PublicKey publicKey;
-    
+    @Value("${jwt.private-key-path}")
+    private String privateKeyPath;
+
+    @Value("${jwt.public-key-path}")
+    private String publicKeyPath;
+
+    private final RsaKeyUtil rsaKeyUtil;
+
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
+
     private final IUsuarioRepository usuarioRepository;
     private final UserDetailsServiceImpl userDetailsService;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
@@ -41,17 +50,22 @@ public class JwtTokenProvider {
     @Value("${app.jwt-expiration-ms}")
     private int jwtExpirationMs;
 
+    @PostConstruct
+    public void init() throws Exception {
+        this.privateKey = rsaKeyUtil.loadPrivateKey(privateKeyPath);
+        this.publicKey = rsaKeyUtil.loadPublicKey(publicKeyPath);
+    }
+
     public JwtTokenProvider(
             IUsuarioRepository usuarioRepository,
             UserDetailsServiceImpl userDetailsService,
             ITokenEmitidoRepository tokenEmitidoRepository,
             RsaKeyUtil rsaKeyUtil
-    ) throws Exception {
+    ) {
         this.usuarioRepository = usuarioRepository;
         this.userDetailsService = userDetailsService;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
-        this.privateKey = rsaKeyUtil.loadPrivateKey("src/main/resources/keys/private.pem");
-        this.publicKey = rsaKeyUtil.loadPublicKey("src/main/resources/keys/public.pem");
+        this.rsaKeyUtil = rsaKeyUtil;
     }
 
     public String generarTokenDesdeAuthentication(Authentication authentication) {
