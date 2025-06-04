@@ -82,7 +82,42 @@ public class JwtTokenProvider {
         Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         return generarTokenDesdeAuthentication(auth);
     }
+    
+    private String generarTokenParaUsuario(Long id, String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
+        // Obtener roles del usuario
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
+
+        List<String> roles = usuario.getRoles().stream()
+            .map(rol -> rol.getNombre().name()) // o solo getNombre() si ya es string
+            .toList();
+
+        String token = Jwts.builder()
+                .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // typ: JWT
+                .setSubject(String.valueOf(id))
+                .claim("username", username)
+                .claim("roles", roles)
+                .claim("jti", UUID.randomUUID().toString())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+
+        // Guardar el token emitido
+        TokenEmitido tokenEmitido = new TokenEmitido();
+        tokenEmitido.setToken(token);
+        tokenEmitido.setRevocado(false);
+        tokenEmitido.setFechaEmision(now.toInstant());
+        tokenEmitido.setFechaExpiracion(expiryDate.toInstant());
+        tokenEmitido.setUsuario(usuario);
+
+        tokenEmitidoRepository.save(tokenEmitido);
+        return token;
+    }
+    /*
     private String generarTokenParaUsuario(Long id, String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
@@ -109,7 +144,7 @@ public class JwtTokenProvider {
 
         tokenEmitidoRepository.save(tokenEmitido);
         return token;
-    }
+    }*/
 
     public boolean validarToken(String token) {
         try {

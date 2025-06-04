@@ -184,7 +184,9 @@ Contiene anotaciones JPA como @Id, @ManyToOne, etc.			No tiene lógica de persis
 Se usa para interactuar con la base de datos a través del Repository.	Se usa para exponer solo los datos necesarios a través del Controller (sin exponer toda la entidad).
 Puede tener relaciones complicadas, colecciones, etc.			Está diseñado para ser simple, específico y liviano.
 
+-> 1. Autenticación JWT
 
+beta 0.1.6.0: Generar token JWT con datos usuales (subject, iat, exp = 15 min, claims).
 
 
 

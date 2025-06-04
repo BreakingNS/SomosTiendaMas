@@ -1,9 +1,8 @@
-/*
 package com.breakingns.SomosTiendaMas.auth.config;
 
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.IUsuarioService;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioService;
+import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -15,7 +14,7 @@ public class AdminInitializer implements CommandLineRunner {
 
     private final IUsuarioService usuarioService;
 
-    public AdminInitializer(UsuarioService usuarioService) {
+    public AdminInitializer(UsuarioServiceImpl usuarioService) {
         this.usuarioService = usuarioService;
     }
 
@@ -50,4 +49,3 @@ public class AdminInitializer implements CommandLineRunner {
         }
     }
 }
-*/

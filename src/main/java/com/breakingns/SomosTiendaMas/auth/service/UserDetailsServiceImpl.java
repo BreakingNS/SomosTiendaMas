@@ -5,7 +5,6 @@ import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
@@ -51,28 +50,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             usuario
         );
     }
-    
-    /*
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.info("Cargando usuario desde username: {}", username);
-
-        Usuario usuario = usuarioRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-
-        if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-            throw new UsernameNotFoundException("El usuario no tiene roles asignados");
-        }
-
-        return new UserAuthDetails(
-            usuario.getIdUsuario(),
-            usuario.getUsername(),
-            usuario.getPassword(),
-            mapearRoles(usuario.getRoles()),
-            usuario
-        );
-    }
-    */
 
     private Collection<? extends GrantedAuthority> mapearRoles(Set<Rol> roles) {
         log.info("Se mapean los roles: {}", roles);

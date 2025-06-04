@@ -10,13 +10,25 @@
 	</parent>
 	<groupId>com.breakingns</groupId>
 	<artifactId>SomosTiendaMas</artifactId>
-	<version>0.1.5.4</version>
+	<version>0.1.6.0</version>
 	<name>SomosTiendaMas</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
 	</licenses>
+        
+        <profiles>
+            <profile>
+                <id>dev</id>
+                <!-- Podés agregar configuraciones específicas para dev si querés -->
+            </profile>
+            <profile>
+                <id>test</id>
+                <!-- Podés agregar configuraciones específicas para test si querés -->
+            </profile>
+        </profiles>
+        
 	<developers>
 		<developer/>
 	</developers>
