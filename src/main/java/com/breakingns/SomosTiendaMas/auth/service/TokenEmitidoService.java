@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import java.security.PublicKey;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,19 @@ public class TokenEmitidoService {
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final IUsuarioRepository usuarioRepository;
     
+    // PRODUCCION
+    public TokenEmitidoService(
+            ITokenEmitidoRepository tokenEmitidoRepository, 
+            IUsuarioRepository usuarioRepository, 
+            RsaKeyUtil rsaKeyUtil,
+            @Value("${jwt.public-key-path}") String publicKeyPath
+    ) throws Exception {
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.publicKey = rsaKeyUtil.loadPublicKey(publicKeyPath);
+    }
+
+    /* DESARROLLO
     public TokenEmitidoService(
             ITokenEmitidoRepository tokenEmitidoRepository, 
             IUsuarioRepository usuarioRepository, 
@@ -36,7 +50,7 @@ public class TokenEmitidoService {
         this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.usuarioRepository = usuarioRepository;
         this.publicKey = rsaKeyUtil.loadPublicKey("src/main/resources/keys/public.pem");
-    }
+    }*/
 
     public void guardarToken(String token, Instant fechaExpiracion, String username) {
         log.info("Guardando token de usuario: {}", username);

@@ -52,6 +52,8 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() throws Exception {
+        System.out.println("Ruta clave privada: " + privateKeyPath);
+        System.out.println("Ruta clave pública: " + publicKeyPath);
         this.privateKey = rsaKeyUtil.loadPrivateKey(privateKeyPath);
         this.publicKey = rsaKeyUtil.loadPublicKey(publicKeyPath);
     }

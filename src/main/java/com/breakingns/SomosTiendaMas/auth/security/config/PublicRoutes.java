@@ -6,6 +6,16 @@ public class PublicRoutes {
         "/api/password/public/**",
         "/api/registro/public/**",
         "/api/sesiones/public/**",
-        "/test/**"
+        "/test/**",
+        // Rutas públicas para archivos estáticos
+        "/index.html",
+        "/main.html",
+        "/login.html",
+        "/registro.html",
+        "/recuperar.html",
+        "/css/**",
+        "/js/**",
+        "/images/**",
+        "/"
     };
 }

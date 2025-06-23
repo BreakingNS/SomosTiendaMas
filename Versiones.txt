@@ -174,7 +174,7 @@ beta 0.1.5.3: Se agregaron validaciones correspondientes a DTO requests de endpo
 
 beta 0.1.5.4: Orgenizacion de Tests en paquetes y endpoints temporales de pruebas.
 
-Server beta 0.0.1: nuevas credenciales rsa y cambio de directorios en application.properties.
+***Server beta 0.0.1: nuevas credenciales rsa y cambio de directorios en application.properties.
 
 🔹 Diferencia entre Entidad y DTO
 
@@ -188,6 +188,9 @@ Puede tener relaciones complicadas, colecciones, etc.			Está diseñado para ser
 
 beta 0.1.6.0: Generar token JWT con datos usuales (subject, iat, exp = 15 min, claims).
 
+beta 0.1.6.1: Generar refresh token (exp = 7 días).
+
+***Server beta 0.1.6.2: Beta para pruebas de login
 
 
 

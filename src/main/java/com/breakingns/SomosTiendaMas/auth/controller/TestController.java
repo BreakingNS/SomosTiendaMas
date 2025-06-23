@@ -2,10 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.controller;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
-import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
-import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.model.RolNombre;
 import jakarta.validation.Valid;
@@ -19,17 +16,10 @@ public class TestController {
     
     private final AuthService authService;
     private final UsuarioServiceImpl usuarioService;
-    private final IUsuarioRepository usuarioRepository;
-    private final LoginAttemptService loginAttemptService;
 
-    private final PasswordResetService passwordResetService;
-
-    public TestController(AuthService authService, UsuarioServiceImpl usuarioService, IUsuarioRepository usuarioRepository, LoginAttemptService loginAttemptService, PasswordResetService passwordResetService) {
+    public TestController(AuthService authService, UsuarioServiceImpl usuarioService) {
         this.authService = authService;
         this.usuarioService = usuarioService;
-        this.usuarioRepository = usuarioRepository;
-        this.loginAttemptService = loginAttemptService;
-        this.passwordResetService = passwordResetService;
     }    
     
     @PostMapping("/api/password/public/generartokenexpirado") // SOLO PRUEBAS

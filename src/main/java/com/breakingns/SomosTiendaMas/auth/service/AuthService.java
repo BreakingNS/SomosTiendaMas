@@ -3,9 +3,7 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
@@ -42,14 +40,21 @@ public class AuthService {
     //private final RateLimiterService rateLimiterService;
     private final LoginAttemptService loginAttemptService;
     
-    private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final IUsuarioRepository usuarioRepository;
-    private final ISesionActivaRepository sesionActivaRepository;
     private final IRefreshTokenRepository refreshTokenRepository;
 
     private final UsuarioUtils UsuarioUtils;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager, RefreshTokenService refreshTokenService, TokenEmitidoService tokenEmitidoService, SesionActivaService sesionActivaService, PasswordResetService passwordResetService, LoginAttemptService loginAttemptService, IPasswordResetTokenRepository passwordResetTokenRepository, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, IRefreshTokenRepository refreshTokenRepository, UsuarioUtils UsuarioUtils) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, 
+                        AuthenticationManager authenticationManager, 
+                        RefreshTokenService refreshTokenService, 
+                        TokenEmitidoService tokenEmitidoService, 
+                        SesionActivaService sesionActivaService, 
+                        PasswordResetService passwordResetService, 
+                        LoginAttemptService loginAttemptService,
+                        IUsuarioRepository usuarioRepository,
+                        IRefreshTokenRepository refreshTokenRepository, 
+                        UsuarioUtils UsuarioUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
@@ -57,9 +62,7 @@ public class AuthService {
         this.sesionActivaService = sesionActivaService;
         this.passwordResetService = passwordResetService;
         this.loginAttemptService = loginAttemptService;
-        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.usuarioRepository = usuarioRepository;
-        this.sesionActivaRepository = sesionActivaRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.UsuarioUtils = UsuarioUtils;
     }

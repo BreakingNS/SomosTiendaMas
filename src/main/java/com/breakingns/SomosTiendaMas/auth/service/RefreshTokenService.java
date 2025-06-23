@@ -32,7 +32,6 @@ public class RefreshTokenService {
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenRepository refreshTokenRepository;
     private final IUsuarioRepository usuarioRepository;
-    private final ISesionActivaRepository sesionActivaRepository;
     private final TokenEmitidoService tokenEmitidoService;
     private final SesionActivaService sesionActivaService;
 
@@ -41,14 +40,12 @@ public class RefreshTokenService {
         IUsuarioRepository usuarioRepository,
         JwtTokenProvider jwtTokenProvider,
         TokenEmitidoService tokenEmitidoService,
-        ISesionActivaRepository sesionActivaRepository,
         SesionActivaService sesionActivaService
     ) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.usuarioRepository = usuarioRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.tokenEmitidoService = tokenEmitidoService;
-        this.sesionActivaRepository = sesionActivaRepository;
         this.sesionActivaService = sesionActivaService;
     }
 
