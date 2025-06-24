@@ -192,7 +192,7 @@ beta 0.1.6.1: Generar refresh token (exp = 7 días).
 
 ***Server beta 0.1.6.2: Beta para pruebas de login
 
-
+***Server beta 0.1.6.2: configuración inicial de HTTPS con certificado autofirmado en Spring Boot
 
 
 

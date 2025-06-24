@@ -8,5 +8,5 @@ ENV DB_PASSWORD=nahuel
 ENV DB_DRIVER=org.postgresql.Driver
 ENV PRIVATE_KEY_PATH=/app/keys/private.pem
 ENV PUBLIC_KEY_PATH=/app/keys/public.pem
-EXPOSE 8080
+EXPOSE 8443
 ENTRYPOINT ["java", "-jar", "app.jar"]

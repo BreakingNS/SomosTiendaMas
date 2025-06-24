@@ -31,6 +31,8 @@ src/main/resources/keys/
 *.iml
 *.ipr
 *.tar
+*.p12
+*.crt
 
 # NetBeans
 /nbproject/private/
