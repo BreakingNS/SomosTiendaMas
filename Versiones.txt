@@ -194,8 +194,12 @@ beta 0.1.6.1: Generar refresh token (exp = 7 días).
 
 ***Server beta 0.1.6.2: configuración inicial de HTTPS con certificado autofirmado en Spring Boot
 
+***Server beta 0.1.6.2: autenticación JWT usando cookies HttpOnly en login, refresh, logout y filtros
 
-
+- Modificados endpoints de login, refresh y logout para usar cookies HttpOnly
+- JwtAuthenticationFilter ahora lee tokens desde cookies en lugar de headers
+- Implementada clase CookieUtils para manejo centralizado de cookies
+- Configuradas cookies con atributos secure, httpOnly y sameSite
 
 
 

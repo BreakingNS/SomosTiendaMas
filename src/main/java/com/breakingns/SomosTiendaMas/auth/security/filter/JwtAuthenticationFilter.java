@@ -6,6 +6,7 @@ import static com.breakingns.SomosTiendaMas.auth.security.config.PublicRoutes.RU
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.utils.JwtAuthUtil;
+import com.breakingns.SomosTiendaMas.auth.utils.CookieUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,7 +53,77 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
     }
+    
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
+            
+            String path = request.getRequestURI();
+            System.out.println("🔍 JwtAuthFilter - Request URI: " + path);
 
+            if (path == null || path.isEmpty()) {
+                System.out.println("❌ Path vacío o nulo");
+            } else {
+                for (String ruta : RUTAS_PUBLICAS) {
+                    if (pathMatcher.match(ruta, path)) {
+                        System.out.println("✅ Ruta pública detectada: " + path + " — No aplico filtro JWT");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                }
+            }
+            
+            // CAMBIO PRINCIPAL: Leer token desde cookies en lugar del header
+            String token = CookieUtils.getAccessTokenFromCookies(request);
+            if (token == null || token.isEmpty()) {
+                JwtAuthUtil.noAutenticado(response, "Token no encontrado en cookies");
+                return;
+            }
+
+            if (!jwtTokenProvider.validarToken(token)) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o expirado");
+                return;
+            }
+
+            Optional<TokenEmitido> tokenDb = tokenEmitidoRepository.findByToken(token);
+            if (tokenDb.isEmpty() || tokenDb.get().isRevocado()) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o revocado");
+                return;
+            }
+
+            String username = jwtTokenProvider.obtenerUsernameDelToken(token);
+            UserDetails userDetails;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(username);
+            } catch (UsernameNotFoundException ex) {
+                JwtAuthUtil.rechazar(response, "Usuario no encontrado.");
+                return;
+            }
+
+            Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+
+            if (authorities == null || authorities.isEmpty()) {
+                System.out.println("⚠ Usuario autenticado sin roles: " + username + " — asignando ROLE_NONE");
+                authorities = List.of(new SimpleGrantedAuthority("ROLE_NONE"));
+            }
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            filterChain.doFilter(request, response);
+
+        } catch (ServletException | IOException e) {
+            JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
+            System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
+        }
+    }
+
+    /*
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -120,7 +191,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
             System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
         }
-    }
+    }*/
     /* EL QUE VA
     @Override
     protected void doFilterInternal(HttpServletRequest request,
