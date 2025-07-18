@@ -201,8 +201,8 @@ beta 0.1.6.1: Generar refresh token (exp = 7 días).
 - Implementada clase CookieUtils para manejo centralizado de cookies
 - Configuradas cookies con atributos secure, httpOnly y sameSite
 
+*-*-*-*-*-*-*-*    MOMENTANEAMENTE COOKIES NO IMPLEMENTADAS 	*-*-*-*-*-*-*-*
+*-*-*-*-*-*-*-*   	    FUTURA IMPLEMENTACION		*-*-*-*-*-*-*-*
+*-*-*-*-*-*-*-*   INICIO DE IMPLEMENTACION DE FUNCIONALIDADES 	*-*-*-*-*-*-*-*
 
-
-
-
-
+beta 0.1.6.3: Funcional con HTTPS y Cookies.
