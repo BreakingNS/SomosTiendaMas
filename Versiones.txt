@@ -206,3 +206,5 @@ beta 0.1.6.1: Generar refresh token (exp = 7 días).
 *-*-*-*-*-*-*-*   INICIO DE IMPLEMENTACION DE FUNCIONALIDADES 	*-*-*-*-*-*-*-*
 
 beta 0.1.6.3: Funcional con HTTPS y Cookies.
+
+beta 0.1.6.4: Funcional con HTTPS y Cookies SEMIFINAL.

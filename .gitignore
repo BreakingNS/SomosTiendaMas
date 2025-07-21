@@ -43,3 +43,8 @@ src/main/resources/keys/
 
 # Visual Studio Code
 .vscode/
+
+# SSL Certificates
+src/main/resources/keys/*.p12
+src/main/resources/keys/*.jks
+.env

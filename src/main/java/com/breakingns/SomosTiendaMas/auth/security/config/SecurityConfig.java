@@ -45,6 +45,7 @@ public class SecurityConfig {
                                                OlvidePasswordRateLimitFilter rateLimitFilter) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
+            .requiresChannel(channel -> channel.anyRequest().requiresSecure())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(cCustomAuthenticationEntryPoint)

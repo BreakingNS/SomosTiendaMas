@@ -1,43 +1,44 @@
-version: "3.8"
-
 services:
   db:
-    image: postgres:16
-    container_name: postgres
-    restart: always
-    env_file:
-      - .env
+    image: postgres:15-alpine
+    container_name: somostiendamas-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: somostiendamas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: nahuel
+    ports:
+      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - ecommerce-net
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: springboot-app
+    image: somostiendamas:0.1.6.4
+    container_name: somostiendamas-app
     depends_on:
-      - db
-    ports:
-      - "8443:8443"
-    env_file:
-      - .env
-    volumes:
-      - ./src/main/resources/keys/private.pem:/app/config/private.pem:ro
-      - ./src/main/resources/keys/public.pem:/app/config/public.pem:ro
+      db:
+        condition: service_healthy
     environment:
-      PRIVATE_KEY_PATH: /app/config/private.pem
-      PUBLIC_KEY_PATH: /app/config/public.pem
+      # ✅ Perfil Docker con SSL
+      SPRING_PROFILES_ACTIVE: docker
+      
+    ports:
+      - "8443:8443"  # ✅ Cambio: Puerto HTTPS
+    volumes:
+      - ./logs:/app/logs
     networks:
-      - ecommerce-net
+      - app-network
+    restart: unless-stopped
 
 volumes:
-  pgdata:
+  postgres_data:
 
 networks:
-  ecommerce-net:
+  app-network:
+    driver: bridge
