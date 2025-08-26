@@ -189,6 +189,16 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(TokenRevocadoException.class)
+    public ResponseEntity<?> manejarTokenRevocado(TokenRevocadoException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+            "error", "Token revocado",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.UNAUTHORIZED.value()
+        ));
+    }
+
     @ExceptionHandler(PasswordInvalidaException.class)
     public ResponseEntity<?> manejarPasswordInvalida(PasswordInvalidaException ex) {
         return ResponseEntity.badRequest().body(Map.of(
@@ -201,11 +211,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RefreshTokenException.class)
     public ResponseEntity<?> handleRefreshTokenException(RefreshTokenException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
             "error", "Token Inválido",
             "message", ex.getMessage(),
             "timestamp", Instant.now().toString(),
-            "status", HttpStatus.FORBIDDEN.value()
+            "status", HttpStatus.UNAUTHORIZED.value()
         ));
     }
 

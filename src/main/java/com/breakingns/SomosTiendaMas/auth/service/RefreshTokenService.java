@@ -2,15 +2,12 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.security.exception.NotFoundException;
 import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -32,21 +29,23 @@ public class RefreshTokenService {
     private final JwtTokenProvider jwtTokenProvider;
     private final IRefreshTokenRepository refreshTokenRepository;
     private final IUsuarioRepository usuarioRepository;
-    private final TokenEmitidoService tokenEmitidoService;
     private final SesionActivaService sesionActivaService;
+
+    private final RevocacionUtils revocacionUtils;
 
     public RefreshTokenService(
         IRefreshTokenRepository refreshTokenRepository,
         IUsuarioRepository usuarioRepository,
         JwtTokenProvider jwtTokenProvider,
         TokenEmitidoService tokenEmitidoService,
-        SesionActivaService sesionActivaService
+        SesionActivaService sesionActivaService,
+        RevocacionUtils revocacionUtils
     ) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.usuarioRepository = usuarioRepository;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.tokenEmitidoService = tokenEmitidoService;
         this.sesionActivaService = sesionActivaService;
+        this.revocacionUtils = revocacionUtils; 
     }
 
     public RefreshToken crearRefreshToken(Long userId, HttpServletRequest request) {
@@ -135,11 +134,11 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con id: " + userId));
         refreshTokenRepository.deleteByUsuario(usuario);
     }
-
+    /*
     @Transactional
     public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
         log.info("Llamando a refrescarTokens con token: {}", requestRefreshToken);
-    
+        
         String tokenAnterior = extraerAccessTokenDesdeHeader(request);
         Long usuarioId = jwtTokenProvider.obtenerIdDelToken(tokenAnterior);
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -150,7 +149,7 @@ public class RefreshTokenService {
                 .map(this::verificarExpiracion)
                 .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
 
-        SesionActiva sesion = sesionActivaService.buscarPorToken(tokenAnterior)
+        sesionActivaService.buscarPorToken(tokenAnterior)
                 .orElseThrow(() -> new RefreshTokenException("No se encontró sesión para este token."));
         
         // Revocar tokens anteriores
@@ -159,6 +158,26 @@ public class RefreshTokenService {
         log.info("Token de refresh usado: {}", refreshToken);
 
         // Generar y registrar los nuevos tokens
+        return generarYRegistrarTokens(usuario, request);
+    }*/
+
+    @Transactional
+    public AuthResponse refrescarTokens(String requestRefreshToken, HttpServletRequest request) {
+        log.info("Llamando a refrescarTokens con token: {}", requestRefreshToken);
+
+        // 1. Buscar y revocar el refresh token anterior
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(requestRefreshToken)
+            .map(this::verificarExpiracion)
+            .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
+        revocarYUsar(refreshToken);
+
+        // 2. Buscar y revocar la sesión activa asociada al refresh token
+        revocacionUtils.revocarTodoPorSesion(sesionActivaService.buscarPorRefreshToken(refreshToken.getToken()));
+
+        // 3. Obtener el usuario
+        Usuario usuario = refreshToken.getUsuario();
+
+        // 4. Generar nuevos tokens y registrar nueva sesión
         return generarYRegistrarTokens(usuario, request);
     }
 
@@ -192,29 +211,29 @@ public class RefreshTokenService {
         refreshTokenRepository.save(refreshToken);
     }
 
-    private void revocarTokensAnteriores(String accessToken, RefreshToken refreshToken) {
-        revocarYUsar(refreshToken);
-        tokenEmitidoService.revocarToken(accessToken);
-        sesionActivaService.revocarSesion(accessToken);
-    }
-
     private AuthResponse generarYRegistrarTokens(Usuario usuario, HttpServletRequest request) {
         String nuevoAccessToken = jwtTokenProvider.generarTokenConUsuario(usuario);
         String nuevoRefreshToken = crearRefreshToken(usuario.getIdUsuario(), request).getToken();
         sesionActivaService.registrarSesion(
             usuario,
             nuevoAccessToken,
+            nuevoRefreshToken,
             request.getRemoteAddr(),
             request.getHeader("User-Agent")
         );
         return new AuthResponse(nuevoAccessToken, nuevoRefreshToken);
     }
 
-    private String extraerAccessTokenDesdeHeader(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new TokenNoEncontradoException("Token de acceso no encontrado o mal formado.");
-        }
-        return authHeader.substring(7);
+    public boolean validarToken(String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
+        return !token.getRevocado() && !token.getUsado() && Instant.now().isBefore(token.getFechaExpiracion());
+    }
+
+    public void revocarToken(String refreshToken) {
+        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new RefreshTokenException("Refresh token no válido."));
+        token.setRevocado(true);
+        refreshTokenRepository.save(token);
     }
 }

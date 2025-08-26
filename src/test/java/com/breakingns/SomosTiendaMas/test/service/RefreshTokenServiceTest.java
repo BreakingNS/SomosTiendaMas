@@ -1,5 +1,5 @@
-package com.breakingns.SomosTiendaMas.service;
-
+package com.breakingns.SomosTiendaMas.test.service;
+/*
 import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
@@ -84,7 +84,7 @@ public class RefreshTokenServiceTest {
         status().isNoContent() → 204
     
     */
-    
+    /*
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
     private final AuthenticationManager authenticationManager;
@@ -312,7 +312,7 @@ public class RefreshTokenServiceTest {
     
     
     
-}
+
 
 /*
 

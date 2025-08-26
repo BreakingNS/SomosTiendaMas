@@ -1,6 +1,5 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.test.controller;
 
-import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.request.ChangePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.request.OlvidePasswordRequest;
@@ -9,14 +8,11 @@ import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
-import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
-import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
@@ -131,15 +125,8 @@ public class AuthPasswordControllerSecurityTest {
     
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final PasswordEncoder passwordEncoder;
     
-    private final AuthController authController;
-    
-    private final SesionActivaService sesionActivaService;
-    private final UsuarioServiceImpl usuarioService;
-    private final RolService rolService;
     
     private final IUsuarioRepository usuarioRepository;
     private final ITokenResetPasswordRepository tokenResetPasswordRepository;
@@ -159,27 +146,14 @@ public class AuthPasswordControllerSecurityTest {
         registrarUsuario("usuario", "123456", "usuario@test.com");
         
         AuthResponse adminAuth = loginYGuardarDatos("admin", "987654");
-        tokenAdmin = adminAuth.accessToken();
-        refreshAdmin = adminAuth.refreshToken();
+        tokenAdmin = adminAuth.getAccessToken();
+        refreshAdmin = adminAuth.getRefreshToken();
         idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
         
         AuthResponse userAuth = loginYGuardarDatos("usuario", "123456");
-        tokenUsuario = userAuth.accessToken();
-        refreshUsuario = userAuth.refreshToken();
+        tokenUsuario = userAuth.getAccessToken();
+        refreshUsuario = userAuth.getRefreshToken();
         idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
-    }
-
-    // Método para registrar un usuario sin roles
-    private void registrarUsuarioSinRoles(String username, String password, String email) throws Exception {
-        Usuario usuario = new Usuario();
-        usuario.setUsername(username);
-        usuario.setPassword(password);
-        usuario.setEmail(email);
-
-        mockMvc.perform(post("/api/registro/public/sinrol")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(usuario)))
-            .andExpect(status().isOk());
     }
     
     // Método para registrar un usuario
@@ -229,50 +203,26 @@ public class AuthPasswordControllerSecurityTest {
 
         // Guardar el token y el refresh
         if (username.equals("admin")) {
-            tokenAdmin = jwtResponse.accessToken();
-            refreshAdmin = jwtResponse.refreshToken();
+            tokenAdmin = jwtResponse.getAccessToken();
+            refreshAdmin = jwtResponse.getRefreshToken();
             idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
         } else if (username.equals("usuario")) {
-            tokenUsuario = jwtResponse.accessToken();
-            refreshUsuario = jwtResponse.refreshToken();
+            tokenUsuario = jwtResponse.getAccessToken();
+            refreshUsuario = jwtResponse.getRefreshToken();
             idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
         }
-        
-        return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
+
+        return new AuthResponse(jwtResponse.getAccessToken(), jwtResponse.getRefreshToken());
     }
     
-    private AuthResponse loginYGuardarDatosOtroIp(String username, String password) throws Exception {
-        LoginRequest loginRequest = new LoginRequest(username, password);
-
-        String response = mockMvc.perform(post("/api/auth/public/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest))
-                .header("User-Agent", "MockMvc")
-                .with(request -> {
-                    request.setRemoteAddr("127.0.0.9");
-                    return request;
-                }))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-        AuthResponse jwtResponse = objectMapper.readValue(response, AuthResponse.class);
-
-        // Guardar el token y el refresh
-        if (username.equals("admin")) {
-            tokenAdmin = jwtResponse.accessToken();
-            refreshAdmin = jwtResponse.refreshToken();
-            idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
-        } else if (username.equals("usuario")) {
-            tokenUsuario = jwtResponse.accessToken();
-            refreshUsuario = jwtResponse.refreshToken();
-            idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
-        }
-        
-        return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
+    @Test
+    public void evitarWarnings() throws Exception{
+        assertEquals(refreshAdmin, refreshAdmin);
+        assertEquals(refreshUsuario, refreshUsuario);
+        assertEquals(idAdmin, idAdmin);
+        assertEquals(idUsuario, idUsuario);
     }
-    
+
     // Simular múltiples intentos fallidos:
     @Test
     public void testLimiteIntentosFallidosOlvidePassword() throws Exception {

@@ -1,0 +1,53 @@
+2025-07-21T14:56:20.788Z  INFO 1 --- [SomosTiendaMas-Beta] [main] c.b.S.SomosTiendaMasApplication          : Starting SomosTiendaMasApplication v0.1.6.4 using Java 17.0.15 with PID 1 (/app/app.jar started by spring in /app)
+2025-07-21T14:56:20.791Z  INFO 1 --- [SomosTiendaMas-Beta] [main] c.b.S.SomosTiendaMasApplication          : The following 1 profile is active: "docker"
+2025-07-21T14:56:21.628Z  INFO 1 --- [SomosTiendaMas-Beta] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-07-21T14:56:21.715Z  INFO 1 --- [SomosTiendaMas-Beta] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 74 ms. Found 9 JPA repository interfaces.
+2025-07-21T14:56:22.545Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with ports 8443 (https), 8080 (http)
+2025-07-21T14:56:22.560Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-07-21T14:56:22.561Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.40]
+2025-07-21T14:56:22.591Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-07-21T14:56:22.592Z  INFO 1 --- [SomosTiendaMas-Beta] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1749 ms
+2025-07-21T14:56:22.742Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-07-21T14:56:22.818Z  INFO 1 --- [SomosTiendaMas-Beta] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2025-07-21T14:56:22.858Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-07-21T14:56:23.136Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-07-21T14:56:23.178Z  INFO 1 --- [SomosTiendaMas-Beta] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-07-21T14:56:23.333Z  INFO 1 --- [SomosTiendaMas-Beta] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@645ba24a
+2025-07-21T14:56:23.335Z  INFO 1 --- [SomosTiendaMas-Beta] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-07-21T14:56:23.365Z  WARN 1 --- [SomosTiendaMas-Beta] [main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-07-21T14:56:23.387Z  INFO 1 --- [SomosTiendaMas-Beta] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 15.13
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-07-21T14:56:24.582Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-07-21T14:56:24.692Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.692Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "ukjo3wdfqn510qwk6ffx5v9nua8" of relation "carrito" does not exist, skipping
+2025-07-21T14:56:24.699Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.700Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "ukr4k4edos30bx9neoq81mdvwph" of relation "refresh_token" does not exist, skipping
+2025-07-21T14:56:24.707Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.708Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "uk43kr6s7bts1wqfv43f7jd87kp" of relation "rol" does not exist, skipping
+2025-07-21T14:56:24.716Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.716Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "ukbc0w580y2vl721trlikpdt39k" of relation "sesiones_activas" does not exist, skipping
+2025-07-21T14:56:24.724Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.725Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "uknghw4qcx4ddqclkocecnnkn0p" of relation "token_emitido" does not exist, skipping
+2025-07-21T14:56:24.732Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Warning Code: 0, SQLState: 00000
+2025-07-21T14:56:24.733Z  WARN 1 --- [SomosTiendaMas-Beta] [main] o.h.engine.jdbc.spi.SqlExceptionHelper   : constraint "ukir66j8bnp69b9gfcepjy6im3a" of relation "tokens_reset_password" does not exist, skipping
+2025-07-21T14:56:24.769Z  INFO 1 --- [SomosTiendaMas-Beta] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-07-21T14:56:25.040Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-07-21T14:56:25.841Z  WARN 1 --- [SomosTiendaMas-Beta] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-07-21T14:56:25.941Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
+2025-07-21T14:56:26.639Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/spring/.keystore] using alias [somostiendamas] with trust store [null]
+2025-07-21T14:56:26.654Z  INFO 1 --- [SomosTiendaMas-Beta] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on ports 8443 (https), 8080 (http) with context path '/'
+2025-07-21T14:56:26.669Z  INFO 1 --- [SomosTiendaMas-Beta] [main] c.b.S.SomosTiendaMasApplication          : Started SomosTiendaMasApplication in 6.422 seconds (process running for 7.008)
+2025-07-21T14:56:47.457Z  INFO 1 --- [SomosTiendaMas-Beta] [https-jsse-nio-8443-exec-5] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-07-21T14:56:47.458Z  INFO 1 --- [SomosTiendaMas-Beta] [https-jsse-nio-8443-exec-5] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-07-21T14:56:47.460Z  INFO 1 --- [SomosTiendaMas-Beta] [https-jsse-nio-8443-exec-5] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-07-21T22:51:03.968Z  INFO 1 --- [SomosTiendaMas-Beta] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-07-21T22:51:03.972Z  INFO 1 --- [SomosTiendaMas-Beta] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-07-21T22:51:03.979Z  INFO 1 --- [SomosTiendaMas-Beta] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-07-21T22:51:03.983Z  INFO 1 --- [SomosTiendaMas-Beta] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-07-21T22:51:03.989Z  INFO 1 --- [SomosTiendaMas-Beta] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

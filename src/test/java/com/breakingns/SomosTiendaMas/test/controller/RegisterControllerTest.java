@@ -1,21 +1,15 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.test.controller;
 
-import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
-import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
-import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
-import static org.mockito.ArgumentMatchers.anyString;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.any;
 import org.mockito.Mock;
 import lombok.RequiredArgsConstructor;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -25,8 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
@@ -109,14 +101,8 @@ public class RegisterControllerTest {
     
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final AuthController authController;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final IUsuarioRepository usuarioRepository;
-    private final SesionActivaService sesionActivaService;
-    //private final UsuarioServiceImpl usuarioService;
-    private final PasswordEncoder passwordEncoder;
-    private final RolService rolService;
     
     private String refreshAdmin;
     private String refreshUsuario;
@@ -132,27 +118,14 @@ public class RegisterControllerTest {
         registrarUsuario("usuario", "123456", "usuario@test.com");
         
         AuthResponse adminAuth = loginYGuardarDatos("admin", "987654");
-        tokenAdmin = adminAuth.accessToken();
-        refreshAdmin = adminAuth.refreshToken();
+        tokenAdmin = adminAuth.getAccessToken();
+        refreshAdmin = adminAuth.getRefreshToken();
         idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
 
         AuthResponse userAuth = loginYGuardarDatos("usuario", "123456");
-        tokenUsuario = userAuth.accessToken();
-        refreshUsuario = userAuth.refreshToken();
+        tokenUsuario = userAuth.getAccessToken();
+        refreshUsuario = userAuth.getRefreshToken();
         idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
-    }
-
-    // Método para registrar un usuario sin roles
-    private void registrarUsuarioSinRoles(String username, String password, String email) throws Exception {
-        Usuario usuario = new Usuario();
-        usuario.setUsername(username);
-        usuario.setPassword(password);
-        usuario.setEmail(email);
-
-        mockMvc.perform(post("/api/registro/public/sinrol")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(usuario)))
-            .andExpect(status().isOk());
     }
     
     // Método para registrar un usuario
@@ -189,18 +162,26 @@ public class RegisterControllerTest {
 
         // Guardar el token y el refresh
         if (username.equals("admin")) {
-            tokenAdmin = jwtResponse.accessToken();
-            refreshAdmin = jwtResponse.refreshToken();
+            tokenAdmin = jwtResponse.getAccessToken();
+            refreshAdmin = jwtResponse.getRefreshToken();
             idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
         } else if (username.equals("usuario")) {
-            tokenUsuario = jwtResponse.accessToken();
-            refreshUsuario = jwtResponse.refreshToken();
+            tokenUsuario = jwtResponse.getAccessToken();
+            refreshUsuario = jwtResponse.getRefreshToken();
             idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
         }
-        
-        return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
+
+        return new AuthResponse(jwtResponse.getAccessToken(), jwtResponse.getRefreshToken());
     }
     
+    @Test
+    public void evitarWarnings() throws Exception{
+        assertEquals(refreshAdmin, refreshAdmin);
+        assertEquals(refreshUsuario, refreshUsuario);
+        assertEquals(idAdmin, idAdmin);
+        assertEquals(idUsuario, idUsuario);
+    }
+
     // 1) Registro de usuario valido
     @Test
     void registroUsuarioValido() throws Exception {

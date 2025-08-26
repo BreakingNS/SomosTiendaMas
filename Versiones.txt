@@ -208,3 +208,11 @@ beta 0.1.6.1: Generar refresh token (exp = 7 días).
 beta 0.1.6.3: Funcional con HTTPS y Cookies.
 
 beta 0.1.6.4: Funcional con HTTPS y Cookies SEMIFINAL.
+
+	Modulos
+
+Modulo 1 Autorizacion
+
+beta 0.1.7.0: Modulo 1 Autorizacion finalizado y testeado.
+
+	- Modelo hibrido, aceptado tanto cookies como tokens por header/body.

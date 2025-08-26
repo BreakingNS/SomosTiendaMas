@@ -2,20 +2,27 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
+import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
+import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
 import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.CredencialesInvalidasException;
+import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenException;
+import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
+import com.breakingns.SomosTiendaMas.security.exception.TokenRevocadoException;
 import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioBloqueadoException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +31,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 @Slf4j
 @Service
@@ -41,9 +47,10 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     
     private final IUsuarioRepository usuarioRepository;
-    private final IRefreshTokenRepository refreshTokenRepository;
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
 
-    private final UsuarioUtils UsuarioUtils;
+    private final UsuarioUtils usuarioUtils;
+    private final RevocacionUtils revocacionUtils;
 
     public AuthService(JwtTokenProvider jwtTokenProvider, 
                         AuthenticationManager authenticationManager, 
@@ -53,8 +60,9 @@ public class AuthService {
                         PasswordResetService passwordResetService, 
                         LoginAttemptService loginAttemptService,
                         IUsuarioRepository usuarioRepository,
-                        IRefreshTokenRepository refreshTokenRepository, 
-                        UsuarioUtils UsuarioUtils) {
+                        ITokenEmitidoRepository tokenEmitidoRepository,
+                        UsuarioUtils usuarioUtils,
+                        RevocacionUtils revocacionUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
@@ -63,8 +71,9 @@ public class AuthService {
         this.passwordResetService = passwordResetService;
         this.loginAttemptService = loginAttemptService;
         this.usuarioRepository = usuarioRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.UsuarioUtils = UsuarioUtils;
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.usuarioUtils = usuarioUtils;
+        this.revocacionUtils = revocacionUtils;
     }
     
     // ---
@@ -87,7 +96,7 @@ public class AuthService {
         
             String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
 
-            Usuario usuario = UsuarioUtils.findByUsername(loginRequest.username());
+            Usuario usuario = usuarioUtils.findByUsername(loginRequest.username());
 
             String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
 
@@ -95,8 +104,12 @@ public class AuthService {
             String ip = RequestUtil.obtenerIpCliente(request);
             String userAgent = request.getHeader("User-Agent");
 
+            if (userAgent == null) {
+                userAgent = "Desconocido"; //PRUEBA PARA EVITAR USERAGENT NULOS
+            }
+
             // Crear sesión activa con servicio dedicado
-            sesionActivaService.registrarSesion(usuario, accessToken, ip, userAgent);
+            sesionActivaService.registrarSesion(usuario, accessToken, refreshToken, ip, userAgent);
 
             loginAttemptService.loginSucceeded(loginRequest.username(), ip);
 
@@ -111,32 +124,27 @@ public class AuthService {
         }
     }
     
-    public void logout(String accessToken, String refreshToken) {
-        // Extraer username desde el accessToken para identificar al usuario
-        String username = jwtTokenProvider.obtenerUsernameDelToken(accessToken);
+    @Transactional
+    public void logout(String accessToken) {
+        // Buscar la sesión activa por access token
+        SesionActiva sesion = sesionActivaService.buscarPorToken(accessToken)
+            .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada"));
 
-        // Buscar el usuario en la base de datos
-        Usuario usuario = usuarioRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        Long idSesion = sesion.getId();
+        String username = sesion.getUsuario().getUsername();
 
-        // Buscar el refreshToken en la base de datos
-        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
-            .orElseThrow(() -> new TokenException("Refresh token no encontrado"));
+        log.info("Logout solicitado para usuario: {} (sesión: {})", username, idSesion);
 
-        // Verificar que el refreshToken pertenece al mismo usuario
-        if (!token.getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
-            throw new TokenException("El refresh token no pertenece al usuario autenticado");
+        // Validar que la sesión corresponde al usuario del token
+        Long idUsuario = jwtTokenProvider.obtenerIdDesdeToken(accessToken);
+        if (!tokenEmitidoService.validarSesionActual(accessToken, idUsuario)) {
+            throw new SesionNoValidaException("La sesión no es válida o ha sido manipulada.");
         }
 
-        // Verificar si el refreshToken está revocado
-        if (token.getRevocado()) {
-            throw new TokenException("Refresh token ya fue revocado o usado.");
-        }
+        // Revocar todo lo relacionado a la sesión
+        revocacionUtils.revocarTodoPorSesion(idSesion);
 
-        // Revocar el refresh token, el access token y la sesión activa
-        refreshTokenService.logout(refreshToken); // Revocar refresh token
-        tokenEmitidoService.revocarToken(accessToken); // Revocar access token
-        sesionActivaService.revocarSesion(accessToken); // Revocar sesión 
+        log.info("Logout exitoso para usuario: {} (sesión: {})", username, idSesion);
     }
     
     public void logoutTotal(String accessToken) {
@@ -150,14 +158,16 @@ public class AuthService {
         log.info("Logout total completado para usuario: {}", username);
     }
     
-    public void logoutTotalExceptoSesionActual(Long idUsuario, String accessToken, String refresh){
+    public void logoutTotalExceptoSesionActual(Long idUsuario, String accessToken){
         log.info("Logout total excepto sesión actual para usuario ID: {}", idUsuario);
         
         if (!tokenEmitidoService.validarSesionActual(accessToken, idUsuario)) {
             throw new SesionNoValidaException("La sesión no es válida o ha sido manipulada.");
         }
         
-        // Revocar tolos los refresh token de este usuario
+        String refresh = obtenerRefreshDeSesionActual(idUsuario, accessToken);
+
+        // Revocar todos los refresh token de este usuario
         refreshTokenService.logoutTotalExceptoSesionActual(idUsuario, refresh); //Listo
         
         // Revocar todos los access token de este usuario
@@ -201,5 +211,40 @@ public class AuthService {
 
     public void generarTokenUsado(String email) { //SOLO PRUEBAS
         passwordResetService.solicitarRecuperacionPasswordUsado(email);
+    }
+
+    public boolean validarAccessToken(String accessToken) {
+        Optional<TokenEmitido> tokenOpt = tokenEmitidoRepository.findByToken(accessToken);
+        if (tokenOpt.isEmpty()) {
+            throw new TokenNoEncontradoException("Token no encontrado");
+        }
+        TokenEmitido tokenEmitido = tokenOpt.get();
+        if (tokenEmitido.isRevocado()) {
+            throw new TokenRevocadoException("El token fue revocado");
+        }
+        return true;
+    }
+
+    public boolean validarRefreshToken(String refreshToken) {
+        return refreshTokenService.validarToken(refreshToken);
+    }
+
+    public void revocarAccessToken(String accessToken) {
+        tokenEmitidoService.revocarToken(accessToken);
+    }
+
+    public void revocarRefreshToken(String refreshToken) {
+        refreshTokenService.revocarToken(refreshToken);
+    }
+
+    public List<SesionActivaDTO> listarSesionesActivas(Long idUsuario) {
+        return sesionActivaService.listarSesionesActivas(idUsuario);
+    }
+
+    private String obtenerRefreshDeSesionActual(Long idUsuario, String accessToken) {
+        // Buscar la sesión activa por accessToken y usuario
+        SesionActiva sesion = sesionActivaService.buscarSesionPorTokenYUsuario(accessToken, idUsuario)
+            .orElseThrow(() -> new SesionNoEncontradaException("Sesión activa no encontrada para el usuario y token"));
+        return sesion.getRefreshToken();
     }
 }

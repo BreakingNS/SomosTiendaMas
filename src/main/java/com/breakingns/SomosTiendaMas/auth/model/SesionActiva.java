@@ -26,6 +26,10 @@ public class SesionActiva {
     @Column(nullable = false, unique = true, length = 2048)
     private String token;
 
+    // NUEVO CAMPO: refreshToken asociado a la sesión
+    @Column(nullable = true, length = 2048)
+    private String refreshToken;
+
     @Column(nullable = false)
     private String ip;
 
@@ -48,9 +52,10 @@ public class SesionActiva {
     public SesionActiva() {
     }
     
-    public SesionActiva(Long id, String token, String ip, String userAgent, Usuario usuario, Instant fechaInicioSesion, Instant fechaExpiracion) {
+    public SesionActiva(Long id, String token, String refreshToken, String ip, String userAgent, Usuario usuario, Instant fechaInicioSesion, Instant fechaExpiracion) {
         this.id = id;
         this.token = token;
+        this.refreshToken = refreshToken;
         this.ip = ip;
         this.userAgent = userAgent;
         this.usuario = usuario;

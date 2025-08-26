@@ -6,6 +6,7 @@ public class PublicRoutes {
         "/api/password/public/**",
         "/api/registro/public/**",
         "/api/sesiones/public/**",
+        "/test/api/auth/public/**",
         "/test/**",
         // Rutas públicas para archivos estáticos
         "/index.html",

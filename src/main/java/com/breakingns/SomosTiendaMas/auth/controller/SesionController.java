@@ -47,13 +47,19 @@ public class SesionController {
     public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
         return sesionActivaService.listarSesionesActivasComoAdmin(idUsuario);
     }
+
+    @PostMapping("/private/admin/revocar")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> revocarSesionActiva(@RequestParam Long idSesion) {
+        sesionActivaService.revocarSesionPorId(idSesion);
+        return ResponseEntity.ok("Sesión revocada correctamente");
+    }
     
     @PostMapping("/private/logout-otras-sesiones")
     @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
     public ResponseEntity<?> logoutOtrasSesiones(
-        @RequestHeader("Authorization") String authorizationHeader,
-        @RequestHeader("Refresh-Token") String refreshTokenHeader) {
-        
+        @RequestHeader("Authorization") String authorizationHeader) {
+
         String accessToken = TokenUtils.extractTokenFromHeader(authorizationHeader);
         if (accessToken == null) {
             throw new TokenInvalidoException("Token faltante o mal formado");
@@ -69,8 +75,9 @@ public class SesionController {
         if (!jwtTokenProvider.validarTokenPorId(accessToken, idUsuario)) {
             throw new TokenInvalidoException("El token no corresponde a la sesión actual.");
         }
-        
-        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken, refreshTokenHeader);
+
+        // Ahora solo pasás el accessToken, el service buscará el refresh asociado
+        authService.logoutTotalExceptoSesionActual(idUsuario, accessToken);
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }
     

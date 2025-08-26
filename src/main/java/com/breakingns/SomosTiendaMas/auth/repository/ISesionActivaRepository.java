@@ -4,6 +4,7 @@ import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,5 +24,9 @@ public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Lon
     SesionActiva findByUsuarioAndIpAndUserAgentAndRevocadoFalse(Usuario usuario, String ip, String userAgent);
 
     List<SesionActiva> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
+
+    Optional<SesionActiva> findByRefreshToken(String token);
+
+    List<SesionActiva> findAllByUsuario_Username(String username);
 
 }

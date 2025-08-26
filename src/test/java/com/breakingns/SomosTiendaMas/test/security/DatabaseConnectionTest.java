@@ -1,14 +1,9 @@
-package com.breakingns.SomosTiendaMas.security;
+package com.breakingns.SomosTiendaMas.test.security;
 
-import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.model.Carrito;
 import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
-import com.breakingns.SomosTiendaMas.service.CarritoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
@@ -18,19 +13,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
-import static org.mockito.Mockito.when;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
@@ -79,22 +70,14 @@ public class DatabaseConnectionTest {
     private final ObjectMapper objectMapper;
     
     private final JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
-    private final PasswordEncoder passwordEncoder;
-    
-    private final AuthController authController;
-    
-    private final RolService rolService;
-    private final CarritoService carritoService;
-    private final UsuarioServiceImpl usuarioService;
-    
-    private final IUsuarioRepository usuarioRepository;
+
     private final ICarritoRepository carritoRepository;
     //private final ITokenEmitidoRepository tokenEmitidoRepository;
     
     @Mock
     private ITokenEmitidoRepository tokenEmitidoRepository;
     
+    /*
     // Método para registrar un usuario
     private void registrarUsuario(String username, String password, String email) throws Exception {
         Usuario usuario = new Usuario();
@@ -106,7 +89,7 @@ public class DatabaseConnectionTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(usuario)))
             .andExpect(status().isOk());
-    }
+    }*/
 
     // 1) Error de conexión: la base de datos no está disponible
     @Test
@@ -212,7 +195,7 @@ public class DatabaseConnectionTest {
         usuario.setCarrito(carrito);
 
         // Esperamos que explote al intentar guardar carrito con usuario no persistido
-        DataIntegrityViolationException assertThrows = assertThrows(DataIntegrityViolationException.class, () -> {
+        assertThrows(DataIntegrityViolationException.class, () -> {
             carritoRepository.saveAndFlush(carrito);
         });
 

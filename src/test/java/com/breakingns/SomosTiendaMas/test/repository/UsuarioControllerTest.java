@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.repository;
+package com.breakingns.SomosTiendaMas.test.repository;
 
 import com.breakingns.SomosTiendaMas.auth.controller.RegistroController;
 import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
@@ -10,13 +10,13 @@ import org.springframework.http.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
+
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,16 +24,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false) // opcional si no necesitás filtros de seguridad en el test
 class UsuarioControllerTest {
 
-    @MockBean
+    @Mock
     private RolService rolService;
 
-    @MockBean
+    @Mock
     private LoginAttemptService loginAttemptService;
 
-    @MockBean
+    @Mock
     private UsuarioServiceImpl usuarioService;
     
-    @MockBean
+    @Mock
     private CarritoService carritoService;
 
     @Autowired

@@ -1,15 +1,12 @@
-package com.breakingns.SomosTiendaMas.controller;
+package com.breakingns.SomosTiendaMas.test.controller;
 
-import com.breakingns.SomosTiendaMas.auth.controller.AuthController;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.request.RefreshTokenRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
-import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.domain.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,8 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
@@ -125,14 +120,9 @@ public class AuthIntegrationTest {
     
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final AuthController authController;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final IUsuarioRepository usuarioRepository;
     private final SesionActivaService sesionActivaService;
     private final UsuarioServiceImpl usuarioService;
-    private final PasswordEncoder passwordEncoder;
-    private final RolService rolService;
     
     private String refreshAdmin;
     private String refreshUsuario;
@@ -148,13 +138,13 @@ public class AuthIntegrationTest {
         registrarUsuario("usuario", "123456", "usuario@test.com");
         
         AuthResponse adminAuth = loginYGuardarDatos("admin", "987654");
-        tokenAdmin = adminAuth.accessToken();
-        refreshAdmin = adminAuth.refreshToken();
+        tokenAdmin = adminAuth.getAccessToken();
+        refreshAdmin = adminAuth.getRefreshToken();
         idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
 
         AuthResponse userAuth = loginYGuardarDatos("usuario", "123456");
-        tokenUsuario = userAuth.accessToken();
-        refreshUsuario = userAuth.refreshToken();
+        tokenUsuario = userAuth.getAccessToken();
+        refreshUsuario = userAuth.getRefreshToken();
         idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
     }
 
@@ -205,16 +195,16 @@ public class AuthIntegrationTest {
 
         // Guardar el token y el refresh
         if (username.equals("admin")) {
-            tokenAdmin = jwtResponse.accessToken();
-            refreshAdmin = jwtResponse.refreshToken();
+            tokenAdmin = jwtResponse.getAccessToken();
+            refreshAdmin = jwtResponse.getRefreshToken();
             idAdmin = jwtTokenProvider.obtenerIdDelToken(tokenAdmin);
         } else if (username.equals("usuario")) {
-            tokenUsuario = jwtResponse.accessToken();
-            refreshUsuario = jwtResponse.refreshToken();
+            tokenUsuario = jwtResponse.getAccessToken();
+            refreshUsuario = jwtResponse.getRefreshToken();
             idUsuario = jwtTokenProvider.obtenerIdDelToken(tokenUsuario);
         }
-        
-        return new AuthResponse(jwtResponse.accessToken(), jwtResponse.refreshToken());
+
+        return new AuthResponse(jwtResponse.getAccessToken(), jwtResponse.getRefreshToken());
     }
 
     // Verifica que un usuario cuando se registra, si existe en la BD
@@ -302,10 +292,12 @@ public class AuthIntegrationTest {
     // 1) Login con credenciales incorrectas
     @Test
     void loginIncorrecto() throws Exception {
+        assertEquals(refreshAdmin, refreshAdmin);
+        
         // Login del usuario
         LoginRequest loginUsuario = new LoginRequest("usuario", "holamundo");
 
-        String responseUsuario = mockMvc.perform(post("/api/auth/public/login")
+        mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginUsuario))
                 .header("User-Agent", "MockMvc") // 🛠️ importante
@@ -365,9 +357,9 @@ public class AuthIntegrationTest {
         String responseBody = result.getResponse().getContentAsString();
         AuthResponse authResponse = objectMapper.readValue(responseBody, AuthResponse.class);
 
-        assertNotNull(authResponse.accessToken());
-        assertNotNull(authResponse.refreshToken());
-        assertNotEquals(tokenUsuario, authResponse.accessToken()); // opcional
+        assertNotNull(authResponse.getAccessToken());
+        assertNotNull(authResponse.getRefreshToken());
+        assertNotEquals(tokenUsuario, authResponse.getAccessToken()); // opcional
     }
     
     // 5) Intentar generar refresh con tokens invalidos
@@ -450,7 +442,7 @@ public class AuthIntegrationTest {
         AuthResponse jwtResponse = objectMapper.readValue(response, AuthResponse.class);
 
         mockMvc.perform(post("/api/auth/private/logout-total") // <-- Endpoint
-                .header("Authorization", "Bearer " + jwtResponse.accessToken()))
+                .header("Authorization", "Bearer " + jwtResponse.getAccessToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").value("Sesiones cerradas en todos los dispositivos"));
         

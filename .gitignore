@@ -33,6 +33,8 @@ src/main/resources/keys/
 *.tar
 *.p12
 *.crt
+*.tar.gz
+*.rar
 
 # NetBeans
 /nbproject/private/

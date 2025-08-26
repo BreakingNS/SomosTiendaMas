@@ -7,6 +7,7 @@ import com.breakingns.SomosTiendaMas.auth.service.UserDetailsServiceImpl;
 import com.breakingns.SomosTiendaMas.auth.utils.RsaKeyUtil;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
@@ -175,8 +176,20 @@ public class JwtTokenProvider {
     }
 
     public Long obtenerIdDelToken(String token) {
-        return Long.valueOf(obtenerClaims(token).getSubject());
+        try {
+            return Long.valueOf(obtenerClaims(token).getSubject());
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            return Long.valueOf(ex.getClaims().getSubject());
+        } catch (io.jsonwebtoken.JwtException ex) {
+            throw new RefreshTokenException("Access token mal formado.");
+        }
     }
+
+
+    /*
+    public Long obtenerIdDelToken(String token) {
+        return Long.valueOf(obtenerClaims(token).getSubject());
+    }*/
 
     public List<String> obtenerRolesDelToken(String token) {
         Object roles = obtenerClaims(token).get("roles");
@@ -191,12 +204,27 @@ public class JwtTokenProvider {
     }
 
     private Claims obtenerClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            return ex.getClaims();
+        } catch (io.jsonwebtoken.JwtException ex) {
+            throw new RefreshTokenException("Access token mal formado.");
+        }
+    }
+
+    /*
+    private Claims obtenerClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(publicKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
+    }*/
 
     public long getJwtExpirationMs() {
         return jwtExpirationMs;
@@ -226,4 +254,5 @@ public class JwtTokenProvider {
         String sub = claims.getSubject();     // getSubject() es equivalente a claims.get("sub", String.class)
         return Long.valueOf(sub);           // Conversión manual
     }
+    
 }

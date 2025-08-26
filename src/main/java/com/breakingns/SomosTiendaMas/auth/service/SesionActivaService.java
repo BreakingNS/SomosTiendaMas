@@ -3,22 +3,20 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
-import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+//import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
 import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.AccesoDenegadoException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionActivaNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,20 +29,26 @@ public class SesionActivaService {
     private final JwtTokenProvider jwtTokenProvider;
     
     private final TokenEmitidoService tokenEmitidoService;
-    
+
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
-    private final ITokenEmitidoRepository tokenEmitidoRepository;
-    private final IRefreshTokenRepository refreshTokenRepository;
+    //private final ITokenEmitidoRepository tokenEmitidoRepository;
+
+    private final RevocacionUtils revocacionUtils;
 
     @Autowired
-    public SesionActivaService(JwtTokenProvider jwtTokenProvider, TokenEmitidoService tokenEmitidoService, IUsuarioRepository usuarioRepository, ISesionActivaRepository sesionActivaRepository, ITokenEmitidoRepository tokenEmitidoRepository, IRefreshTokenRepository refreshTokenRepository) {
+    public SesionActivaService(JwtTokenProvider jwtTokenProvider, 
+                                TokenEmitidoService tokenEmitidoService, 
+                                IUsuarioRepository usuarioRepository, 
+                                ISesionActivaRepository sesionActivaRepository, 
+                                //ITokenEmitidoRepository tokenEmitidoRepository,
+                                RevocacionUtils revocacionUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.tokenEmitidoService = tokenEmitidoService;
         this.usuarioRepository = usuarioRepository;
         this.sesionActivaRepository = sesionActivaRepository;
-        this.tokenEmitidoRepository = tokenEmitidoRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
+        //this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.revocacionUtils = revocacionUtils;
     }
     
     // Método actual reforzado: solo para uso normal de usuario autenticado
@@ -72,7 +76,7 @@ public class SesionActivaService {
         }
 
         // Validamos que el usuario exista
-        Usuario usuario = usuarioRepository.findById(idUsuario)
+        usuarioRepository.findById(idUsuario)
             .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario con ID " + idUsuario + " no existe"));
 
         // Si el usuario existe, buscamos sus sesiones activas
@@ -89,16 +93,33 @@ public class SesionActivaService {
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
-    
+    /* 
+    public void revocarSesionCompleta(String accessToken) {
+        sesionActivaRepository.findByToken(accessToken)
+            .ifPresentOrElse(sesion -> {
+                sesion.setRevocado(true);
+                sesionActivaRepository.save(sesion);
+
+                // Revocar access token
+                tokenEmitidoRepository.revocarPorToken(sesion.getToken());
+
+                // Revocar refresh token
+                if (sesion.getRefreshToken() != null && !sesion.getRefreshToken().isEmpty()) {
+                    refreshTokenService.revocarPorToken(sesion.getRefreshToken());
+                }
+            }, () -> { throw new TokenNoEncontradoException("Token no encontrado"); });
+    }*/
+
+    /*
     // Revocar sesión
-    public void revocarSesion(String token) {
+    public void revocarSesion(String token, String refreshToken) {
         log.info("Por revocar sesion, cuyo token es: {}", token);
         sesionActivaRepository.findByToken(token)
             .ifPresentOrElse(sesion -> {
                 sesion.setRevocado(true);
                 sesionActivaRepository.save(sesion);
             }, () -> { throw new TokenNoEncontradoException("Token no encontrado"); });
-    }
+    }*/
     
     // Cerrar sesión del usuario
     public void cerrarSesion(Long idSesion) {
@@ -110,9 +131,7 @@ public class SesionActivaService {
         if (!sesion.getUsuario().getIdUsuario().equals(userDetails.getId())) {
             throw new AccesoDenegadoException("No tenés permiso para cerrar esta sesión");
         }
-        sesion.setRevocado(true);
-        sesionActivaRepository.save(sesion);
-        tokenEmitidoRepository.revocarPorToken(sesion.getToken());
+        revocarSesion(sesion); // Reutiliza la lógica centralizada
     }
 
     // Revocar todas las sesiones de un usuario
@@ -136,13 +155,14 @@ public class SesionActivaService {
     }
     
     // Registrar sesión activa
-    public void registrarSesion(Usuario usuario, String token, String ip, String userAgent) {
+    public void registrarSesion(Usuario usuario, String token, String refresh, String ip, String userAgent) {
         log.info("Registrando sesion de usuario: {}", usuario.getUsername());
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(jwtTokenProvider.getJwtExpirationMs());
         SesionActiva sesion = new SesionActiva();
         sesion.setUsuario(usuario);
         sesion.setToken(token);
+        sesion.setRefreshToken(refresh);
         sesion.setIp(ip);
         sesion.setUserAgent(userAgent);
         sesion.setFechaInicioSesion(now);
@@ -172,5 +192,26 @@ public class SesionActivaService {
 
     public Optional<SesionActiva> buscarPorToken(String tokenAnterior) {
         return sesionActivaRepository.findByToken(tokenAnterior);
+    }
+
+    public void revocarSesionPorId(Long idSesion) {
+        SesionActiva sesion = sesionActivaRepository.findById(idSesion)
+            .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada"));
+        revocarSesion(sesion);
+    }
+
+    public void revocarSesion(SesionActiva sesion) {
+        revocacionUtils.revocarTodoPorSesion(sesion.getId());
+    }
+
+    public Optional<SesionActiva> buscarSesionPorTokenYUsuario(String accessToken, Long idUsuario) {
+        return sesionActivaRepository.findByToken(accessToken)
+            .filter(sesion -> sesion.getUsuario().getIdUsuario().equals(idUsuario));
+    }
+
+    public Long buscarPorRefreshToken(String token) {
+        return sesionActivaRepository.findByRefreshToken(token)
+            .map(SesionActiva::getId)
+            .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada para el refresh token: " + token));
     }
 }

@@ -144,6 +144,44 @@ public class UsuarioServiceImpl implements IUsuarioService{
             throw new RuntimeException("Error interno en el servidor");
         }
 
+        // Validación: username no puede tener secuencias especiales como ._, -., .-, _., -_
+        if (dto.getUsername().contains("._") || dto.getUsername().contains("-.") ||
+            dto.getUsername().contains(".-") || dto.getUsername().contains("_.") ||
+            dto.getUsername().contains("-_") || dto.getUsername().contains("_-")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede contener secuencias como ._, -., .-, _., -_ o _-.");
+        }
+
+        // Validación: contraseña debe tener al menos una letra y un número
+        if (!dto.getPassword().matches("^(?=.*[A-Za-z])(?=.*\\d).+$")) {
+            throw new PasswordInvalidaException("La contraseña debe contener al menos una letra y un número.");
+        }
+
+        // Validación: contraseña no puede ser igual al nombre de usuario
+        if (dto.getPassword().equals(dto.getUsername())) {
+            throw new PasswordInvalidaException("La contraseña no puede ser igual al nombre de usuario.");
+        }
+
+        // Validación: email debe tener formato válido (más estricto)
+        if (!dto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new EmailInvalidoException("El correo electrónico no tiene un formato válido.");
+        }
+
+        // Validación: username solo puede tener letras, números, guion bajo y punto
+        if (!dto.getUsername().matches("^[A-Za-z0-9._-]{6,16}$")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 6 y 16 caracteres.");
+        }
+
+        // Validación: username no puede tener dos puntos o dos guiones bajos seguidos
+        if (dto.getUsername().contains("..") || dto.getUsername().contains("__") || dto.getUsername().contains("--")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede tener dos puntos, dos guion medio o dos guiones bajos seguidos.");
+        }
+
+        // Validación: username no puede empezar ni terminar con punto o guion bajo
+        if (dto.getUsername().startsWith(".") || dto.getUsername().startsWith("_") || dto.getUsername().startsWith("-") ||
+            dto.getUsername().endsWith(".") || dto.getUsername().endsWith("_") || dto.getUsername().endsWith("-")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario no puede empezar ni terminar con punto, guion medio o guion bajo.");
+        }
+
         Rol rol = rolService.getByNombre(RolNombre.ROLE_USUARIO)
                 .orElseThrow(() -> new RolNoEncontradoException("Error: Rol no encontrado."));
         

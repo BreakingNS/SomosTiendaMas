@@ -28,7 +28,111 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.AntPathMatcher;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final ITokenEmitidoRepository tokenEmitidoRepository;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
+                                   UserDetailsServiceImpl userDetailsService,
+                                   ITokenEmitidoRepository tokenEmitidoRepository) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userDetailsService = userDetailsService;
+        this.tokenEmitidoRepository = tokenEmitidoRepository;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String path = request.getRequestURI();
+            System.out.println("🔍 JwtAuthFilter - Request URI: " + path);
+
+            if (path == null || path.isEmpty()) {
+                System.out.println("❌ Path vacío o nulo");
+            } else {
+                for (String ruta : RUTAS_PUBLICAS) {
+                    if (pathMatcher.match(ruta, path)) {
+                        System.out.println("✅ Ruta pública detectada: " + path + " — No aplico filtro JWT");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                }
+            }
+
+            // HÍBRIDO: Leer token desde header Authorization o cookies
+            String token = null;
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) {
+                token = header.substring(7);
+            }
+            if (token == null || token.isEmpty()) {
+                token = CookieUtils.getAccessTokenFromCookies(request);
+            }
+            if (token == null || token.isEmpty()) {
+                JwtAuthUtil.noAutenticado(response, "Token no encontrado en header ni cookies");
+                return;
+            }
+
+            try {
+                if (!jwtTokenProvider.validarToken(token)) {
+                    JwtAuthUtil.noAutorizado(response, "Token inválido o expirado");
+                    return;
+                }
+            } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+                JwtAuthUtil.noAutorizado(response, "Token expirado");
+                return;
+            }
+
+
+            /*
+            if (!jwtTokenProvider.validarToken(token)) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o expirado");
+                return;
+            }*/
+
+            Optional<TokenEmitido> tokenDb = tokenEmitidoRepository.findByToken(token);
+            if (tokenDb.isEmpty() || tokenDb.get().isRevocado()) {
+                JwtAuthUtil.noAutorizado(response, "Token inválido o revocado");
+                return;
+            }
+
+            String username = jwtTokenProvider.obtenerUsernameDelToken(token);
+            UserDetails userDetails;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(username);
+            } catch (UsernameNotFoundException ex) {
+                JwtAuthUtil.rechazar(response, "Usuario no encontrado.");
+                return;
+            }
+
+            Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+
+            if (authorities == null || authorities.isEmpty()) {
+                System.out.println("⚠ Usuario autenticado sin roles: " + username + " — asignando ROLE_NONE");
+                authorities = List.of(new SimpleGrantedAuthority("ROLE_NONE"));
+            }
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            filterChain.doFilter(request, response);
+
+        } catch (ServletException | IOException e) {
+            JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
+            System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
+        }
+    }
+}
+
+/*
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    */
     /*
             Filtros que realiza:
 
@@ -40,7 +144,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         - Manejo de errores inesperados (try-catch)
     
     */
-    
+    /*
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsService;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
@@ -121,7 +225,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtAuthUtil.rechazar(response, "Error inesperado en autenticación.");
             System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
         }
-    }
+    }*/
 
     /*
     @Override
@@ -246,4 +350,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             System.err.println("Error en JwtAuthenticationFilter: " + e.getMessage());
         }
     }*/
-}
+//}

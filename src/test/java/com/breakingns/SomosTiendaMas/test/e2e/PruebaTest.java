@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.e2e;
+package com.breakingns.SomosTiendaMas.test.e2e;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;

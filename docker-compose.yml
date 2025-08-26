@@ -1,17 +1,17 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: somostiendamas-db
+    container_name: somostiendamas-db-beta
     environment:
       POSTGRES_DB: somostiendamas
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: nahuel
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nahuel}
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Puerto diferente para no conflicto con desarrollo
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_beta:/var/lib/postgresql/data
     networks:
-      - app-network
+      - app-network-beta
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -19,26 +19,29 @@ services:
       retries: 5
 
   app:
-    image: somostiendamas:0.1.6.4
-    container_name: somostiendamas-app
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: somostiendamas:beta-0.1.6.4
+    container_name: somostiendamas-app-beta
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # ✅ Perfil Docker con SSL
       SPRING_PROFILES_ACTIVE: docker
-      
+      SSL_KEYSTORE_PASSWORD: Cocochosegura1595
     ports:
-      - "8443:8443"  # ✅ Cambio: Puerto HTTPS
+      - "8443:8443"  # Puerto HTTPS
+      - "8080:8080"  # Puerto HTTP para redirección (opcional)
     volumes:
       - ./logs:/app/logs
     networks:
-      - app-network
+      - app-network-beta
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data_beta:
 
 networks:
-  app-network:
+  app-network-beta:
     driver: bridge

@@ -129,4 +129,10 @@ public class TokenEmitidoService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public boolean validarToken(String accessToken) {
+        return tokenEmitidoRepository.findByToken(accessToken)
+                .map(tokenEmitido -> !tokenEmitido.isRevocado())
+                .orElse(false);
+    }
 }

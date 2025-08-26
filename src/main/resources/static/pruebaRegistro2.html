@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - SomosTiendaMas</title>
+    <link rel="stylesheet" href="registro.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h1>Registro en SomosTiendaMas</h1>
+            
+            <!-- Selector de tipo de usuario -->
+            <div class="user-type-selector">
+                <h2>¿Cómo te quieres registrar?</h2>
+                <div class="type-buttons">
+                    <button type="button" id="btnPersona" class="type-btn" onclick="mostrarFormulario('persona')">
+                        👤 Como Persona
+                    </button>
+                    <button type="button" id="btnEmpresa" class="type-btn" onclick="mostrarFormulario('empresa')">
+                        🏢 Como Empresa
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form id="registroForm" style="display: none;">
+                <div class="form-section">
+                    <h3>Datos de Cuenta</h3>
+                    <div class="form-group">
+                        <label for="username">Usuario *</label>
+                        <input type="text" id="username" name="username" required 
+                               pattern="^[a-zA-Z0-9._]+$" 
+                               title="Solo letras, números, puntos y guiones bajos">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Contraseña *</label>
+                        <input type="password" id="password" name="password" required 
+                               minlength="6" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar Contraseña *</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 id="responsableTitle">Datos del Responsable</h3>
+                    <div class="form-group">
+                        <label for="responsable_nombre">Nombre *</label>
+                        <input type="text" id="responsable_nombre" name="responsable_nombre" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="responsable_apellido">Apellido *</label>
+                        <input type="text" id="responsable_apellido" name="responsable_apellido" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="responsable_documento">Documento (DNI/CUIL) *</label>
+                        <input type="text" id="responsable_documento" name="responsable_documento" required 
+                               pattern="^[0-9]{8,11}$" 
+                               title="Entre 8 y 11 dígitos">
+                    </div>
+                </div>
+
+                <!-- Campos específicos de empresa -->
+                <div id="empresaFields" class="form-section" style="display: none;">
+                    <h3>Datos de la Empresa</h3>
+                    <div class="form-group">
+                        <label for="razonSocial">Razón Social *</label>
+                        <input type="text" id="razonSocial" name="razonSocial">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cuit">CUIT *</label>
+                        <input type="text" id="cuit" name="cuit" 
+                               pattern="^[0-9]{2}-[0-9]{8}-[0-9]{1}$" 
+                               placeholder="20-12345678-9"
+                               title="Formato: 20-12345678-9">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="condicionIVA">Condición ante IVA *</label>
+                        <select id="condicionIVA" name="condicionIVA">
+                            <option value="">Seleccione...</option>
+                            <option value="RESPONSABLE_INSCRIPTO">Responsable Inscripto</option>
+                            <option value="MONOTRIBUTO">Monotributo</option>
+                            <option value="EXENTO">Exento</option>
+                            <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="direccionFiscal_calle">Calle *</label>
+                        <input type="text" id="direccionFiscal_calle" name="direccionFiscal_calle" 
+                            placeholder="Av. Corrientes">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_numero">Número *</label>
+                        <input type="text" id="direccionFiscal_numero" name="direccionFiscal_numero" 
+                            placeholder="1234">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_piso">Piso</label>
+                        <input type="text" id="direccionFiscal_piso" name="direccionFiscal_piso" 
+                            placeholder="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_departamento">Departamento</label>
+                        <input type="text" id="direccionFiscal_departamento" name="direccionFiscal_departamento" 
+                            placeholder="B">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_ciudad">Ciudad *</label>
+                        <input type="text" id="direccionFiscal_ciudad" name="direccionFiscal_ciudad" 
+                            placeholder="Buenos Aires">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_provincia">Provincia *</label>
+                        <select id="direccionFiscal_provincia" name="direccionFiscal_provincia">
+                            <option value="">Seleccione...</option>
+                            <option value="BUENOS_AIRES">Buenos Aires</option>
+                            <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
+                            <option value="CATAMARCA">Catamarca</option>
+                            <option value="CHACO">Chaco</option>
+                            <option value="CHUBUT">Chubut</option>
+                            <option value="CORDOBA">Córdoba</option>
+                            <option value="CORRIENTES">Corrientes</option>
+                            <option value="ENTRE_RIOS">Entre Ríos</option>
+                            <option value="FORMOSA">Formosa</option>
+                            <option value="JUJUY">Jujuy</option>
+                            <option value="LA_PAMPA">La Pampa</option>
+                            <option value="LA_RIOJA">La Rioja</option>
+                            <option value="MENDOZA">Mendoza</option>
+                            <option value="MISIONES">Misiones</option>
+                            <option value="NEUQUEN">Neuquén</option>
+                            <option value="RIO_NEGRO">Río Negro</option>
+                            <option value="SALTA">Salta</option>
+                            <option value="SAN_JUAN">San Juan</option>
+                            <option value="SAN_LUIS">San Luis</option>
+                            <option value="SANTA_CRUZ">Santa Cruz</option>
+                            <option value="SANTA_FE">Santa Fe</option>
+                            <option value="SANTIAGO_DEL_ESTERO">Santiago del Estero</option>
+                            <option value="TIERRA_DEL_FUEGO">Tierra del Fuego</option>
+                            <option value="TUCUMAN">Tucumán</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direccionFiscal_codigoPostal">Código Postal *</label>
+                        <input type="text" id="direccionFiscal_codigoPostal" name="direccionFiscal_codigoPostal" 
+                            pattern="^[0-9]{4}$|^[A-Z][0-9]{4}[A-Z]{3}$"
+                            placeholder="1001 o C1001ABC"
+                            title="Formato: 1001 o C1001ABC">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telefonoEmpresa">Teléfono de la Empresa *</label>
+                        <input type="tel" id="telefonoEmpresa" name="telefonoEmpresa" 
+                               pattern="^[0-9+\-\s()]+$"
+                               placeholder="011-1234-5678">
+                    </div>
+                </div>
+
+                <!-- Términos y condiciones -->
+                <div class="form-section">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="aceptaTerminos" name="aceptaTerminos" required>
+                        <label for="aceptaTerminos">
+                            Acepto los <a href="#" target="_blank">Términos y Condiciones</a> *
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="aceptaPolitica" name="aceptaPolitica" required>
+                        <label for="aceptaPolitica">
+                            Acepto la <a href="#" target="_blank">Política de Privacidad</a> *
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="recibirPromociones" name="recibirPromociones">
+                        <label for="recibirPromociones">
+                            Quiero recibir promociones y ofertas por email
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="volver()">
+                        ← Volver
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Registrarse →
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function mostrarFormulario(tipo) {
+            // Mostrar formulario
+            document.getElementById('registroForm').style.display = 'block';
+            
+            // Actualizar botones
+            document.getElementById('btnPersona').classList.remove('active');
+            document.getElementById('btnEmpresa').classList.remove('active');
+            
+            if (tipo === 'persona') {
+                document.getElementById('btnPersona').classList.add('active');
+                document.getElementById('empresaFields').style.display = 'none';
+                document.getElementById('responsableTitle').textContent = 'Tus Datos Personales';
+                
+                // Hacer campos de empresa no requeridos
+                document.getElementById('razonSocial').required = false;
+                document.getElementById('cuit').required = false;
+                document.getElementById('condicionIVA').required = false;
+                document.getElementById('direccionFiscal_calle').required = true;
+                document.getElementById('direccionFiscal_numero').required = true;
+                document.getElementById('direccionFiscal_ciudad').required = true;
+                document.getElementById('direccionFiscal_provincia').required = true;
+                document.getElementById('direccionFiscal_codigoPostal').required = true;
+                document.getElementById('telefonoEmpresa').required = false;
+                
+            } else if (tipo === 'empresa') {
+                document.getElementById('btnEmpresa').classList.add('active');
+                document.getElementById('empresaFields').style.display = 'block';
+                document.getElementById('responsableTitle').textContent = 'Datos del Representante Legal';
+                
+                // Hacer campos de empresa requeridos
+                document.getElementById('razonSocial').required = true;
+                document.getElementById('cuit').required = true;
+                document.getElementById('condicionIVA').required = true;
+                document.getElementById('direccionFiscal_calle').required = false;
+                document.getElementById('direccionFiscal_numero').required = false;
+                document.getElementById('direccionFiscal_ciudad').required = false;
+                document.getElementById('direccionFiscal_provincia').required = false;
+                document.getElementById('direccionFiscal_codigoPostal').required = false;
+                document.getElementById('telefonoEmpresa').required = true;
+            }
+            
+            // Scroll suave al formulario
+            document.getElementById('registroForm').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+        
+        function volver() {
+            document.getElementById('registroForm').style.display = 'none';
+            document.getElementById('btnPersona').classList.remove('active');
+            document.getElementById('btnEmpresa').classList.remove('active');
+            
+            // Scroll al inicio
+            document.querySelector('.user-type-selector').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Validación de formulario
+        document.getElementById('registroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            alert('Formulario válido - Aquí se enviarían los datos al servidor');
+        });
+    </script>
+</body>
+</html>
