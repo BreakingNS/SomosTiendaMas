@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.model;
 
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +20,7 @@ public class Carrito {
     private Long id_carrito;
     
     @OneToOne
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
     public Carrito() {
@@ -29,5 +30,15 @@ public class Carrito {
         this.id_carrito = id_carrito;
         this.usuario = usuario;
     }
+
+        @Override
+        public String toString() {
+            return "Carrito{" +
+                    "id_carrito=" + id_carrito +
+                    ", usuario_id=" + (usuario != null ? usuario.getIdUsuario() : null) +
+                    '}';
+        }
+
+    
     
 }

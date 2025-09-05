@@ -20,6 +20,24 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(EmailVerificationException.class)
+    public ResponseEntity<?> handleEmailVerificationException(EmailVerificationException ex) {
+        ex.printStackTrace(); // Esto imprime la excepción en consola
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Verificación de email",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.BAD_REQUEST.value()
+        ));
+    }
+
+    @ExceptionHandler(UsuarioDesactivadoException.class)
+    public ResponseEntity<?> handleUsuarioDesactivadoException(UsuarioDesactivadoException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("error", ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, List<String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         List<String> errores = ex.getBindingResult().getFieldErrors().stream()

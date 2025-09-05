@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.service;
 
 import com.breakingns.SomosTiendaMas.model.Carrito;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import jakarta.transaction.Transactional;
 import java.util.Optional;

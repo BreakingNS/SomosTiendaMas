@@ -216,3 +216,7 @@ Modulo 1 Autorizacion
 beta 0.1.7.0: Modulo 1 Autorizacion finalizado y testeado.
 
 	- Modelo hibrido, aceptado tanto cookies como tokens por header/body.
+
+beta 0.1.7.1: Modulo 1 Autorizacion finalizado y testeado. Avanzado 1
+
+	- Avanzado en testeos, faltan Email, Model y Security

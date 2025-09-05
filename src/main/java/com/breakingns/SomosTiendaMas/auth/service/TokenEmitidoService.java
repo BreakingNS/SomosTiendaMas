@@ -3,11 +3,12 @@ package com.breakingns.SomosTiendaMas.auth.service;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.auth.utils.RsaKeyUtil;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.PrincipalInvalidoException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
+import com.breakingns.SomosTiendaMas.utils.RsaKeyUtil;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;

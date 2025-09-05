@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
-import com.breakingns.SomosTiendaMas.model.RolNombre;
+import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import java.util.List;
 import java.util.Optional;

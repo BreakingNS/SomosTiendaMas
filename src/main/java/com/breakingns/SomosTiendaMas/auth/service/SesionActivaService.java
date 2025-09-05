@@ -1,18 +1,18 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
-import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
-//import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.AccesoDenegadoException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionActivaNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
+import com.breakingns.SomosTiendaMas.security.jwt.JwtTokenProvider;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

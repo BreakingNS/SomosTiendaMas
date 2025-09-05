@@ -1,7 +1,8 @@
 package com.breakingns.SomosTiendaMas.auth.repository;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;

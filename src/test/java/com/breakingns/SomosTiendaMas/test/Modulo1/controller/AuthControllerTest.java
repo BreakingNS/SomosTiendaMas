@@ -1,44 +1,46 @@
 package com.breakingns.SomosTiendaMas.test.Modulo1.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.dto.shared.RegistroUsuarioDTO;
-import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
-import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
-import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
-import jakarta.servlet.http.Cookie;
-
+// Imports Java estándar
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.mockito.Mock;
+// Imports externos
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import jakarta.servlet.http.Cookie;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+
+// Imports del proyecto
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
+import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
+import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
+import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
+import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
 
 /*                                                  AuthControllerIntegrationTest
     
@@ -104,6 +106,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
             "DELETE FROM refresh_token",
+            "DELETE FROM direcciones",
+            "DELETE FROM telefonos",
+            "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
             "DELETE FROM usuario_roles",
             "DELETE FROM usuario"
@@ -117,6 +122,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
             "DELETE FROM refresh_token",
+            "DELETE FROM direcciones",
+            "DELETE FROM telefonos",
+            "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
             "DELETE FROM usuario_roles",
             "DELETE FROM usuario"
@@ -126,40 +134,71 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 })
 class AuthControllerTest {
 
+    /*          Metodos:
+        
+        status().isOk() → 200
+        status().isUnauthorized() → 401
+        status().isForbidden() → 403
+        status().isInternalServerError() → 500
+        status().isBadRequest() → 400
+        status().isCreated() → 201
+        status().isNotFound() → 404
+        status().isNoContent() → 204
+    
+    */
+
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
+    private final IUsuarioRepository usuarioRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
     private final ISesionActivaRepository sesionActivaRepository;
     private final IRefreshTokenRepository refreshTokenRepository;
+
+    private final UsuarioServiceImpl usuarioService;
     private final RefreshTokenService refreshTokenService;
+
+    private RegistroUsuarioCompletoDTO registroDTO;
     
-    @Mock
-    private TokenEmitidoService tokenEmitidoService;
+    @BeforeEach
+    void setUp() throws Exception {
+        crearAdminTestSiNoExiste();
+    }
+    
+    void crearAdminTestSiNoExiste() {
+        boolean exists = usuarioRepository.findAll().stream()
+            .anyMatch(u -> u.getRoles().stream().anyMatch(r -> r.getNombre() == RolNombre.ROLE_ADMIN));
+        if (!exists) {
+            Usuario admin = new Usuario();
+            admin.setUsername("adminTest");
+            admin.setPassword("P123456");
+            admin.setEmail("correoprueba@noenviar.com");
+            admin.setActivo(true);
+            admin.setEmailVerificado(true);
+            admin.setFechaRegistro(java.time.LocalDateTime.now());
+            admin.setIntentosFallidosLogin(0);
+            admin.setCuentaBloqueada(false);
+            admin.setTipoUsuario(Usuario.TipoUsuario.PERSONA_FISICA);
+            admin.setNombreResponsable("Admin");
+            admin.setApellidoResponsable("Test");
+            admin.setDocumentoResponsable("99999999");
+            admin.setAceptaTerminos(true);
+            admin.setAceptaPoliticaPriv(true);
+            admin.setFechaUltimaModificacion(java.time.LocalDateTime.now());
+            usuarioService.registrarConRol(admin, RolNombre.ROLE_SUPERADMIN);
+        }
+    }
 
-    @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private Authentication authentication;
-
-    private final IUsuarioRepository usuarioRepository;
-
-    // Método para registrar un usuario
-    private int registrarUsuario(String username, String password, String email) throws Exception {
-        Usuario usuario = new Usuario();
-        usuario.setUsername(username);
-        usuario.setPassword(password);
-        usuario.setEmail(email);
-
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
+    // Método para registrar un usuario completo usando el endpoint de gestión de perfil
+    private int registrarUsuarioCompleto(RegistroUsuarioCompletoDTO registroDTO) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(usuario)))
+            .content(objectMapper.writeValueAsString(registroDTO)))
             .andReturn();
 
         return result.getResponse().getStatus();
     }
-
+    
     // Método para hacer login de un usuario
     private MvcResult loginUsuario(String username, String password) throws Exception {
         LoginRequest loginRequest = new LoginRequest(username, password);
@@ -167,40 +206,160 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest))
                 .header("User-Agent", "MockMvc"))
+                .andExpect(status().isOk())
                 .andReturn();
 
         return loginResult;
     }
 
-    // Registro de usuario
+    @Test
+	void testBasico() {
+		assertTrue(true);
+	}
 
+    // Registro de usuario
+    
     // 1. Registro exitoso con datos válidos
     @Test
     void registroUsuario_exitoso() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("nuevoUsuario", "nuevo@correo.com", "P123456");
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registroDTO)))
-                .andReturn();
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("usuario123");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("ClaveSegura123");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("12345678");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO"); // Si quieres especificar el rol
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+        
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(registroDTO)))
+            .andReturn();
         assertEquals(200, result.getResponse().getStatus());
     }
-
+     
     // 2. Registro falla con email inválido
     @Test
     void registroUsuario_emailInvalido_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("usuarioEmailInvalido", "correo-invalido", "P123456");
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registroDTO)))
-                .andReturn();
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("usuarioEmailInvalido");
+        usuarioDTO.setEmail("email_invalidohotmail.com"); // Email sin @
+        usuarioDTO.setPassword("ClaveSegura123");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("99999999");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(registroDTO)))
+            .andReturn();
         assertEquals(400, result.getResponse().getStatus());
     }
-
+    
     // 3. Registro falla con username inválido
     @Test
     void registroUsuario_usernameInvalido_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("", "usuario@correo.com", "P123456");
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername(""); // Username inválido
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("33333333");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
@@ -210,25 +369,102 @@ class AuthControllerTest {
     // 4. Registro falla con password inválida
     @Test
     void registroUsuario_passwordInvalida_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("usuarioPassInvalida", "usuario@correo.com", "123");
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("usuarioPassInvalida");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("123"); // Password inválida (muy corta)
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("44444444");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
         assertEquals(400, result.getResponse().getStatus());
     }
-
+    
     // 5. Registro falla si el usuario ya existe
     @Test
     void registroUsuario_usuarioExistente_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("usuarioExistente", "usuarioExistente@correo.com", "P123456");
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("usuarioExistente");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("55555555");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
         // Primer registro exitoso
-        mockMvc.perform(post("/api/registro/public/usuario")
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
+
         // Segundo registro con mismo username
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
@@ -238,32 +474,138 @@ class AuthControllerTest {
     // 6. Registro falla si el email ya existe
     @Test
     void registroUsuario_emailExistente_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO1 = new RegistroUsuarioDTO("usuarioEmail1", "emailrepetido@correo.com", "P123456");
-        RegistroUsuarioDTO registroDTO2 = new RegistroUsuarioDTO("usuarioEmail2", "emailrepetido@correo.com", "P123456");
+        RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
+        usuarioDTO1.setUsername("usuarioEmail1");
+        usuarioDTO1.setEmail("correoprueba@noenviar.com");
+        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setNombreResponsable("Juan");
+        usuarioDTO1.setApellidoResponsable("Pérez");
+        usuarioDTO1.setDocumentoResponsable("66666666");
+        usuarioDTO1.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO1.setAceptaTerminos(true);
+        usuarioDTO1.setAceptaPoliticaPriv(true);
+        usuarioDTO1.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO1.setGeneroResponsable("MASCULINO");
+        usuarioDTO1.setIdioma("es");
+        usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO1.setRol("ROLE_USUARIO");
+
+        RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
+        usuarioDTO2.setUsername("usuarioEmail2");
+        usuarioDTO2.setEmail("correoprueba@noenviar.com"); // mismo email
+        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setNombreResponsable("Juan");
+        usuarioDTO2.setApellidoResponsable("Pérez");
+        usuarioDTO2.setDocumentoResponsable("77777777");
+        usuarioDTO2.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO2.setAceptaTerminos(true);
+        usuarioDTO2.setAceptaPoliticaPriv(true);
+        usuarioDTO2.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO2.setGeneroResponsable("MASCULINO");
+        usuarioDTO2.setIdioma("es");
+        usuarioDTO2.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO2.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO1 = new RegistroUsuarioCompletoDTO();
+        registroDTO1.setUsuario(usuarioDTO1);
+        registroDTO1.setDirecciones(List.of(direccionDTO));
+        registroDTO1.setTelefonos(List.of(telefonoDTO));
+
+        RegistroUsuarioCompletoDTO registroDTO2 = new RegistroUsuarioCompletoDTO();
+        registroDTO2.setUsuario(usuarioDTO2);
+        registroDTO2.setDirecciones(List.of(direccionDTO));
+        registroDTO2.setTelefonos(List.of(telefonoDTO));
+
         // Primer registro exitoso
-        mockMvc.perform(post("/api/registro/public/usuario")
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO1)))
                 .andReturn();
+
         // Segundo registro con mismo email
-        MvcResult result = mockMvc.perform(post("/api/registro/public/usuario")
+        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO2)))
                 .andReturn();
         assertEquals(400, result.getResponse().getStatus());
     }
-
+    
     // Login
 
     // 7. Login exitoso con credenciales válidas
     @Test
     void login_exitoso() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("loginUser", "login@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("loginUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("88888888");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("loginUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("loginUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -276,12 +618,52 @@ class AuthControllerTest {
     // 8. Login falla con credenciales inválidas
     @Test
     void login_credencialesInvalidas_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("loginUserFail", "loginfail@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("loginUserFail");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("99999999");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Login con contraseña incorrecta
         LoginRequest loginRequest = new LoginRequest("loginUserFail", "contraFail");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -304,16 +686,63 @@ class AuthControllerTest {
     }
 
     // Generación y validación de tokens
-
+    
     // 10. Se generan access y refresh tokens al login
     @Test
     void login_generacionTokens_ok() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("tokenUser", "token@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("tokenUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("10101010");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("tokenUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("tokenUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -334,16 +763,63 @@ class AuthControllerTest {
         assertNotNull(accessToken);
         assertNotNull(refreshToken);
     }
-
+    
     // 11. Access token permite acceder a ruta protegida
     @Test
     void accessToken_accesoRutaProtegida_ok() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("userProtegido", "protegido@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("userProtegido");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("12121212");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("userProtegido");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("userProtegido", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -358,6 +834,7 @@ class AuthControllerTest {
         }
         assertNotNull(accessToken);
 
+        // Acceso a ruta protegida (ejemplo: logout privado)
         MvcResult result = mockMvc.perform(post("/api/auth/private/logout")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -369,12 +846,59 @@ class AuthControllerTest {
     // 12. Refresh token permite obtener nuevos tokens
     @Test
     void refreshToken_obtieneNuevosTokens_ok() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("userRefresh", "refresh@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("userRefresh");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("13131313");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("userRefresh");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("userRefresh", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -384,14 +908,14 @@ class AuthControllerTest {
         Cookie[] cookies = loginResult.getResponse().getCookies();
         String refreshToken = null;
         for (Cookie cookie : cookies) {
-
             if ("refreshToken".equals(cookie.getName())) {
                 refreshToken = cookie.getValue();
             }
         }
         assertNotNull(refreshToken);
 
-        MvcResult refreshResult = mockMvc.perform(post("/test/api/auth/public/refresh-token")
+        // Refresh token (endpoint real, ajusta si tu endpoint es diferente)
+        MvcResult refreshResult = mockMvc.perform(post("/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
@@ -399,18 +923,65 @@ class AuthControllerTest {
 
         assertEquals(200, refreshResult.getResponse().getStatus());
     }
-
+    
     // Refresh de tokens
 
     // 13. Refresh exitoso con refresh token válido
     @Test
     void refreshToken_exitoso() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("refreshOkUser", "refreshok@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("refreshOkUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("14141414");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("refreshOkUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("refreshOkUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -425,7 +996,7 @@ class AuthControllerTest {
         }
         assertNotNull(refreshToken);
 
-        MvcResult refreshResult = mockMvc.perform(post("/test/api/auth/public/refresh-token")
+        MvcResult refreshResult = mockMvc.perform(post("/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
@@ -437,8 +1008,47 @@ class AuthControllerTest {
     // 14. Refresh falla con refresh token inválido
     @Test
     void refreshToken_invalido_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("refreshFailUser", "refreshfail@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("refreshFailUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("15151515");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
@@ -451,16 +1061,64 @@ class AuthControllerTest {
 
         assertEquals(401, refreshResult.getResponse().getStatus());
     }
-
+    
     // 15. Refresh falla con refresh token expirado
     @Test
     void refreshToken_expirado_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("refreshExpUser", "refreshexp@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        // Registro completo del usuario
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("refreshExpUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("16161616");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("refreshExpUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login y obtener refresh token
         LoginRequest loginRequest = new LoginRequest("refreshExpUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -476,7 +1134,8 @@ class AuthControllerTest {
         }
         assertNotNull(refreshToken);
 
-        loginResult = mockMvc.perform(post("/test/api/auth/public/refresh-token")
+        // Intentar refresh con el token expirado
+        MvcResult result = mockMvc.perform(post("/test/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
@@ -489,10 +1148,13 @@ class AuthControllerTest {
                 refreshToken = cookie.getValue();
             }
         }
+        assertNotNull(refreshToken);
 
-        Thread.sleep(5000);
+        // Esperar para simular expiración (ajusta el tiempo según tu configuración)
+        Thread.sleep(8000);
 
-        MvcResult result = mockMvc.perform(post("/api/auth/public/refresh-token")
+        // Intentar refresh con el token expirado
+        result = mockMvc.perform(post("/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
@@ -504,35 +1166,78 @@ class AuthControllerTest {
     // 16. Refresh falla con refresh token revocado
     @Test
     void refreshToken_revocado_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("refreshExpUser", "refreshexp@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("refreshRevUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("17171717");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
-        LoginRequest loginRequest = new LoginRequest("refreshExpUser", "P123456");
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("refreshRevUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
+        LoginRequest loginRequest = new LoginRequest("refreshRevUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andReturn();
 
         Cookie[] cookies = loginResult.getResponse().getCookies();
-        String accessToken = null;
         String refreshToken = null;
         for (Cookie cookie : cookies) {
-            if ("accessToken".equals(cookie.getName())) {
-                accessToken = cookie.getValue();
-            }
             if ("refreshToken".equals(cookie.getName())) {
                 refreshToken = cookie.getValue();
             }
         }
+        assertNotNull(refreshToken);
 
-        assertNotNull(accessToken);
-
+        // Revocar el refresh token (debes tener el servicio disponible en el test)
         refreshTokenService.revocarToken(refreshToken);
 
-        MvcResult result = mockMvc.perform(post("/test/api/auth/public/refresh-token")
+        MvcResult result = mockMvc.perform(post("/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
@@ -542,16 +1247,63 @@ class AuthControllerTest {
     }
 
     // Logout individual y total
-
+    
     // 17. Logout exitoso (revoca sesión y tokens)
     @Test
     void logout_exitoso() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("logoutUser", "logout@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("logoutUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("18181818");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("logoutUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("logoutUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -590,13 +1342,58 @@ class AuthControllerTest {
     // 18. Logout total cierra todas las sesiones del usuario
     @Test
     void logoutTotal_revocaTodasSesionesYTokens() throws Exception {
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("multiSesionUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("19191919");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
         // Registrar usuario
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("multiSesionUser", "multi@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
-        
+
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("multiSesionUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
         // Login 1: user-agent y IP distintos
         LoginRequest loginRequest = new LoginRequest("multiSesionUser", "P123456");
         mockMvc.perform(post("/api/auth/public/login")
@@ -630,14 +1427,14 @@ class AuthControllerTest {
             }
         }
         assertNotNull(accessToken);
-        
+
         // Logout total
         MvcResult logoutTotalResult = mockMvc.perform(post("/api/auth/private/logout-total")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertEquals(200, logoutTotalResult.getResponse().getStatus());
-        
+
         // Validar que todas las sesiones del usuario están revocadas
         var sesiones = sesionActivaRepository.findAllByUsuario_Username("multiSesionUser");
         assertTrue(sesiones.stream().allMatch(SesionActiva::isRevocado), "Todas las sesiones deben estar revocadas");
@@ -650,7 +1447,7 @@ class AuthControllerTest {
         var refreshTokens = refreshTokenRepository.findAllByUsuario_Username("multiSesionUser");
         assertTrue(refreshTokens.stream().allMatch(t -> t.getRevocado()), "Todos los refresh tokens deben estar revocados");
     }
-
+    
     // 19. Logout falla si el token es inválido
     @Test
     void logout_tokenInvalido_falla() throws Exception {
@@ -668,12 +1465,59 @@ class AuthControllerTest {
     // 20. Acceso permitido con token válido
     @Test
     void accesoRutaProtegida_tokenValido_ok() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("accesoUser", "acceso@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("accesoUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("20202020");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("accesoUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
         LoginRequest loginRequest = new LoginRequest("accesoUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -688,6 +1532,7 @@ class AuthControllerTest {
         }
         assertNotNull(accessToken);
 
+        // Acceso a ruta protegida
         MvcResult result = mockMvc.perform(post("/api/auth/private/logout")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -705,7 +1550,7 @@ class AuthControllerTest {
 
         assertEquals(401, result.getResponse().getStatus());
     }
-
+    
     // 22. Acceso denegado con token inválido
     @Test
     void accesoRutaProtegida_tokenInvalido_falla() throws Exception {
@@ -721,47 +1566,97 @@ class AuthControllerTest {
     // 23. Acceso denegado con token expirado
     @Test
     void accesoRutaProtegida_tokenExpirado_falla() throws Exception {
-        RegistroUsuarioDTO registroDTO = new RegistroUsuarioDTO("refreshExpUser", "refreshexp@correo.com", "P123456");
-        mockMvc.perform(post("/api/registro/public/usuario")
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("expiraUser");
+        usuarioDTO.setEmail("correoprueba@noenviar.com");
+        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setNombreResponsable("Juan");
+        usuarioDTO.setApellidoResponsable("Pérez");
+        usuarioDTO.setDocumentoResponsable("23232323");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setTipo("PERSONAL");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
+        direccionDTO.setCiudad("Ciudad");
+        direccionDTO.setProvincia("Provincia");
+        direccionDTO.setCodigoPostal("1000");
+        direccionDTO.setPais("Argentina");
+        direccionDTO.setActiva(true);
+        direccionDTO.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
+        telefonoDTO.setTipo("PRINCIPAL");
+        telefonoDTO.setNumero("1122334455");
+        telefonoDTO.setCaracteristica("11");
+        telefonoDTO.setActivo(true);
+        telefonoDTO.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of(direccionDTO));
+        registroDTO.setTelefonos(List.of(telefonoDTO));
+
+        // Registrar usuario
+        mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registroDTO)))
                 .andReturn();
 
-        LoginRequest loginRequest = new LoginRequest("refreshExpUser", "P123456");
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("expiraUser");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
+        // Login
+        LoginRequest loginRequest = new LoginRequest("expiraUser", "P123456");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andReturn();
 
-        Cookie[] cookies = loginResult.getResponse().getCookies();
+        String accessToken = null;
         String refreshToken = null;
-        for (Cookie cookie : cookies) {
+        for (Cookie cookie : loginResult.getResponse().getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                accessToken = cookie.getValue();
+            }
             if ("refreshToken".equals(cookie.getName())) {
                 refreshToken = cookie.getValue();
             }
         }
+        assertNotNull(accessToken);
 
-        assertNotNull(refreshToken);
-
-        loginResult = mockMvc.perform(post("/test/api/auth/public/refresh-token")
+        // Intentar refresh con el token expirado
+        MvcResult result = mockMvc.perform(post("/test/api/auth/public/refresh-token")
                 .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
                 .andReturn();
 
-        cookies = loginResult.getResponse().getCookies();
-        String accessToken = null;
-        for (Cookie cookie : cookies) {
+        accessToken = null;
+        for (Cookie cookie : loginResult.getResponse().getCookies()) {
             if ("accessToken".equals(cookie.getName())) {
                 accessToken = cookie.getValue();
             }
         }
+        assertNotNull(accessToken);
 
+        // Simular expiración del token (ajusta el tiempo según tu configuración)
         Thread.sleep(2000);
 
-        MvcResult result = mockMvc.perform(get("/api/sesiones/private/activas")
+        result = mockMvc.perform(post("/api/auth/private/logout")
                 .header("Authorization", "Bearer " + accessToken)
-                .header("User-Agent", "MockMvc")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -769,37 +1664,119 @@ class AuthControllerTest {
     }
 
     // Acceso según rol
-    
+
     // 24. Acceso permitido a rutas de admin solo con rol admin
     @Test
     void soloAdminPuedeVerSesionesDeUsuarios_controlado() throws Exception {
-        // Registrar admin por endpoint
-        Usuario admin = new Usuario();
-        admin.setUsername("adminTest");
-        admin.setEmail("admin@test.com");
-        admin.setPassword("P123456");
-        int statusAdmin = mockMvc.perform(post("/api/registro/public/admin")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(admin)))
-                .andReturn().getResponse().getStatus();
-        assertEquals(200, statusAdmin);
 
         Optional<Usuario> adminOpt = usuarioRepository.findByUsername("adminTest");
         assertTrue(adminOpt.isPresent());
 
         // Registrar usuario 1
-        int statusUser1 = registrarUsuario("usuario1", "P123456", "user1@test.com");
+        RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
+        usuarioDTO1.setUsername("usuario1");
+        usuarioDTO1.setEmail("correoprueba@noenviar.com");
+        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setNombreResponsable("Juan");
+        usuarioDTO1.setApellidoResponsable("Pérez");
+        usuarioDTO1.setDocumentoResponsable("24242424");
+        usuarioDTO1.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO1.setAceptaTerminos(true);
+        usuarioDTO1.setAceptaPoliticaPriv(true);
+        usuarioDTO1.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO1.setGeneroResponsable("MASCULINO");
+        usuarioDTO1.setIdioma("es");
+        usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO1.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO1 = new RegistroDireccionDTO();
+        direccionDTO1.setTipo("PERSONAL");
+        direccionDTO1.setCalle("Calle Falsa");
+        direccionDTO1.setNumero("123");
+        direccionDTO1.setCiudad("Ciudad");
+        direccionDTO1.setProvincia("Provincia");
+        direccionDTO1.setCodigoPostal("1000");
+        direccionDTO1.setPais("Argentina");
+        direccionDTO1.setActiva(true);
+        direccionDTO1.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO1 = new RegistroTelefonoDTO();
+        telefonoDTO1.setTipo("PRINCIPAL");
+        telefonoDTO1.setNumero("1122334455");
+        telefonoDTO1.setCaracteristica("11");
+        telefonoDTO1.setActivo(true);
+        telefonoDTO1.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO1 = new RegistroUsuarioCompletoDTO();
+        registroDTO1.setUsuario(usuarioDTO1);
+        registroDTO1.setDirecciones(List.of(direccionDTO1));
+        registroDTO1.setTelefonos(List.of(telefonoDTO1));
+
+        int statusUser1 = registrarUsuarioCompleto(registroDTO1);
         assertEquals(200, statusUser1);
         Optional<Usuario> user1Opt = usuarioRepository.findByUsername("usuario1");
         assertTrue(user1Opt.isPresent());
         Usuario usuario1 = user1Opt.get();
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario1");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
         // Registrar usuario 2
-        int statusUser2 = registrarUsuario("usuario2", "P123456", "user2@test.com");
+        RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
+        usuarioDTO2.setUsername("usuario2");
+        usuarioDTO2.setEmail("correoprueba1@noenviar.com");
+        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setNombreResponsable("Juan");
+        usuarioDTO2.setApellidoResponsable("Pérez");
+        usuarioDTO2.setDocumentoResponsable("25252525");
+        usuarioDTO2.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO2.setAceptaTerminos(true);
+        usuarioDTO2.setAceptaPoliticaPriv(true);
+        usuarioDTO2.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO2.setGeneroResponsable("MASCULINO");
+        usuarioDTO2.setIdioma("es");
+        usuarioDTO2.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO2.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO2 = new RegistroDireccionDTO();
+        direccionDTO2.setTipo("PERSONAL");
+        direccionDTO2.setCalle("Calle Falsa");
+        direccionDTO2.setNumero("123");
+        direccionDTO2.setCiudad("Ciudad");
+        direccionDTO2.setProvincia("Provincia");
+        direccionDTO2.setCodigoPostal("1000");
+        direccionDTO2.setPais("Argentina");
+        direccionDTO2.setActiva(true);
+        direccionDTO2.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO2 = new RegistroTelefonoDTO();
+        telefonoDTO2.setTipo("PRINCIPAL");
+        telefonoDTO2.setNumero("1122334455");
+        telefonoDTO2.setCaracteristica("11");
+        telefonoDTO2.setActivo(true);
+        telefonoDTO2.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO2 = new RegistroUsuarioCompletoDTO();
+        registroDTO2.setUsuario(usuarioDTO2);
+        registroDTO2.setDirecciones(List.of(direccionDTO2));
+        registroDTO2.setTelefonos(List.of(telefonoDTO2));
+
+        int statusUser2 = registrarUsuarioCompleto(registroDTO2);
         assertEquals(200, statusUser2);
         Optional<Usuario> user2Opt = usuarioRepository.findByUsername("usuario2");
         assertTrue(user2Opt.isPresent());
         Usuario usuario2 = user2Opt.get();
+
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt2 = usuarioRepository.findByUsername("usuario2");
+        assertTrue(usuarioOpt2.isPresent());
+        Usuario usuario3 = usuarioOpt2.get();
+        usuario3.setEmailVerificado(true);
+        usuarioRepository.save(usuario3);
 
         // Login admin
         MvcResult loginResultAdmin = loginUsuario("adminTest", "P123456");
@@ -812,27 +1789,28 @@ class AuthControllerTest {
         }
         assertNotNull(adminAccessToken);
 
-        // Login usuario 1
-        MvcResult loginResultUser1 = loginUsuario("usuario1", "P123456");
-        assertEquals(200, loginResultUser1.getResponse().getStatus());
-        String user1AccessToken = null;
-        for (Cookie cookie : loginResultUser1.getResponse().getCookies()) {
+        // Login Usuario 1
+        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P123456");
+        assertEquals(200, loginResultUsuario1.getResponse().getStatus());
+        String usuario1AccessToken = null;
+        for (Cookie cookie : loginResultUsuario1.getResponse().getCookies()) {
             if ("accessToken".equals(cookie.getName())) {
-                user1AccessToken = cookie.getValue();
+                usuario1AccessToken = cookie.getValue();
             }
         }
-        assertNotNull(user1AccessToken);
+        assertNotNull(usuario1AccessToken);
 
-        // Login usuario 2
-        MvcResult loginResultUser2 = loginUsuario("usuario2", "P123456");
-        assertEquals(200, loginResultUser2.getResponse().getStatus());
-        String user2AccessToken = null;
-        for (Cookie cookie : loginResultUser2.getResponse().getCookies()) {
+        // Login Usuario 2
+        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P123456");
+        assertEquals(200, loginResultUsuario2.getResponse().getStatus());
+        String usuario2AccessToken = null;
+        for (Cookie cookie : loginResultUsuario2.getResponse().getCookies()) {
             if ("accessToken".equals(cookie.getName())) {
-                user2AccessToken = cookie.getValue();
+                usuario2AccessToken = cookie.getValue();
             }
         }
-        assertNotNull(user2AccessToken);
+        assertNotNull(usuario2AccessToken);
+
 
         // Admin accede y puede ver sesiones activas de usuario 1
         MvcResult resultAdminUser1 = mockMvc.perform(get("/api/sesiones/private/admin/activas")
@@ -850,72 +1828,134 @@ class AuthControllerTest {
                 .andReturn();
         assertEquals(200, resultAdminUser2.getResponse().getStatus());
     }
-
+    
     // 25. Acceso denegado a rutas de admin con rol usuario
     @Test
     void accesoAdmin_conRolUsuario_falla() throws Exception {
-        // Registrar admin por endpoint
-        Usuario admin = new Usuario();
-        admin.setUsername("adminTest");
-        admin.setEmail("admin@test.com");
-        admin.setPassword("P123456");
-        int statusAdmin = mockMvc.perform(post("/api/registro/public/admin")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(admin)))
-                .andReturn().getResponse().getStatus();
-        assertEquals(200, statusAdmin);
-
-        Optional<Usuario> adminOpt = usuarioRepository.findByUsername("adminTest");
-        assertTrue(adminOpt.isPresent());
-
         // Registrar usuario 1
-        int statusUser1 = registrarUsuario("usuario1", "P123456", "user1@test.com");
+        RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
+        usuarioDTO1.setUsername("usuario1");
+        usuarioDTO1.setEmail("correoprueba@noenviar.com");
+        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setNombreResponsable("Juan");
+        usuarioDTO1.setApellidoResponsable("Pérez");
+        usuarioDTO1.setDocumentoResponsable("24242424");
+        usuarioDTO1.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO1.setAceptaTerminos(true);
+        usuarioDTO1.setAceptaPoliticaPriv(true);
+        usuarioDTO1.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO1.setGeneroResponsable("MASCULINO");
+        usuarioDTO1.setIdioma("es");
+        usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO1.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO1 = new RegistroDireccionDTO();
+        direccionDTO1.setTipo("PERSONAL");
+        direccionDTO1.setCalle("Calle Falsa");
+        direccionDTO1.setNumero("123");
+        direccionDTO1.setCiudad("Ciudad");
+        direccionDTO1.setProvincia("Provincia");
+        direccionDTO1.setCodigoPostal("1000");
+        direccionDTO1.setPais("Argentina");
+        direccionDTO1.setActiva(true);
+        direccionDTO1.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO1 = new RegistroTelefonoDTO();
+        telefonoDTO1.setTipo("PRINCIPAL");
+        telefonoDTO1.setNumero("1122334455");
+        telefonoDTO1.setCaracteristica("11");
+        telefonoDTO1.setActivo(true);
+        telefonoDTO1.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO1 = new RegistroUsuarioCompletoDTO();
+        registroDTO1.setUsuario(usuarioDTO1);
+        registroDTO1.setDirecciones(List.of(direccionDTO1));
+        registroDTO1.setTelefonos(List.of(telefonoDTO1));
+
+        int statusUser1 = registrarUsuarioCompleto(registroDTO1);
         assertEquals(200, statusUser1);
         Optional<Usuario> user1Opt = usuarioRepository.findByUsername("usuario1");
         assertTrue(user1Opt.isPresent());
 
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario1");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
         // Registrar usuario 2
-        int statusUser2 = registrarUsuario("usuario2", "P123456", "user2@test.com");
+        RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
+        usuarioDTO2.setUsername("usuario2");
+        usuarioDTO2.setEmail("correoprueba1@noenviar.com");
+        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setNombreResponsable("Juan");
+        usuarioDTO2.setApellidoResponsable("Pérez");
+        usuarioDTO2.setDocumentoResponsable("25252525");
+        usuarioDTO2.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO2.setAceptaTerminos(true);
+        usuarioDTO2.setAceptaPoliticaPriv(true);
+        usuarioDTO2.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTO2.setGeneroResponsable("MASCULINO");
+        usuarioDTO2.setIdioma("es");
+        usuarioDTO2.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO2.setRol("ROLE_USUARIO");
+
+        RegistroDireccionDTO direccionDTO2 = new RegistroDireccionDTO();
+        direccionDTO2.setTipo("PERSONAL");
+        direccionDTO2.setCalle("Calle Falsa");
+        direccionDTO2.setNumero("123");
+        direccionDTO2.setCiudad("Ciudad");
+        direccionDTO2.setProvincia("Provincia");
+        direccionDTO2.setCodigoPostal("1000");
+        direccionDTO2.setPais("Argentina");
+        direccionDTO2.setActiva(true);
+        direccionDTO2.setEsPrincipal(true);
+
+        RegistroTelefonoDTO telefonoDTO2 = new RegistroTelefonoDTO();
+        telefonoDTO2.setTipo("PRINCIPAL");
+        telefonoDTO2.setNumero("1122334455");
+        telefonoDTO2.setCaracteristica("11");
+        telefonoDTO2.setActivo(true);
+        telefonoDTO2.setVerificado(false);
+
+        RegistroUsuarioCompletoDTO registroDTO2 = new RegistroUsuarioCompletoDTO();
+        registroDTO2.setUsuario(usuarioDTO2);
+        registroDTO2.setDirecciones(List.of(direccionDTO2));
+        registroDTO2.setTelefonos(List.of(telefonoDTO2));
+
+        int statusUser2 = registrarUsuarioCompleto(registroDTO2);
         assertEquals(200, statusUser2);
         Optional<Usuario> user2Opt = usuarioRepository.findByUsername("usuario2");
         assertTrue(user2Opt.isPresent());
+        Usuario usuario2 = user2Opt.get();
 
-        // Login admin
-        MvcResult loginResultAdmin = loginUsuario("adminTest", "P123456");
-        assertEquals(200, loginResultAdmin.getResponse().getStatus());
-        String adminAccessToken = null;
-        for (Cookie cookie : loginResultAdmin.getResponse().getCookies()) {
-            if ("accessToken".equals(cookie.getName())) {
-                adminAccessToken = cookie.getValue();
-            }
-        }
-        assertNotNull(adminAccessToken);
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt2 = usuarioRepository.findByUsername("usuario2");
+        assertTrue(usuarioOpt2.isPresent());
+        Usuario usuario3 = usuarioOpt2.get();
+        usuario3.setEmailVerificado(true);
+        usuarioRepository.save(usuario3);
 
         // Login usuario 1
-        MvcResult loginResultUser1 = loginUsuario("usuario1", "P123456");
-        assertEquals(200, loginResultUser1.getResponse().getStatus());
-        String user1AccessToken = null;
-        for (Cookie cookie : loginResultUser1.getResponse().getCookies()) {
+        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P123456");
+        assertEquals(200, loginResultUsuario1.getResponse().getStatus());
+        String usuario1AccessToken = null;
+        for (Cookie cookie : loginResultUsuario1.getResponse().getCookies()) {
             if ("accessToken".equals(cookie.getName())) {
-                user1AccessToken = cookie.getValue();
+                usuario1AccessToken = cookie.getValue();
             }
         }
-        assertNotNull(user1AccessToken);
+        assertNotNull(usuario1AccessToken);
 
-        // Login usuario 2
-        MvcResult loginResultUser2 = loginUsuario("usuario2", "P123456");
-        assertEquals(200, loginResultUser2.getResponse().getStatus());
-        String user2AccessToken = null;
-        for (Cookie cookie : loginResultUser2.getResponse().getCookies()) {
-            if ("accessToken".equals(cookie.getName())) {
-                user2AccessToken = cookie.getValue();
-            }
-        }
-        assertNotNull(user2AccessToken);
+        // Login usuario 2 (por si el endpoint requiere que ambos tengan sesión)
+        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P123456");
+        assertEquals(200, loginResultUsuario2.getResponse().getStatus());
 
-        // Usuario común intenta acceder a endpoint solo admin (debe fallar con 403)
+        // Usuario 1 intenta acceder a endpoint solo admin para ver sesiones de usuario 2
         MvcResult resultUser1 = mockMvc.perform(get("/api/sesiones/private/admin/activas")
-                .header("Authorization", "Bearer " + user1AccessToken)
+                .header("Authorization", "Bearer " + usuario1AccessToken)
+                .param("idUsuario", String.valueOf(usuario2.getIdUsuario()))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertEquals(403, resultUser1.getResponse().getStatus());

@@ -1,12 +1,13 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
 
-import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
-import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
-import com.breakingns.SomosTiendaMas.auth.utils.TokenUtils;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.security.exception.TokenInvalidoException;
+import com.breakingns.SomosTiendaMas.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.utils.TokenUtils;
+
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,28 +36,31 @@ public class SesionController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
     
+    /*                                   Endpoints:
+        1. Listar mis sesiones activas (Admin/User)
+        2. Listar Sesiones Activas (Admin)
+        3. Revocar Sesión Activa (Admin)
+        4. Logout Otras Sesiones (User/Admin)
+
+    */
+
+    // Private con acceso a usuarios autenticados
     @GetMapping("/private/activas")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public List<SesionActivaDTO> misSesionesActivas() {
         Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
         return sesionActivaService.listarSesionesActivas(idUsuario);
     }
 
-    @GetMapping("/private/admin/activas")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
-        return sesionActivaService.listarSesionesActivasComoAdmin(idUsuario);
-    }
-
     @PostMapping("/private/admin/revocar")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> revocarSesionActiva(@RequestParam Long idSesion) {
         sesionActivaService.revocarSesionPorId(idSesion);
         return ResponseEntity.ok("Sesión revocada correctamente");
     }
     
     @PostMapping("/private/logout-otras-sesiones")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logoutOtrasSesiones(
         @RequestHeader("Authorization") String authorizationHeader) {
 
@@ -81,4 +85,10 @@ public class SesionController {
         return ResponseEntity.ok("Sesiones cerradas excepto la actual");
     }
     
+    // Jerarquia alta
+    @GetMapping("/private/admin/activas")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_SUPERADMIN', 'ROLE_SOPORTE')")
+    public List<SesionActivaDTO> listarSesionesActivas(@RequestParam(required = false) Long idUsuario) {
+        return sesionActivaService.listarSesionesActivasComoAdmin(idUsuario);
+    }
 }

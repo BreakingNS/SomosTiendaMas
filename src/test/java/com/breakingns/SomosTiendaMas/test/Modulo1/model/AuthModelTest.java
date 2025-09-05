@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
@@ -100,11 +100,15 @@ import jakarta.servlet.http.Cookie;
 @SqlGroup({
     @Sql(
         statements = {
+            "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
             "DELETE FROM refresh_token",
+            "DELETE FROM direcciones",
+            "DELETE FROM telefonos",
+            "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
             "DELETE FROM usuario_roles",
             "DELETE FROM usuario"
@@ -113,11 +117,15 @@ import jakarta.servlet.http.Cookie;
     )/*,
     @Sql(
         statements = {
+            "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
             "DELETE FROM token_emitido",
             "DELETE FROM refresh_token",
+            "DELETE FROM direcciones",
+            "DELETE FROM telefonos",
+            "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
             "DELETE FROM usuario_roles",
             "DELETE FROM usuario"

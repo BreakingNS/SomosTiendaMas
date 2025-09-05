@@ -4,10 +4,9 @@ import com.breakingns.SomosTiendaMas.auth.dto.request.ChangePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.request.EmailRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.request.ResetPasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
-import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
-import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -22,23 +21,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/password")
 public class PasswordController {
-    
-    private final AuthService authService;
 
     private final PasswordResetService passwordResetService;
 
-    public PasswordController(AuthService authService, PasswordResetService passwordResetService) {
-        this.authService = authService;
+    public PasswordController(PasswordResetService passwordResetService) {
         this.passwordResetService = passwordResetService;
     }
     
+    /*                                   Endpoints:
+        1. Olvide Password
+        2. Reset Password
+        3. Change Password
+        
+    */
+
     @PostMapping("/public/olvide-password")
     public ResponseEntity<?> olvidePassword(@RequestBody @Valid EmailRequest emailRequest, HttpServletRequest request) {
         String email = emailRequest.email();
-        String ip = RequestUtil.obtenerIpCliente(request);
-
-        authService.procesarSolicitudOlvidePassword(email, ip, request);
-
+        passwordResetService.solicitarRecuperacionPassword(email);
         return ResponseEntity.ok(Map.of(
             "message", "Si el email existe, te enviaremos instrucciones para recuperar tu contraseña."
         ));
@@ -51,7 +51,7 @@ public class PasswordController {
     }
     
     @PostMapping("/private/change-password")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> changePassword(@RequestBody @Valid ChangePasswordRequest req, Authentication auth) {
         Usuario usuario = ((UserAuthDetails) auth.getPrincipal()).getUsuario();
         passwordResetService.changePassword(usuario, req.currentPassword(), req.newPassword());

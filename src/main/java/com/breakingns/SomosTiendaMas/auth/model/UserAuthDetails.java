@@ -3,7 +3,8 @@ package com.breakingns.SomosTiendaMas.auth.model;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 public class UserAuthDetails implements UserDetails {
 

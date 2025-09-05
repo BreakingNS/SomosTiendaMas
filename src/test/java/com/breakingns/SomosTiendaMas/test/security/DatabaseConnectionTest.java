@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.test.security;
 
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.model.Carrito;
 import com.breakingns.SomosTiendaMas.repository.ICarritoRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

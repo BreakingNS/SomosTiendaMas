@@ -2,16 +2,15 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.dto.shared.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.repository.IEventoAuditoriaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
-import com.breakingns.SomosTiendaMas.auth.security.jwt.JwtTokenProvider;
 import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
-import com.breakingns.SomosTiendaMas.auth.utils.RequestUtil;
-import com.breakingns.SomosTiendaMas.auth.utils.UsuarioUtils;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.helpers.TokenHelper;
 import com.breakingns.SomosTiendaMas.security.exception.CredencialesInvalidasException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
@@ -19,15 +18,23 @@ import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoExcepti
 import com.breakingns.SomosTiendaMas.security.exception.TokenRevocadoException;
 import com.breakingns.SomosTiendaMas.security.exception.TooManyRequestsException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioBloqueadoException;
+import com.breakingns.SomosTiendaMas.security.exception.UsuarioDesactivadoException;
+import com.breakingns.SomosTiendaMas.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.utils.RequestUtil;
+import com.breakingns.SomosTiendaMas.utils.UsuarioUtils;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
@@ -45,9 +52,12 @@ public class AuthService {
     private final PasswordResetService passwordResetService;
     //private final RateLimiterService rateLimiterService;
     private final LoginAttemptService loginAttemptService;
-    
+    private final EmailVerificacionService emailVerificacionService;
+    private final EventoAuditoriaService eventoAuditoriaService;
+
     private final IUsuarioRepository usuarioRepository;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
+    private final IEventoAuditoriaRepository eventoAuditoriaRepository;
 
     private final UsuarioUtils usuarioUtils;
     private final RevocacionUtils revocacionUtils;
@@ -59,8 +69,11 @@ public class AuthService {
                         SesionActivaService sesionActivaService, 
                         PasswordResetService passwordResetService, 
                         LoginAttemptService loginAttemptService,
+                        EmailVerificacionService emailVerificacionService,
+                        EventoAuditoriaService eventoAuditoriaService,
                         IUsuarioRepository usuarioRepository,
                         ITokenEmitidoRepository tokenEmitidoRepository,
+                        IEventoAuditoriaRepository eventoAuditoriaRepository,
                         UsuarioUtils usuarioUtils,
                         RevocacionUtils revocacionUtils) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -70,56 +83,81 @@ public class AuthService {
         this.sesionActivaService = sesionActivaService;
         this.passwordResetService = passwordResetService;
         this.loginAttemptService = loginAttemptService;
+        this.emailVerificacionService = emailVerificacionService;
+        this.eventoAuditoriaService = eventoAuditoriaService;
         this.usuarioRepository = usuarioRepository;
         this.tokenEmitidoRepository = tokenEmitidoRepository;
+        this.eventoAuditoriaRepository = eventoAuditoriaRepository;
         this.usuarioUtils = usuarioUtils;
         this.revocacionUtils = revocacionUtils;
     }
     
     // ---
     
+    @Transactional
     public AuthResponse login(LoginRequest loginRequest, HttpServletRequest request) {
-        log.info("Intento de login para usuario: {}", loginRequest.username());
-        
+        System.out.println("\n\n[DEBUG] Entrando al método AuthService.login para usuario: " + loginRequest.username() + "\n\n");
+
         if (loginAttemptService.isBlocked(loginRequest.username(), RequestUtil.obtenerIpCliente(request))) {
+            System.out.println("\n\n[DEBUG] Usuario bloqueado en login: " + loginRequest.username() + "\n\n");
             throw new UsuarioBloqueadoException("Usuario temporalmente bloqueado por múltiples intentos fallidos.");
         }
-        
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.username(), loginRequest.password()
                 )
             );
-            
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
             String accessToken = jwtTokenProvider.generarTokenDesdeAuthentication(authentication);
 
             Usuario usuario = usuarioUtils.findByUsername(loginRequest.username());
 
-            String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
-
-            // Extraer IP y user-agent con helper
-            String ip = RequestUtil.obtenerIpCliente(request);
-            String userAgent = request.getHeader("User-Agent");
-
-            if (userAgent == null) {
-                userAgent = "Desconocido"; //PRUEBA PARA EVITAR USERAGENT NULOS
+            // Verifica si el email está verificado
+            if (!usuario.getEmailVerificado()) {
+                System.out.println("\n\n[DEBUG] Email no verificado en login: " + loginRequest.username() + "\n\n");
+                throw new CredencialesInvalidasException("El email no está verificado.");
             }
 
-            // Crear sesión activa con servicio dedicado
+            if (!usuario.isActivo()) {
+                System.out.println("\n\n[DEBUG] Usuario desactivado en login: " + loginRequest.username() + "\n\n");
+                throw new UsuarioDesactivadoException("El usuario está desactivado.");
+            }
+
+            String refreshToken = refreshTokenService.crearRefreshToken(usuario.getIdUsuario(), request).getToken();
+
+            String ip = RequestUtil.obtenerIpCliente(request);
+            String userAgent = request.getHeader("User-Agent");
+            if (userAgent == null) {
+                userAgent = "Desconocido";
+            }
+
             sesionActivaService.registrarSesion(usuario, accessToken, refreshToken, ip, userAgent);
 
             loginAttemptService.loginSucceeded(loginRequest.username(), ip);
 
-            log.info("Login exitoso. Access token emitido para usuario: {}", usuario.getUsername());
-            log.info("IP: {}, User-Agent: {}", ip, userAgent);
+            eventoAuditoriaService.registrarEvento(
+                loginRequest.username(),
+                "LOGIN_EXITOSO",
+                "Login exitoso desde IP " + RequestUtil.obtenerIpCliente(request)
+            );
+
+            System.out.println("\n\n[DEBUG] Login exitoso en AuthService.login para usuario: " + loginRequest.username() + "\n\n");
 
             return new AuthResponse(accessToken, refreshToken);
-        } catch (AuthenticationException ex) {
+        }catch (AuthenticationException ex) {
             String ip = RequestUtil.obtenerIpCliente(request);
-            loginAttemptService.loginFailed(loginRequest.username(), ip);
+
+            // Registrar evento de auditoría para login fallido
+            eventoAuditoriaService.registrarEvento(
+                loginRequest.username(),
+                "LOGIN_FALLIDO",
+                "Login fallido desde IP " + ip
+            );
+
             throw new CredencialesInvalidasException("Credenciales inválidas");
         }
     }
@@ -247,4 +285,31 @@ public class AuthService {
             .orElseThrow(() -> new SesionNoEncontradaException("Sesión activa no encontrada para el usuario y token"));
         return sesion.getRefreshToken();
     }
+
+    // Devuelve los datos del usuario autenticado usando el request (token JWT)
+    public Map<String, Object> traerDatosUsuarioAutenticado(HttpServletRequest request) {
+        // Ejemplo: obtén el username del token y busca el usuario en la BD
+        String username = TokenHelper.getUsernameFromRequest(request);
+        Usuario usuario = usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        Map<String, Object> datos = new HashMap<>();
+        datos.put("id", usuario.getIdUsuario());
+        datos.put("username", usuario.getUsername());
+        datos.put("email", usuario.getEmail());
+        // Agrega más campos si lo necesitas
+        return datos;
+    }
+
+    // Verifica el código de email (simulado, deberías implementar la lógica real)
+    public boolean verificarCodigoEmail(String code) {
+        return emailVerificacionService.verificarCodigo(code);
+    }
+
+    public boolean seGeneroEventoAuditoria(String username, String tipoEvento) {
+        // Supongamos que tienes un repositorio eventoAuditoriaRepository
+        // y una entidad EventoAuditoria con campos username y tipoEvento
+
+        return eventoAuditoriaRepository.existsByUsernameAndTipoEvento(username, tipoEvento);
+    }
+
 }

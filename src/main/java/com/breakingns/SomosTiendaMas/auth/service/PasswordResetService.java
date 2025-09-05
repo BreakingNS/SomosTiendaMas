@@ -2,8 +2,8 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIgualAAnteriorException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
@@ -25,34 +25,38 @@ public class PasswordResetService {
     private final IUsuarioRepository usuarioRepository;
     private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public PasswordResetService(IUsuarioRepository usuarioRepository, 
                                    IPasswordResetTokenRepository passwordResetTokenRepository,
-                                   PasswordEncoder passwordEncoder) {
+                                   PasswordEncoder passwordEncoder,
+                                   EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
     
     public void solicitarRecuperacionPassword(String email) {
         log.info("Buscando usuario con email: {}", email);
 
-        // Aquí evitamos loggear si el usuario existe o no
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isPresent()) {
-            String token = UUID.randomUUID().toString();
+            String token = TokenResetPassword.generarTokenAlfanumerico(6);
             TokenResetPassword tokenReset = new TokenResetPassword();
             tokenReset.setToken(token);
             tokenReset.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES));
             tokenReset.setUsado(false);
             tokenReset.setUsuario(usuarioOpt.get());
             passwordResetTokenRepository.save(tokenReset);
-            // Envía el token por correo o en alguna otra parte del flujo.
-            log.info("Token de recuperación generado.");
-        }
 
+            // Generar enlace de recuperación
+            String enlace = "https://tusitioweb.com/recuperar?token=" + token;
+            // Enviar email con código y enlace
+            emailService.enviarEmailRecuperacionPassword(email, token, enlace);
+            log.info("Token de recuperación generado y email enviado.");
+        }
         // Siempre responder OK aunque no exista, por seguridad
-        // No indicar si el email existe o no para evitar ataques de enumeración
     }
     
     /*

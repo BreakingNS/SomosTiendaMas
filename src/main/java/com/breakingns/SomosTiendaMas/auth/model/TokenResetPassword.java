@@ -1,6 +1,5 @@
 package com.breakingns.SomosTiendaMas.auth.model;
 
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +10,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +32,10 @@ public class TokenResetPassword {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
+
+    @Column(nullable = false)
+    private Instant fechaCreacion = Instant.now();
+
     @Column(nullable = false)
     private Instant fechaExpiracion;
 
@@ -42,8 +48,20 @@ public class TokenResetPassword {
     public TokenResetPassword(String token, Usuario usuario, Instant fechaExpiracion) {
         this.token = token;
         this.usuario = usuario;
+        this.fechaCreacion = Instant.now();
         this.fechaExpiracion = fechaExpiracion;
         this.usado = false;
+    }
+
+    // Genera un token alfanumérico de longitud dada
+    public static String generarTokenAlfanumerico(int longitud) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        for (int i = 0; i < longitud; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     // Getters y setters

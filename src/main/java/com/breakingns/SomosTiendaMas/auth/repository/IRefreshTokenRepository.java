@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.repository;
 
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 import jakarta.transaction.Transactional;
 
@@ -37,6 +37,10 @@ public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Lon
     void revocarPorToken(@Param("token") String token, @Param("fechaRevocado") Instant fechaRevocado);
     
     List<RefreshToken> findAllByUsuario_Username(String username);
+
+    Iterable<? extends RefreshToken> findByUsuario_IdUsuario(Long idUsuario);
+
+    List<RefreshToken> findAllByToken(String refreshToken);
 
     /*
     @Modifying

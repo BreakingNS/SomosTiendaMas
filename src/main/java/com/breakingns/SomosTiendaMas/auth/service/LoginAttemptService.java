@@ -1,10 +1,15 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.LoginAttempt;
-import com.breakingns.SomosTiendaMas.auth.repository.LoginAttemptRepository;
-import com.breakingns.SomosTiendaMas.domain.usuario.model.Usuario;
-import com.breakingns.SomosTiendaMas.domain.usuario.repository.IUsuarioRepository;
-import jakarta.transaction.Transactional;
+import com.breakingns.SomosTiendaMas.auth.repository.ILoginAttemptRepository;
+import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
+
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+
+//import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -21,12 +26,12 @@ public class LoginAttemptService {
     private static final long INITIAL_BLOCK_MINUTES = 1;
 
     private final Clock clock;
-    private final LoginAttemptRepository loginAttemptRepository;
+    private final ILoginAttemptRepository loginAttemptRepository;
     private final IUsuarioRepository usuarioRepository;
 
     @Autowired
     public LoginAttemptService(Clock clock,
-                                LoginAttemptRepository loginAttemptRepository,
+                                ILoginAttemptRepository loginAttemptRepository,
                                 IUsuarioRepository usuarioRepository) {
         this.clock = clock;
         this.loginAttemptRepository = loginAttemptRepository;
@@ -76,27 +81,69 @@ public class LoginAttemptService {
 
     // * Registra un intento fallido y bloquea si se supera el umbral.
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void loginFailed(String username, String ip) {
-        LocalDateTime now = LocalDateTime.now(clock);
+        System.out.println("\n\n[DEBUG] Entrando a loginFailed con username: " + username + ", ip: " + ip + "\n\n");
+
+        LocalDateTime now = LocalDateTime.now();
 
         LoginAttempt attempt = loginAttemptRepository
                 .findByUsernameAndIp(username, ip)
-                .orElseGet(() -> new LoginAttempt(username, ip, 0, now, null));
+                .orElse(null);
 
-        int currentAttempts = attempt.getFailedAttempts() + 1;
-        attempt.setFailedAttempts(currentAttempts);
-        attempt.setLastAttempt(now);
-
-        if (currentAttempts >= MAX_ATTEMPTS) {
-            long blockMinutes = (long) (INITIAL_BLOCK_MINUTES * Math.pow(2, currentAttempts - MAX_ATTEMPTS));
-            LocalDateTime blockedUntil = now.plusMinutes(blockMinutes);
-            attempt.setBlockedUntil(blockedUntil);
-            log.warn("Usuario [{}] con IP [{}] bloqueado hasta {}", username, ip, blockedUntil);
+        if (attempt == null) {
+            attempt = new LoginAttempt(username, ip, 1, now, null);
+        } else {
+            attempt.setFailedAttempts(attempt.getFailedAttempts() + 1);
+            attempt.setLastAttempt(now);
         }
 
-        loginAttemptRepository.save(attempt);
+        if (attempt.getFailedAttempts() >= MAX_ATTEMPTS) {
+            long blockMinutes = (long) (INITIAL_BLOCK_MINUTES * Math.pow(2, attempt.getFailedAttempts() - MAX_ATTEMPTS));
+            LocalDateTime blockedUntil = now.plusMinutes(blockMinutes);
+            attempt.setBlockedUntil(blockedUntil);
+            System.out.println("\n\n[DEBUG] Usuario bloqueado en loginFailed: " + username + ", ip: " + ip + ", hasta: " + blockedUntil + "\n\n");
+
+            // Actualiza el usuario como bloqueado
+            usuarioRepository.findByUsername(username).ifPresent(usuario -> {
+                usuario.setCuentaBloqueada(true);
+                usuarioRepository.save(usuario);
+                System.out.println("\n\n[DEBUG] Usuario [" + username + "] marcado como bloqueado en la entidad Usuario\n\n");
+            });
+        }
+
+        LoginAttempt saved = loginAttemptRepository.saveAndFlush(attempt);
+        System.out.println("\n\n[DEBUG] Intento guardado en loginFailed: id=" + saved.getId() + ", username=" + saved.getUsername() + ", ip=" + saved.getIp() + ", failedAttempts=" + saved.getFailedAttempts() + "\n\n");
     }
+
+    /*
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void loginFailed(String username, String ip) {
+        System.out.println("\n\n[DEBUG] Entrando a loginFailed con username: " + username + ", ip: " + ip + "\n\n");
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LoginAttempt attempt = loginAttemptRepository
+                .findByUsernameAndIp(username, ip)
+                .orElse(null);
+
+        if (attempt == null) {
+            attempt = new LoginAttempt(username, ip, 1, now, null);
+        } else {
+            attempt.setFailedAttempts(attempt.getFailedAttempts() + 1);
+            attempt.setLastAttempt(now);
+        }
+
+        if (attempt.getFailedAttempts() >= MAX_ATTEMPTS) {
+            long blockMinutes = (long) (INITIAL_BLOCK_MINUTES * Math.pow(2, attempt.getFailedAttempts() - MAX_ATTEMPTS));
+            LocalDateTime blockedUntil = now.plusMinutes(blockMinutes);
+            attempt.setBlockedUntil(blockedUntil);
+            System.out.println("\n\n[DEBUG] Usuario bloqueado en loginFailed: " + username + ", ip: " + ip + ", hasta: " + blockedUntil + "\n\n");
+        }
+
+        LoginAttempt saved = loginAttemptRepository.saveAndFlush(attempt);
+        System.out.println("\n\n[DEBUG] Intento guardado en loginFailed: id=" + saved.getId() + ", username=" + saved.getUsername() + ", ip=" + saved.getIp() + ", failedAttempts=" + saved.getFailedAttempts() + "\n\n");
+    }*/
 
     /**
      * Elimina intentos de login viejos cada hora.
@@ -108,5 +155,10 @@ public class LoginAttemptService {
         if (eliminados > 0) {
             log.info("Se eliminaron {} intentos fallidos viejos", eliminados);
         }
+    }
+
+    public int traerIntentosFallidos(String username, String ip) {
+        Integer intentos = loginAttemptRepository.findFailedAttemptsByUsernameAndIp(username, ip);
+        return intentos != null ? intentos : 0;
     }
 }

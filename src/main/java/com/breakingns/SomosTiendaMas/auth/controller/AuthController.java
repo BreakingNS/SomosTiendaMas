@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.helpers.TokenHelper;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.RefreshTokenService;
-import com.breakingns.SomosTiendaMas.auth.utils.CookieUtils;
+import com.breakingns.SomosTiendaMas.helpers.TokenHelper;
+import com.breakingns.SomosTiendaMas.utils.CookieUtils;
+
 import jakarta.validation.Valid;
 
 
@@ -35,17 +36,29 @@ public class AuthController {
         this.refreshTokenService = refreshTokenService;
     }
     
+    /*                                   Endpoints:
+        1. Login
+        2. Refresh Token
+        3. Logout
+        4. Logout Total
+        
+    */
+
     @PostMapping("/public/login")
     public ResponseEntity<Map<String, String>> login(
             @Valid @RequestBody LoginRequest loginRequest, 
             HttpServletRequest request,
             HttpServletResponse response) {
-        
+
+        System.out.println("\n\n[DEBUG] Entrando al endpoint /public/login con usuario: " + loginRequest.username() + "\n\n");
+
         AuthResponse tokens = authService.login(loginRequest, request);
-        
+
+        System.out.println("\n\n[DEBUG] LoginService respondió para usuario: " + loginRequest.username() + "\n\n");
+
         // Usar utilidad para setear cookies
-        CookieUtils.setAuthCookies(response, tokens.getAccessToken(), tokens.getRefreshToken(), false); //EN PRODUCCION SERA TRUE EL SECURE.
-        
+        CookieUtils.setAuthCookies(response, tokens.getAccessToken(), tokens.getRefreshToken(), false);
+
         // Devolver solo mensaje de éxito
         return ResponseEntity.ok(Map.of(
             "message", "Login exitoso",
@@ -74,7 +87,7 @@ public class AuthController {
     }
 
     @PostMapping("/private/logout")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         // Leer access token desde las cookies o header
         String accessToken = TokenHelper.extractAccessToken(request, null);
@@ -92,7 +105,7 @@ public class AuthController {
     }
 
     @PostMapping("/private/logout-total")
-    @PreAuthorize("hasAnyRole('ROLE_USUARIO', 'ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> logoutTotal(HttpServletRequest request, HttpServletResponse response) {
         
         // Leer access token desde las cookies o header
@@ -109,6 +122,29 @@ public class AuthController {
         CookieUtils.clearAuthCookies(response, false); //EN PRODUCCION SERA TRUE EL SECURE.
 
         return ResponseEntity.ok(Map.of("message", "Sesiones cerradas en todos los dispositivos"));
+    }
+
+    // Extras
+
+    // Obtener datos del usuario autenticado
+    @PostMapping("/misDatos")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getMe(HttpServletRequest request) {
+        // Aquí deberías obtener el usuario desde el token o contexto de seguridad
+        Map<String, Object> userData = authService.traerDatosUsuarioAutenticado(request);
+        return ResponseEntity.ok(userData);
+    }
+
+    // Verificación de email (simulado, deberías implementar lógica real)
+    @PostMapping("public/verificarEmail")
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestBody Map<String, String> body) {
+        String code = body.get("code");
+        boolean ok = authService.verificarCodigoEmail(code);
+        if (ok) {
+            return ResponseEntity.ok(Map.of("message", "Email verificado correctamente"));
+        } else {
+            return ResponseEntity.status(400).body(Map.of("error", "Código inválido"));
+        }
     }
 
 }

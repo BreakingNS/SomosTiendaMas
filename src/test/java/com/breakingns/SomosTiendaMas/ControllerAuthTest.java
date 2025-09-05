@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.breakingns.SomosTiendaMas.auth.dto.response.AuthResponse;
-import com.breakingns.SomosTiendaMas.auth.helpers.TokenHelper;
-import com.breakingns.SomosTiendaMas.auth.utils.CookieUtils;
+import com.breakingns.SomosTiendaMas.helpers.TokenHelper;
+import com.breakingns.SomosTiendaMas.utils.CookieUtils;
 
 @RestController
 @RequestMapping("/test/api/auth")
@@ -25,6 +25,7 @@ public class ControllerAuthTest {
         this.refreshTokenServiceTest = refreshTokenServiceTest;
     }
 
+    
 
     @PostMapping("/public/refresh-token")
     public ResponseEntity<Map<String, String>> refrescarToken(
