@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -29,5 +30,9 @@ public interface ISesionActivaRepository extends JpaRepository<SesionActiva, Lon
     Optional<SesionActiva> findByRefreshToken(String token);
 
     List<SesionActiva> findAllByUsuario_Username(String username);
+
+    boolean existsByUsuario_IdUsuario(Long idUsuario);
+
+    void deleteByUsuario_IdUsuario(Long idUsuario);
 
 }

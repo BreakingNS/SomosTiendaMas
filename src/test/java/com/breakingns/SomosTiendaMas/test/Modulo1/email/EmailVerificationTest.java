@@ -1,6 +1,8 @@
 package com.breakingns.SomosTiendaMas.test.Modulo1.email;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,9 +30,12 @@ import com.breakingns.SomosTiendaMas.auth.repository.ILoginAttemptRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
 import com.breakingns.SomosTiendaMas.auth.service.AuthService;
+import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
@@ -42,8 +47,10 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
@@ -51,6 +58,10 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -151,8 +162,14 @@ class EmailVerificationTest {
     private final ILoginAttemptRepository loginAttemptRepository;
     private final IRolRepository rolRepository;
     private final IEmailVerificacionRepository emailVerificacionRepository;
+    private final ITokenResetPasswordRepository tokenResetPasswordRepository;
 
     private final AuthService authService;
+
+    private final PasswordEncoder passwordEncoder;
+
+    @MockBean
+    private EmailService emailService;
 
     private RegistroUsuarioCompletoDTO registroDTO;
 
@@ -462,15 +479,14 @@ class EmailVerificationTest {
         assertEquals(401, status, "No debe permitir login si el email no está verificado");
     }
 
-
     // Recuperación de contraseña
 
     // 8. Envía email de recuperación de contraseña al usuario
     @Test
     void enviarEmailRecuperacion_usuario() throws Exception {
         // Simular solicitud de recuperación de contraseña
-        String email = "correoprueba1@noenviar.com";
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password")
+        String email = "correoprueba@noenviar.com";
+        MvcResult result = mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\"}"))
                 .andReturn();
@@ -478,9 +494,13 @@ class EmailVerificationTest {
         int status = result.getResponse().getStatus();
         assertEquals(200, status, "Debe responder OK al solicitar recuperación de contraseña");
 
-        // Verificar que se creó el registro de recuperación en la BD
-        Optional<EmailVerificacion> tokenOpt = emailVerificacionRepository.findByUsuario_IdUsuario(
-            usuarioRepository.findByUsername("usuario123").get().getIdUsuario());
+        // Buscar el usuario por email
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+
+        // Verificar que se creó el registro de recuperación en la tabla tokens_reset_password
+        Optional<TokenResetPassword> tokenOpt = tokenResetPasswordRepository.findByUsuario_IdUsuario(usuario.getIdUsuario());
         assertTrue(tokenOpt.isPresent(), "Debe existir un token de recuperación para el usuario");
     }
 
@@ -488,117 +508,115 @@ class EmailVerificationTest {
     @Test
     void generaYGuardaCodigoRecuperacion_correctamente() throws Exception {
         // Simular solicitud de recuperación de contraseña
-        String email = "correoprueba1@noenviar.com";
-        mockMvc.perform(post("/api/auth/public/recuperar-password")
+        String email = "correoprueba@noenviar.com";
+        mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\"}"))
                 .andReturn();
 
         // Buscar el usuario
-        Usuario usuario = usuarioRepository.findByUsername("usuario123").get();
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
 
-        // Buscar el token de recuperación en la BD
-        Optional<EmailVerificacion> tokenOpt = emailVerificacionRepository.findByUsuario_IdUsuario(usuario.getIdUsuario());
+        // Buscar el token de recuperación en la tabla tokens_reset_password
+        Optional<TokenResetPassword> tokenOpt = tokenResetPasswordRepository.findByUsuario_IdUsuario(usuario.getIdUsuario());
         assertTrue(tokenOpt.isPresent(), "Debe existir un token de recuperación para el usuario");
 
-        EmailVerificacion token = tokenOpt.get();
-        assertNotNull(token.getCodigo(), "El código de recuperación debe existir");
+        TokenResetPassword token = tokenOpt.get();
+        assertNotNull(token.getToken(), "El código de recuperación debe existir");
         assertFalse(token.isUsado(), "El código de recuperación no debe estar usado");
         assertTrue(token.getFechaExpiracion().isAfter(token.getFechaCreacion()), "La expiración debe ser posterior a la creación");
         assertEquals(usuario.getIdUsuario(), token.getUsuario().getIdUsuario(), "El token debe estar asociado al usuario correcto");
     }
      
-    /// 10. No permite recuperar contraseña con código inválido
+    /// 10. No permite recuperar contraseña con token inválido
     @Test
-    void noPermiteRecuperarContrasena_codigoInvalido() throws Exception {
-        String codigoInvalido = "codigo-que-no-existe";
+    void noPermiteRecuperarContrasena_tokenInvalido() throws Exception {
+        String tokenInvalido = "token-que-no-existe";
 
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password/confirmar")
+        MvcResult result = mockMvc.perform(post("/api/password/public/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"codigo\":\"" + codigoInvalido + "\", \"nuevaPassword\":\"NuevaClave123\"}"))
+                .content("{\"token\":\"" + tokenInvalido + "\", \"nuevaPassword\":\"NuevaClave123\"}"))
                 .andReturn();
 
         int status = result.getResponse().getStatus();
-        assertTrue(status == 400 || status == 404, "Debe responder con error si el código es inválido");
+        assertTrue(status == 400 || status == 404, "Debe responder con error si el token es inválido");
     }
 
-    // 11. No permite recuperar contraseña con código expirado
+    // 11. No permite recuperar contraseña con token expirado
     @Test
-    void noPermiteRecuperarContrasena_codigoExpirado() throws Exception {
+    void noPermiteRecuperarContrasena_tokenExpirado() throws Exception {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail("correoprueba@noenviar.com");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+
+        // Crear token de 32 caracteres ya expirado
+        String tokenExpirado = TokenResetPassword.generarTokenAlfanumerico(32);
+        Instant fechaExpiracion = Instant.now().minusSeconds(60); // Expirado hace 1 minuto
+        TokenResetPassword token = new TokenResetPassword(tokenExpirado, usuario, fechaExpiracion);
+        tokenResetPasswordRepository.save(token);
+
+        // Intentar recuperar contraseña con el token expirado
+        MvcResult result = mockMvc.perform(post("/api/password/public/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\":\"" + tokenExpirado + "\", \"nuevaPassword\":\"NuevaClave123\"}"))
+                .andReturn();
+
+        int status = result.getResponse().getStatus();
+        assertTrue(status == 400 || status == 410, "Debe responder con error si el token está expirado");
+    }
+
+    // 12. No permite recuperar contraseña con token ya usado
+    @Test
+    void noPermiteRecuperarContrasena_tokenYaUsado() throws Exception {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
         assertTrue(usuarioOpt.isPresent());
         Usuario usuario = usuarioOpt.get();
 
-        EmailVerificacion tokenExpirado = new EmailVerificacion(
-            "codigo-expirado-recuperacion",
-            usuario,
-            LocalDateTime.now().minusMinutes(1) // Expirado
-        );
-        tokenExpirado.setFechaCreacion(LocalDateTime.now().minusHours(1));
-        emailVerificacionRepository.save(tokenExpirado);
+        // Crear token de 32 caracteres válido pero ya usado
+        String tokenUsado = TokenResetPassword.generarTokenAlfanumerico(32);
+        Instant fechaExpiracion = Instant.now().plusSeconds(3600); // Expira en 1 hora
+        TokenResetPassword token = new TokenResetPassword(tokenUsado, usuario, fechaExpiracion);
+        token.setUsado(true); // Marcar como usado
+        tokenResetPasswordRepository.save(token);
 
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password/confirmar")
+        // Intentar recuperar contraseña con el token ya usado
+        MvcResult result = mockMvc.perform(post("/api/password/public/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"codigo\":\"codigo-expirado-recuperacion\", \"nuevaPassword\":\"NuevaClave123\"}"))
+                .content("{\"token\":\"" + tokenUsado + "\", \"nuevaPassword\":\"NuevaClave123\"}"))
                 .andReturn();
 
         int status = result.getResponse().getStatus();
-        assertTrue(status == 400 || status == 410, "Debe responder con error si el código está expirado");
-    }
-
-    // 12. No permite recuperar contraseña con código ya usado
-    @Test
-    void noPermiteRecuperarContrasena_codigoYaUsado() throws Exception {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
-        assertTrue(usuarioOpt.isPresent());
-        Usuario usuario = usuarioOpt.get();
-
-        EmailVerificacion tokenUsado = new EmailVerificacion(
-            "codigo-usado-recuperacion",
-            usuario,
-            LocalDateTime.now().plusMinutes(10)
-        );
-        tokenUsado.setUsado(true);
-        tokenUsado.setFechaCreacion(LocalDateTime.now().minusMinutes(5));
-        emailVerificacionRepository.save(tokenUsado);
-
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password/confirmar")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"codigo\":\"codigo-usado-recuperacion\", \"nuevaPassword\":\"NuevaClave123\"}"))
-                .andReturn();
-
-        int status = result.getResponse().getStatus();
-        assertTrue(status == 400 || status == 409, "Debe responder con error si el código ya fue usado");
+        assertTrue(status == 400 || status == 409, "Debe responder con error si el token ya fue usado");
     }
     
-    // 13. Permite recuperar contraseña con código válido y actualiza la contraseña
+    // 13. Permite recuperar contraseña con token válido y actualiza la contraseña
     @Test
-    void permiteRecuperarContrasena_codigoValido_actualizaContrasena() throws Exception {
+    void permiteRecuperarContrasena_tokenValido_actualizaContrasena() throws Exception {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
         assertTrue(usuarioOpt.isPresent());
         Usuario usuario = usuarioOpt.get();
 
-        EmailVerificacion tokenValido = new EmailVerificacion(
-            "codigo-valido-recuperacion",
-            usuario,
-            LocalDateTime.now().plusMinutes(10)
-        );
-        tokenValido.setFechaCreacion(LocalDateTime.now());
-        emailVerificacionRepository.save(tokenValido);
+        // Crear token válido (no expirado, no usado)
+        String tokenValido = TokenResetPassword.generarTokenAlfanumerico(32);
+        Instant fechaExpiracion = Instant.now().plusSeconds(3600); // Expira en 1 hora
+        TokenResetPassword token = new TokenResetPassword(tokenValido, usuario, fechaExpiracion);
+        token.setUsado(false);
+        tokenResetPasswordRepository.save(token);
 
         String nuevaPassword = "NuevaClave123";
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password/confirmar")
+        MvcResult result = mockMvc.perform(post("/api/password/public/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"codigo\":\"codigo-valido-recuperacion\", \"nuevaPassword\":\"" + nuevaPassword + "\"}"))
+                .content("{\"token\":\"" + tokenValido + "\", \"nuevaPassword\":\"" + nuevaPassword + "\"}"))
                 .andReturn();
 
         int status = result.getResponse().getStatus();
-        assertEquals(200, status, "Debe responder OK si el código es válido");
+        assertEquals(200, status, "Debe responder OK si el token es válido");
 
-        // Verifica que la contraseña del usuario fue actualizada
+        // Verifica que la contraseña del usuario fue actualizada (usando el encoder)
         Usuario usuarioActualizado = usuarioRepository.findByUsername("usuario123").get();
-        assertTrue(usuarioActualizado.getPassword().equals(nuevaPassword) || 
-                usuarioActualizado.getPassword().matches(".*" + nuevaPassword + ".*"),
+        assertTrue(passwordEncoder.matches(nuevaPassword, usuarioActualizado.getPassword()),
                 "La contraseña debe haber sido actualizada");
     }
 
@@ -607,117 +625,150 @@ class EmailVerificationTest {
     // 14. No envía email si el usuario no existe
     @Test
     void noEnviaEmail_usuarioNoExiste() throws Exception {
-        String emailInexistente = "correoprueba1@noenviar.com";
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password")
+        String emailInexistente = "usuarionoexiste@noenviar.com";
+        MvcResult result = mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + emailInexistente + "\"}"))
                 .andReturn();
 
         int status = result.getResponse().getStatus();
-        assertTrue(status == 404 || status == 400, "Debe responder con error si el usuario no existe");
+        assertEquals(200, status, "Debe responder OK aunque el usuario no exista (por seguridad)");
 
-        // Verifica que no se creó ningún registro de verificación
+        // Verifica que no se creó ningún registro de recuperación
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(emailInexistente);
         assertTrue(usuarioOpt.isEmpty(), "No debe existir el usuario en la base");
+
+        Optional<TokenResetPassword> tokenOpt = tokenResetPasswordRepository.findByUsuario_IdUsuario(-1L);
+        assertTrue(tokenOpt.isEmpty(), "No debe existir un token de recuperación para el usuario inexistente");
     }
 
     // 15. No expone el código de verificación en la respuesta
     @Test
     void noExponeCodigoVerificacion_enRespuesta() throws Exception {
         String email = "correoprueba1@noenviar.com";
-        MvcResult result = mockMvc.perform(post("/api/auth/public/recuperar-password")
+        MvcResult result = mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\"}"))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
         assertFalse(responseBody.contains("codigo"), "La respuesta no debe exponer el código de verificación");
+        assertFalse(responseBody.contains("token"), "La respuesta no debe exponer el token de recuperación");
     }
     
     // 16. El código de verificación es único y aleatorio
     @Test
     void codigoVerificacion_esUnicoYAleatorio() throws Exception {
-        // Registrar dos usuarios distintos
-        RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
-        usuarioDTO1.setUsername("usuarioA");
-        usuarioDTO1.setEmail("correoprueba1@noenviar.com");
-        usuarioDTO1.setPassword("ClaveSegura123");
-        usuarioDTO1.setNombreResponsable("A");
-        usuarioDTO1.setApellidoResponsable("A");
-        usuarioDTO1.setDocumentoResponsable("11111111");
-        usuarioDTO1.setTipoUsuario("PERSONA_FISICA");
-        usuarioDTO1.setAceptaTerminos(true);
-        usuarioDTO1.setAceptaPoliticaPriv(true);
-        usuarioDTO1.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
-        usuarioDTO1.setGeneroResponsable("MASCULINO");
-        usuarioDTO1.setIdioma("es");
-        usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
-        usuarioDTO1.setRol("ROLE_USUARIO");
+        // Registrar usuario A
+        RegistroUsuarioDTO usuarioDTOA = new RegistroUsuarioDTO();
+        usuarioDTOA.setUsername("usuarioA");
+        usuarioDTOA.setEmail("correoprueba1@noenviar.com");
+        usuarioDTOA.setPassword("ClaveSegura123");
+        usuarioDTOA.setNombreResponsable("A");
+        usuarioDTOA.setApellidoResponsable("A");
+        usuarioDTOA.setDocumentoResponsable("11111111");
+        usuarioDTOA.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTOA.setAceptaTerminos(true);
+        usuarioDTOA.setAceptaPoliticaPriv(true);
+        usuarioDTOA.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
+        usuarioDTOA.setGeneroResponsable("MASCULINO");
+        usuarioDTOA.setIdioma("es");
+        usuarioDTOA.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTOA.setRol("ROLE_USUARIO");
 
-        RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
-        usuarioDTO2.setUsername("usuarioB");
-        usuarioDTO2.setEmail("correoprueba2@noenviar.com");
-        usuarioDTO2.setPassword("ClaveSegura123");
-        usuarioDTO2.setNombreResponsable("B");
-        usuarioDTO2.setApellidoResponsable("B");
-        usuarioDTO2.setDocumentoResponsable("22222222");
-        usuarioDTO2.setTipoUsuario("PERSONA_FISICA");
-        usuarioDTO2.setAceptaTerminos(true);
-        usuarioDTO2.setAceptaPoliticaPriv(true);
-        usuarioDTO2.setFechaNacimientoResponsable(LocalDate.of(1991, 2, 2));
-        usuarioDTO2.setGeneroResponsable("FEMENINO");
-        usuarioDTO2.setIdioma("es");
-        usuarioDTO2.setTimezone("America/Argentina/Buenos_Aires");
-        usuarioDTO2.setRol("ROLE_USUARIO");
+        RegistroUsuarioCompletoDTO registroDTOA = new RegistroUsuarioCompletoDTO();
+        registroDTOA.setUsuario(usuarioDTOA);
+        registroDTOA.setDirecciones(List.of());
+        registroDTOA.setTelefonos(List.of());
 
-        RegistroUsuarioCompletoDTO registroDTO1 = new RegistroUsuarioCompletoDTO();
-        registroDTO1.setUsuario(usuarioDTO1);
-        registroDTO1.setDirecciones(List.of());
-        registroDTO1.setTelefonos(List.of());
+        registrarUsuarioCompleto(registroDTOA);
 
-        RegistroUsuarioCompletoDTO registroDTO2 = new RegistroUsuarioCompletoDTO();
-        registroDTO2.setUsuario(usuarioDTO2);
-        registroDTO2.setDirecciones(List.of());
-        registroDTO2.setTelefonos(List.of());
+        // Registrar usuario B
+        RegistroUsuarioDTO usuarioDTOB = new RegistroUsuarioDTO();
+        usuarioDTOB.setUsername("usuarioB");
+        usuarioDTOB.setEmail("correoprueba2@noenviar.com");
+        usuarioDTOB.setPassword("ClaveSegura123");
+        usuarioDTOB.setNombreResponsable("B");
+        usuarioDTOB.setApellidoResponsable("B");
+        usuarioDTOB.setDocumentoResponsable("22222222");
+        usuarioDTOB.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTOB.setAceptaTerminos(true);
+        usuarioDTOB.setAceptaPoliticaPriv(true);
+        usuarioDTOB.setFechaNacimientoResponsable(LocalDate.of(1991, 2, 2));
+        usuarioDTOB.setGeneroResponsable("FEMENINO");
+        usuarioDTOB.setIdioma("es");
+        usuarioDTOB.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTOB.setRol("ROLE_USUARIO");
 
-        registrarUsuarioCompleto(registroDTO1);
-        registrarUsuarioCompleto(registroDTO2);
+        RegistroUsuarioCompletoDTO registroDTOB = new RegistroUsuarioCompletoDTO();
+        registroDTOB.setUsuario(usuarioDTOB);
+        registroDTOB.setDirecciones(List.of());
+        registroDTOB.setTelefonos(List.of());
 
-        // Buscar los tokens generados
-        Optional<Usuario> usuarioOpt1 = usuarioRepository.findByUsername("usuarioA");
-        Optional<Usuario> usuarioOpt2 = usuarioRepository.findByUsername("usuarioB");
-        assertTrue(usuarioOpt1.isPresent());
-        assertTrue(usuarioOpt2.isPresent());
+        registrarUsuarioCompleto(registroDTOB);
 
-        Optional<EmailVerificacion> tokenOpt1 = emailVerificacionRepository.findByUsuario_IdUsuario(usuarioOpt1.get().getIdUsuario());
-        Optional<EmailVerificacion> tokenOpt2 = emailVerificacionRepository.findByUsuario_IdUsuario(usuarioOpt2.get().getIdUsuario());
-        assertTrue(tokenOpt1.isPresent());
-        assertTrue(tokenOpt2.isPresent());
+        // Buscar ambos usuarios
+        Optional<Usuario> usuarioOptA = usuarioRepository.findByEmail("correoprueba1@noenviar.com");
+        Optional<Usuario> usuarioOptB = usuarioRepository.findByEmail("correoprueba2@noenviar.com");
+        assertTrue(usuarioOptA.isPresent());
+        assertTrue(usuarioOptB.isPresent());
+        Usuario usuarioA = usuarioOptA.get();
+        Usuario usuarioB = usuarioOptB.get();
 
-        String codigo1 = tokenOpt1.get().getCodigo();
-        String codigo2 = tokenOpt2.get().getCodigo();
+        // Buscar los tokens generados en email_verificacion
+        Optional<EmailVerificacion> tokenOptA = emailVerificacionRepository.findByUsuario_IdUsuario(usuarioA.getIdUsuario());
+        Optional<EmailVerificacion> tokenOptB = emailVerificacionRepository.findByUsuario_IdUsuario(usuarioB.getIdUsuario());
 
-        assertNotNull(codigo1);
-        assertNotNull(codigo2);
-        assertNotEquals(codigo1, codigo2, "Los códigos de verificación deben ser únicos y aleatorios");
+        assertTrue(tokenOptA.isPresent(), "Usuario A debe tener un token de verificación");
+        assertTrue(tokenOptB.isPresent(), "Usuario B debe tener un token de verificación");
+
+        // Verifica que los códigos son únicos y aleatorios
+        String codigoA = tokenOptA.get().getCodigo();
+        String codigoB = tokenOptB.get().getCodigo();
+        assertNotNull(codigoA, "El código de verificación debe existir para usuario A");
+        assertNotNull(codigoB, "El código de verificación debe existir para usuario B");
+        assertNotEquals(codigoA, codigoB, "Los códigos de verificación deben ser únicos y aleatorios");
     }
-
+    
     // 17. El email enviado tiene el formato y contenido esperado
     @Test
     void emailEnviado_tieneFormatoYContenidoEsperado() throws Exception {
-        // Este test depende de cómo implementes el envío de emails.
-        // Si usas un mock o interceptor, verifica el contenido del email generado.
-        // Ejemplo básico (si tienes un servicio mockeado):
+        // Registrar usuario nuevo
+        RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
+        usuarioDTO.setUsername("usuarioTestMail");
+        usuarioDTO.setEmail("breakingbenjaminns@gmail.com");
+        usuarioDTO.setPassword("ClaveSegura123");
+        usuarioDTO.setNombreResponsable("Mail");
+        usuarioDTO.setApellidoResponsable("Test");
+        usuarioDTO.setDocumentoResponsable("33333333");
+        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
+        usuarioDTO.setAceptaTerminos(true);
+        usuarioDTO.setAceptaPoliticaPriv(true);
+        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1992, 3, 3));
+        usuarioDTO.setGeneroResponsable("MASCULINO");
+        usuarioDTO.setIdioma("es");
+        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
+        usuarioDTO.setRol("ROLE_USUARIO");
 
-        // Supón que tienes un servicio EmailService con un método para obtener el último email enviado
-        // Email email = emailService.getUltimoEmailEnviado();
+        RegistroUsuarioCompletoDTO registroDTO = new RegistroUsuarioCompletoDTO();
+        registroDTO.setUsuario(usuarioDTO);
+        registroDTO.setDirecciones(List.of());
+        registroDTO.setTelefonos(List.of());
 
-        // assertNotNull(email);
-        // assertTrue(email.getAsunto().contains("Verificación"));
-        // assertTrue(email.getContenido().contains("Hola"));
-        // assertTrue(email.getContenido().contains("codigo")); // O el enlace de verificación
+        registrarUsuarioCompleto(registroDTO);
 
-        // Si no tienes acceso directo, puedes dejar este test como pendiente o usar un mock para capturar el contenido.
+        // Captura los argumentos del método de envío
+        ArgumentCaptor<String> destinatarioCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> codigoCaptor = ArgumentCaptor.forClass(String.class);
+
+        // Verifica que se llamó al método de envío
+        verify(emailService, times(1)).enviarEmailVerificacion(destinatarioCaptor.capture(), codigoCaptor.capture());
+
+        String destinatario = destinatarioCaptor.getValue();
+        String codigo = codigoCaptor.getValue();
+
+        assertEquals("breakingbenjaminns@gmail.com", destinatario);
+        assertNotNull(codigo);
+        // Puedes agregar más asserts sobre el formato del código, el enlace, etc.
     }
-    
 }

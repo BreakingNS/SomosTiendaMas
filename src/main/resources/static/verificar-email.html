@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificar Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 40px; }
+        .container { background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; max-width: 400px; margin: auto; }
+        .msg { margin-top: 24px; font-size: 1.1em; }
+        .success { color: #388e3c; }
+        .error { color: #d32f2f; }
+        .login-link { display: inline-block; margin-top: 24px; background: #1976d2; color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Verificando tu email...</h2>
+        <div class="msg" id="mensaje"></div>
+        <div id="loginEnlace" style="display:none;">
+            <a href="/login.html" class="login-link">Ir al login</a>
+        </div>
+    </div>
+    <script>
+        function getTokenFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('token');
+        }
+
+        function mostrarResultado(mensaje, exito) {
+            const msgDiv = document.getElementById('mensaje');
+            msgDiv.innerText = mensaje;
+            msgDiv.className = exito ? 'msg success' : 'msg error';
+            if (exito) {
+                document.getElementById('loginEnlace').style.display = 'block';
+            }
+        }
+
+        window.onload = function() {
+            const token = getTokenFromUrl();
+            if (!token) {
+                mostrarResultado("Token no encontrado en la URL.", false);
+                return;
+            }
+            fetch('/api/gestionusuario/public/verificar-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo: token })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    return response.text().then(msg => { throw new Error(msg); });
+                }
+            })
+            .then(msg => {
+                mostrarResultado("¡Tu correo ha sido verificado correctamente! Ya puedes iniciar sesión.", true);
+            })
+            .catch(() => {
+                mostrarResultado("No se pudo verificar el correo. El enlace es inválido o expiró.", false);
+            });
+        }
+    </script>
+</body>
+</html>

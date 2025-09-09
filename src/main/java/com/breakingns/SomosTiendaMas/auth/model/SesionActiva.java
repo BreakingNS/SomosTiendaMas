@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
@@ -63,6 +64,10 @@ public class SesionActiva {
         this.usuario = usuario;
         this.fechaInicioSesion = fechaInicioSesion;
         this.fechaExpiracion = fechaExpiracion;
+    }
+
+    public void setFechaExpiracion(Instant minusDays) {
+        this.fechaExpiracion = minusDays;
     }
 
     // Getters, setters, toString, etc.

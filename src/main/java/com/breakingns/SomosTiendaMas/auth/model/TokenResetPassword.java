@@ -55,9 +55,9 @@ public class TokenResetPassword {
 
     // Genera un token alfanumérico de longitud dada
     public static String generarTokenAlfanumerico(int longitud) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
         StringBuilder sb = new StringBuilder();
-        java.util.Random random = new java.util.Random();
+        java.security.SecureRandom random = new java.security.SecureRandom();
         for (int i = 0; i < longitud; i++) {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }

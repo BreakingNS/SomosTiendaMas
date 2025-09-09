@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.entidades.usuario.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
+import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.auth.service.RolService;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
@@ -34,13 +35,20 @@ public class UsuarioServiceImpl implements IUsuarioService{
     private final IUsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final LoginAttemptService loginAttemptService;
+    private final ISesionActivaRepository sesionActivaRepository;
 
-    public UsuarioServiceImpl(CarritoService carritoService, RolService rolService, IUsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService) {
+    public UsuarioServiceImpl(CarritoService carritoService, 
+                                RolService rolService, 
+                                IUsuarioRepository usuarioRepository, 
+                                PasswordEncoder passwordEncoder, 
+                                LoginAttemptService loginAttemptService,
+                                ISesionActivaRepository sesionActivaRepository) {
         this.carritoService = carritoService;
         this.rolService = rolService;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginAttemptService = loginAttemptService;
+        this.sesionActivaRepository = sesionActivaRepository;   
     }
     
     @Override
@@ -331,7 +339,19 @@ public class UsuarioServiceImpl implements IUsuarioService{
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con username: " + username));
     }
 
+    @Override
     public List<Usuario> traerTodoUsuario() {
         return usuarioRepository.findAll();
+    }
+
+    @Override
+    public void desactivarUsuario(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        usuario.setActivo(false); // o usuario.setEstado("INACTIVO");
+        usuarioRepository.save(usuario);
+
+        // Opcional: invalidar sesiones activas
+        sesionActivaRepository.deleteByUsuario_IdUsuario(idUsuario);
     }
 }

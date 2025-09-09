@@ -172,7 +172,7 @@ class AuthControllerTest {
             Usuario admin = new Usuario();
             admin.setUsername("adminTest");
             admin.setPassword("P123456");
-            admin.setEmail("correoprueba@noenviar.com");
+            admin.setEmail("correoprueba2@noenviar.com");
             admin.setActivo(true);
             admin.setEmailVerificado(true);
             admin.setFechaRegistro(java.time.LocalDateTime.now());

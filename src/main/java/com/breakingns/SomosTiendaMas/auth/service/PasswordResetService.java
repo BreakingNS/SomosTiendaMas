@@ -4,6 +4,7 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
+import com.breakingns.SomosTiendaMas.security.exception.EmailNoVerificadoException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIgualAAnteriorException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
@@ -42,18 +43,23 @@ public class PasswordResetService {
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
         if (usuarioOpt.isPresent()) {
-            String token = TokenResetPassword.generarTokenAlfanumerico(6);
+            Usuario usuario = usuarioOpt.get();
+            if (!usuario.getEmailVerificado()) {
+                log.info("El usuario no tiene el email verificado, no se envía el correo.");
+                throw new EmailNoVerificadoException("El email no está verificado. No se puede recuperar la contraseña.");
+            }
+            String token = TokenResetPassword.generarTokenAlfanumerico(32);
             TokenResetPassword tokenReset = new TokenResetPassword();
             tokenReset.setToken(token);
             tokenReset.setFechaExpiracion(Instant.now().plus(15, ChronoUnit.MINUTES));
             tokenReset.setUsado(false);
-            tokenReset.setUsuario(usuarioOpt.get());
+            tokenReset.setUsuario(usuario);
             passwordResetTokenRepository.save(tokenReset);
 
-            // Generar enlace de recuperación
-            String enlace = "https://tusitioweb.com/recuperar?token=" + token;
-            // Enviar email con código y enlace
-            emailService.enviarEmailRecuperacionPassword(email, token, enlace);
+            System.out.println("\n\nToken de recuperación: " + token); // reemplazar por envío real
+
+            // Enviar email con enlace de recuperación
+            emailService.enviarEmailRecuperacionPassword(email, token);
             log.info("Token de recuperación generado y email enviado.");
         }
         // Siempre responder OK aunque no exista, por seguridad
@@ -126,7 +132,7 @@ public class PasswordResetService {
         if (tokenEntity.isUsado()) {
             throw new TokenYaUsadoException("El token ya fue usado.");
         }
-        /*
+        
         // Validación de la contraseña nueva (por ejemplo, longitud mínima)
         if (nuevaPassword.length() < 6) { 
             throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
@@ -136,7 +142,7 @@ public class PasswordResetService {
         if (nuevaPassword.length() > 16) { 
             throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
         }
-        */
+        
         Usuario usuario = tokenEntity.getUsuario();
 
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));

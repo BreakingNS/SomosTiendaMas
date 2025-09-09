@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -73,6 +75,13 @@ public class GestionPerfilController {
         
     */
 
+    private static final Set<String> EMAILS_BLOQUEADOS = Set.of(
+        "correoprueba@noenviar.com",
+        "correoprueba1@noenviar.com",
+        "correoprueba2@noenviar.com",
+        "nahuel_segura_17@hotmail.com"
+    );
+
     @PostMapping("/public/usuario/registro")
     public ResponseEntity<String> registrarUsuario(@RequestBody @Valid RegistroUsuarioCompletoDTO dto, HttpServletRequest request) {
         String ip = RequestUtil.obtenerIpCliente(request);
@@ -93,10 +102,12 @@ public class GestionPerfilController {
             });
         }
         // Generar código de verificación y enviar email
-        Usuario usuario = usuarioService.findById(idUsuario).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        EmailVerificacion verificacion = emailVerificacionService.generarCodigoParaUsuario(usuario);
-        emailService.enviarEmailVerificacion(usuario.getEmail(), verificacion.getCodigo());
-
+        Usuario usu = usuarioService.findById(idUsuario).orElseThrow(() -> new RuntimeException("Usuario no encontrado")); 
+        EmailVerificacion verificacion = emailVerificacionService.generarCodigoParaUsuario(usu);
+        if (!EMAILS_BLOQUEADOS.contains(usu.getEmail())) {
+            emailService.enviarEmailVerificacion(usu.getEmail(), verificacion.getCodigo());
+        }
+        
         return ResponseEntity.ok("Usuario registrado correctamente. Verifica tu email.");
     }
 
@@ -271,5 +282,11 @@ public class GestionPerfilController {
         String codigo = body.get("codigo");
         emailVerificacionService.verificarCodigo(codigo);
         return ResponseEntity.ok("Email verificado correctamente.");
+    }
+
+    @PatchMapping("/private/usuario/desactivar/{id}")
+        public ResponseEntity<Void> desactivarUsuario(@PathVariable Long id) {
+        usuarioService.desactivarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 }

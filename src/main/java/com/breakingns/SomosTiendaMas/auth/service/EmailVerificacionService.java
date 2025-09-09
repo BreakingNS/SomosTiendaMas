@@ -25,17 +25,17 @@ public class EmailVerificacionService {
 
     // Genera y guarda el código de verificación para el usuario
     public EmailVerificacion generarCodigoParaUsuario(Usuario usuario) {
-        String codigo = generarCodigoAlfanumerico(6);
-        LocalDateTime expiracion = LocalDateTime.now().plusHours(24); // 24h de validez
+        String codigo = generarCodigoSeguro(32);
+        LocalDateTime expiracion = LocalDateTime.now().plusHours(1); // 1h de validez
         EmailVerificacion verificacion = new EmailVerificacion(codigo, usuario, expiracion);
         return emailVerificacionRepository.save(verificacion);
     }
 
-    // Genera un código alfanumérico de longitud dada
-    private String generarCodigoAlfanumerico(int longitud) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    // Genera un código alfanumérico y simbólico de longitud dada
+    private String generarCodigoSeguro(int longitud) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
         StringBuilder sb = new StringBuilder();
-        java.util.Random random = new java.util.Random();
+        java.security.SecureRandom random = new java.security.SecureRandom();
         for (int i = 0; i < longitud; i++) {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }

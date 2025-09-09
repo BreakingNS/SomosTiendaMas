@@ -13,4 +13,6 @@ public interface ITokenResetPasswordRepository extends JpaRepository<TokenResetP
     Optional<TokenResetPassword> findByToken(String token);
     
     Optional<TokenResetPassword> findTopByUsuarioOrderByIdDesc(Usuario usuario);
+
+    Optional<TokenResetPassword> findByUsuario_IdUsuario(Long idUsuario);
 }

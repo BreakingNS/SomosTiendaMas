@@ -10,6 +10,7 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,6 +36,8 @@ public class PasswordController {
         
     */
 
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9!@#$%^&*()\\-_=+\\[\\]{}|;:,.<>?]{32}$");
+
     @PostMapping("/public/olvide-password")
     public ResponseEntity<?> olvidePassword(@RequestBody @Valid EmailRequest emailRequest, HttpServletRequest request) {
         String email = emailRequest.email();
@@ -46,7 +49,17 @@ public class PasswordController {
     
     @PostMapping("/public/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
-        passwordResetService.resetearPassword(request.token(), request.nuevaPassword());
+        String token = request.token();
+        String nuevaPassword = request.nuevaPassword();
+
+        if (!TOKEN_PATTERN.matcher(token).matches()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Formato de token inválido",
+                "message", "El token debe tener 32 caracteres, incluyendo letras, números y símbolos"
+            ));
+        }
+
+        passwordResetService.resetearPassword(token, nuevaPassword);
         return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
     

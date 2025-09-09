@@ -20,6 +20,26 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(SesionExpiradaException.class)
+    public ResponseEntity<?> handleSesionExpirada(SesionExpiradaException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                    "error", "Sesión expirada",
+                    "message", ex.getMessage(),
+                    "timestamp", java.time.Instant.now().toString()
+                ));
+    }
+
+    @ExceptionHandler(EmailNoVerificadoException.class)
+    public ResponseEntity<?> handleEmailNoVerificadoException(EmailNoVerificadoException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Recuperación de contraseña",
+            "message", ex.getMessage(),
+            "timestamp", java.time.Instant.now().toString(),
+            "status", 400
+        ));
+    }
+
     @ExceptionHandler(EmailVerificationException.class)
     public ResponseEntity<?> handleEmailVerificationException(EmailVerificationException ex) {
         ex.printStackTrace(); // Esto imprime la excepción en consola

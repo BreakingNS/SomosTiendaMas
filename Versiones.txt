@@ -220,3 +220,7 @@ beta 0.1.7.0: Modulo 1 Autorizacion finalizado y testeado.
 beta 0.1.7.1: Modulo 1 Autorizacion finalizado y testeado. Avanzado 1
 
 	- Avanzado en testeos, faltan Email, Model y Security
+
+beta 0.1.7.2: Modulo 1 Autorizacion finalizado y testeado. Final Avanzado
+
+	- Testeos completos de todo modulo 1 finalizado, faltaria auditoria.

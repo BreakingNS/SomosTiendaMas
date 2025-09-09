@@ -243,7 +243,7 @@ class AuthRepositoryTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("usuario5");
         usuario.setPassword("password5");
-        usuario.setEmail("correoprueba@noenviar.com");
+        usuario.setEmail("correoprueba1@noenviar.com");
         usuario.setActivo(true);
         usuario.setEmailVerificado(false);
         usuario.setFechaRegistro(LocalDateTime.now());
@@ -672,7 +672,7 @@ class AuthRepositoryTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("usuarioFecha");
         usuario.setPassword("passwordFecha");
-        usuario.setEmail("correoprueba@noenviar.com");
+        usuario.setEmail("correoprueba1@noenviar.com");
         usuario.setActivo(true);
         usuario.setEmailVerificado(false);
         usuario.setFechaRegistro(LocalDateTime.now());

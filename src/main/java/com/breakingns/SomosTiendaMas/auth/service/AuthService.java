@@ -12,6 +12,7 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.helpers.TokenHelper;
 import com.breakingns.SomosTiendaMas.security.exception.CredencialesInvalidasException;
+import com.breakingns.SomosTiendaMas.security.exception.SesionExpiradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoValidaException;
 import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
@@ -26,6 +27,7 @@ import com.breakingns.SomosTiendaMas.utils.UsuarioUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,6 +169,11 @@ public class AuthService {
         // Buscar la sesión activa por access token
         SesionActiva sesion = sesionActivaService.buscarPorToken(accessToken)
             .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada"));
+
+        // Validar si la sesión está expirada
+        if (sesion.getFechaExpiracion().isBefore(Instant.now())) {
+            throw new SesionExpiradaException("La sesión está expirada.");
+        }
 
         Long idSesion = sesion.getId();
         String username = sesion.getUsuario().getUsername();

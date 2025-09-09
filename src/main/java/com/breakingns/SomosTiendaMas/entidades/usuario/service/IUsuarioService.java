@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface IUsuarioService {
@@ -26,4 +27,9 @@ public interface IUsuarioService {
     Long registrarConRolDesdeDTO(RegistroUsuarioDTO registroDTO, String ip);
 
     void actualizarUsuario(Long id, ActualizarUsuarioDTO usuarioDTO, Long id2);
+
+    List<Usuario> traerTodoUsuario();
+
+    void desactivarUsuario(Long id);
+    
 }

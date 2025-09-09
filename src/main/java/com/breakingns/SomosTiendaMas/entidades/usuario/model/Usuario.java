@@ -1,7 +1,10 @@
 package com.breakingns.SomosTiendaMas.entidades.usuario.model;
 
+import com.breakingns.SomosTiendaMas.auth.model.EmailVerificacion;
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.telefono.model.Telefono;
@@ -129,16 +132,26 @@ public class Usuario {
     private Carrito carrito;        
 
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Telefono> telefonos;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Direccion> direcciones;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PerfilEmpresa> empresas;
+    
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmailVerificacion> emailVerificaciones;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefreshToken> refreshTokens;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TokenEmitido> tokenEmitidos;
+
     public Usuario() {}
 
     public Usuario(Long idUsuario, String username, String password, String email, Carrito carrito) {
