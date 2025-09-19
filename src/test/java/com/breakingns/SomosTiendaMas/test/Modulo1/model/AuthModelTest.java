@@ -12,7 +12,6 @@ import java.util.Optional;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
-import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -166,8 +164,6 @@ public class AuthModelTest {
 
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
-
-    private final SesionActivaService sesionActivaService;
 
     private final TokenEmitidoService tokenEmitidoService;
 
@@ -783,9 +779,17 @@ public class AuthModelTest {
     @Test
     void logoutExitosoDebeRetornarOk() throws Exception {
         registrarUsuarioCompleto(registroDTO);
+
+        // Asegura que el usuario y el email están verificados
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
+        usuarioRepository.save(usuario);
+
         MvcResult loginResult = loginUsuario("usuario123", 
                                             "ClaveSegura123");
-        /* 
+        
         Cookie[] cookies = loginResult.getResponse().getCookies();
         String accessToken = null;
         String refreshToken = null;
@@ -814,7 +818,7 @@ public class AuthModelTest {
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
                 .andReturn();
 
-        assertEquals(401, result.getResponse().getStatus());*/
+        assertEquals(401, result.getResponse().getStatus());
     }
 
     //43. Logout con token inválido (401)

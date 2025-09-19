@@ -13,13 +13,18 @@ public class Rol {
     private Long id_rol;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, unique = true, nullable = false)
+    @Column(nullable = false)
     private RolNombre nombre;
 
     public Rol() {}
 
     public Rol(RolNombre nombre) {
         this.nombre = nombre;
+    }
+
+    public Object stream() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'stream'");
     }
     
     // Getters y Setters

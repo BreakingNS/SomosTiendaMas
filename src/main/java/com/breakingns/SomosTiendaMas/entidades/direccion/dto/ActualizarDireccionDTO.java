@@ -17,5 +17,5 @@ public class ActualizarDireccionDTO {
     private String referencia;
     private Boolean activa;
     private Boolean esPrincipal;
-    private Long esCopiaDe;
+    //private Boolean usarComoEnvio;
 }

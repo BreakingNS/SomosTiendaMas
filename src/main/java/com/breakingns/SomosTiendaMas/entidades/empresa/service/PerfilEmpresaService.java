@@ -49,7 +49,7 @@ public class PerfilEmpresaService implements IPerfilEmpresaService {
 
         // Mapear a PerfilEmpresaResponseDTO
         PerfilEmpresaResponseDTO response = new PerfilEmpresaResponseDTO();
-        response.setId(perfilEmpresa.getId());
+        response.setId(perfilEmpresa.getIdPerfilEmpresa());
         response.setRazonSocial(perfilEmpresa.getRazonSocial());
         response.setCuit(perfilEmpresa.getCuit());
         response.setCondicionIVA(perfilEmpresa.getCondicionIVA().name());
@@ -93,7 +93,7 @@ public class PerfilEmpresaService implements IPerfilEmpresaService {
 
         // Mapear a PerfilEmpresaResponseDTO
         PerfilEmpresaResponseDTO response = new PerfilEmpresaResponseDTO();
-        response.setId(perfilEmpresa.getId());
+        response.setId(perfilEmpresa.getIdPerfilEmpresa());
         response.setRazonSocial(perfilEmpresa.getRazonSocial());
         response.setCuit(perfilEmpresa.getCuit());
         response.setCondicionIVA(perfilEmpresa.getCondicionIVA().name());
@@ -125,7 +125,7 @@ public class PerfilEmpresaService implements IPerfilEmpresaService {
         response.setIdUsuario(
             perfilEmpresa.getUsuario() != null ? perfilEmpresa.getUsuario().getIdUsuario() : null
         );
-        response.setId(perfilEmpresa.getId());
+        response.setId(perfilEmpresa.getIdPerfilEmpresa());
         response.setRazonSocial(perfilEmpresa.getRazonSocial());
         response.setCuit(perfilEmpresa.getCuit());
         response.setCondicionIVA(perfilEmpresa.getCondicionIVA().name());

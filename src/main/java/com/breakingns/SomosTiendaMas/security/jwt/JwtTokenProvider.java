@@ -91,19 +91,17 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        // Obtener roles del usuario
+        // Obtener usuario y su rol (ManyToOne)
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
 
-        List<String> roles = usuario.getRoles().stream()
-            .map(rol -> rol.getNombre().name()) // o solo getNombre() si ya es string
-            .toList();
+        String rol = usuario.getRol().getNombre().name(); // nombre es RolNombre enum
 
         String token = Jwts.builder()
-                .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // typ: JWT
+                .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
                 .setSubject(String.valueOf(id))
                 .claim("username", username)
-                .claim("roles", roles)
+                .claim("rol", rol) // solo un rol
                 .claim("jti", UUID.randomUUID().toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)

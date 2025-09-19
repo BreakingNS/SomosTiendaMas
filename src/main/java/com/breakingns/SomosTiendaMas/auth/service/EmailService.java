@@ -16,6 +16,9 @@ public class EmailService {
         "correoprueba@noenviar.com",
         "correoprueba1@noenviar.com",
         "correoprueba2@noenviar.com",
+        "correoempresa@noenviar.com",
+        "correoempresa1@noenviar.com",
+        "correoempresa2@noenviar.com",
         "nahuel_segura_17@hotmail.com"
     );
 

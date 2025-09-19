@@ -23,6 +23,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -100,6 +101,7 @@ public class Usuario {
     @Column(nullable = false)
     private LocalDateTime fechaUltimaModificacion;
 
+    @Column(nullable = false)
     private LocalDate fechaNacimientoResponsable;
 
     @Enumerated(EnumType.STRING)
@@ -118,11 +120,9 @@ public class Usuario {
     private String timezone;
     
     // Relaciones con roles, sesiones y carrito
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_roles",
-            joinColumns = @JoinColumn(name = "id_usuario"),
-            inverseJoinColumns = @JoinColumn(name = "id_rol"))
-    private Set<Rol> roles = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol")
+    private Rol rol;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SesionActiva> sesionesActivas = new ArrayList<>();
@@ -136,8 +136,8 @@ public class Usuario {
     private List<Telefono> telefonos;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Direccion> direcciones;
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Direccion> direcciones = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -179,8 +179,7 @@ public class Usuario {
     }
 
     public void setRol(Rol rol) {
-        this.roles.clear();
-        this.roles.add(rol);
+        this.rol = rol;
     }
 }
 //---------------------------------------------------------------

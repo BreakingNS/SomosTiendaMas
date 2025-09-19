@@ -92,15 +92,13 @@ public class JwtTokenProviderTest {
         Usuario usuario = usuarioRepository.findById(id)
             .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado al generar token"));
 
-        List<String> roles = usuario.getRoles().stream()
-            .map(rol -> rol.getNombre().name()) // o solo getNombre() si ya es string
-            .toList();
+        String rol = usuario.getRol().getNombre().name(); // nombre es RolNombre enum
 
         String token = Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE) // typ: JWT
                 .setSubject(String.valueOf(id))
                 .claim("username", username)
-                .claim("roles", roles)
+                .claim("rol", rol)
                 .claim("jti", UUID.randomUUID().toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)

@@ -10,8 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RoleHierarchyTest {
 
     private RoleHierarchyImpl getConfiguredHierarchy() {
-        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        roleHierarchy.setHierarchy(
+        return RoleHierarchyImpl.fromHierarchy(
             "ROLE_SUPERADMIN > ROLE_ADMIN\n" +
             "ROLE_ADMIN > ROLE_MODERADOR\n" +
             "ROLE_ADMIN > ROLE_SOPORTE\n" +
@@ -20,7 +19,6 @@ public class RoleHierarchyTest {
             "ROLE_MODERADOR > ROLE_USUARIO\n" +
             "ROLE_EMPRESA > ROLE_USUARIO"
         );
-        return roleHierarchy;
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
@@ -36,20 +37,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
-        // Verificar si el usuario tiene roles asignados
-        if (usuario.getRoles() == null || usuario.getRoles().isEmpty()) {
-            log.warn("El usuario {} no tiene roles asignados", username);
-            throw new BadCredentialsException("El usuario no tiene roles asignados");
+        // Verificar si el usuario tiene rol asignado
+        if (usuario.getRol() == null) {
+            log.warn("El usuario {} no tiene rol asignado", username);
+            throw new BadCredentialsException("El usuario no tiene rol asignado");
         }
 
-        // Si tiene roles, devolvemos el usuario con los roles asignados
+        // Devolver el usuario con el rol asignado
         return new UserAuthDetails(
             usuario.getIdUsuario(),
             usuario.getUsername(),
             usuario.getPassword(),
-            mapearRoles(usuario.getRoles()), // Mapear los roles asignados
+            mapearRol(usuario.getRol()), // Mapear el rol asignado
             usuario
         );
+    }
+
+    private Collection<? extends GrantedAuthority> mapearRol(Rol rol) {
+        log.info("Se mapea el rol: {}", rol);
+        return List.of(new SimpleGrantedAuthority(rol.getNombre().name()));
     }
 
     private Collection<? extends GrantedAuthority> mapearRoles(Set<Rol> roles) {

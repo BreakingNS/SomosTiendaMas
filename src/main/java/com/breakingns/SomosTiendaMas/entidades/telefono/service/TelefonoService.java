@@ -4,6 +4,7 @@ import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.ActualizarTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.TelefonoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.model.Telefono;
+import com.breakingns.SomosTiendaMas.entidades.telefono.repository.ICodigoAreaRepository;
 import com.breakingns.SomosTiendaMas.entidades.telefono.repository.ITelefonoRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Objects;
 
 @Service
 public class TelefonoService implements ITelefonoService {
@@ -21,39 +24,77 @@ public class TelefonoService implements ITelefonoService {
     private IUsuarioRepository usuarioRepository;
     @Autowired
     private IPerfilEmpresaRepository perfilEmpresaRepository;
+    @Autowired
+    private ICodigoAreaRepository codigoAreaRepository;
 
     @Override
     public TelefonoResponseDTO registrarTelefono(RegistroTelefonoDTO dto) {
+        // Validar que la característica exista en codigos_area
+        if (dto.getCaracteristica() == null || !codigoAreaRepository.findByCodigo(dto.getCaracteristica()).isPresent()) {
+            throw new IllegalArgumentException("La característica (código de área) no es válida.");
+        }
+
         Telefono telefono = new Telefono();
 
-        if (dto.getIdUsuario() != null) {
-            telefono.setUsuario(usuarioRepository.findById(dto.getIdUsuario()).orElse(null));
-        }
-        if (dto.getIdPerfilEmpresa() != null) {
-            telefono.setPerfilEmpresa(perfilEmpresaRepository.findById(dto.getIdPerfilEmpresa()).orElse(null));
+        // validación XOR: debe venir uno y sólo uno
+        boolean hasUsuario = dto.getIdUsuario() != null;
+        boolean hasPerfil = dto.getIdPerfilEmpresa() != null;
+        if (hasUsuario == hasPerfil) { // ambos true o ambos false
+            throw new IllegalArgumentException("Se debe proporcionar exactamente uno de idUsuario o idPerfilEmpresa");
         }
 
+        // ---- NUEVO: asignar owner al telefono usando los ids del DTO ----
+        if (hasUsuario) {
+            telefono.setUsuario(usuarioRepository.findById(dto.getIdUsuario())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + dto.getIdUsuario())));
+        } else {
+            telefono.setPerfilEmpresa(perfilEmpresaRepository.findById(dto.getIdPerfilEmpresa())
+                .orElseThrow(() -> new IllegalArgumentException("PerfilEmpresa no encontrado: " + dto.getIdPerfilEmpresa())));
+        }
+        // -----------------------------------------------------------------
+
+        // Campos básicos + defaults
         telefono.setTipo(Telefono.TipoTelefono.valueOf(dto.getTipo()));
         telefono.setNumero(dto.getNumero());
         telefono.setCaracteristica(dto.getCaracteristica());
         telefono.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
         telefono.setVerificado(dto.getVerificado() != null ? dto.getVerificado() : false);
 
-        if (dto.getEsCopiaDe() != null) {
-            telefono.setTelefonoCopiado(telefonoRepository.findById(dto.getEsCopiaDe()).orElse(null));
+        // Buscar existentes del mismo owner
+        Long usuarioId = dto.getIdUsuario();
+        Long empresaId = dto.getIdPerfilEmpresa();
+
+        List<Telefono> existentes = Collections.emptyList();
+        if (usuarioId != null) {
+            existentes = telefonoRepository.findByUsuario_IdUsuario(usuarioId);
+        } else if (empresaId != null) {
+            existentes = telefonoRepository.findByPerfilEmpresa_IdPerfilEmpresa(empresaId);
+        }
+
+        java.util.function.Function<String,String> norm = s -> s == null ? "" : s.trim();
+
+        for (Telefono t : existentes) {
+            boolean igual =
+                Objects.equals(telefono.getTipo(), t.getTipo()) &&
+                norm.apply(telefono.getNumero()).equals(norm.apply(t.getNumero())) &&
+                norm.apply(telefono.getCaracteristica()).equals(norm.apply(t.getCaracteristica()));
+            if (igual) {
+                return mapToResponseDTO(t);
+            }
         }
 
         telefono = telefonoRepository.save(telefono);
+        return mapToResponseDTO(telefono);
+    }
 
+    private TelefonoResponseDTO mapToResponseDTO(Telefono telefono) {
         TelefonoResponseDTO response = new TelefonoResponseDTO();
         response.setIdTelefono(telefono.getIdTelefono());
-        response.setTipo(telefono.getTipo().name());
+        response.setTipo(telefono.getTipo() != null ? telefono.getTipo().name() : null);
         response.setNumero(telefono.getNumero());
         response.setCaracteristica(telefono.getCaracteristica());
         response.setActivo(telefono.getActivo());
         response.setVerificado(telefono.getVerificado());
-        response.setEsCopiaDe(telefono.getTelefonoCopiado() != null ? telefono.getTelefonoCopiado().getIdTelefono() : null);
-
         return response;
     }
 
@@ -67,9 +108,6 @@ public class TelefonoService implements ITelefonoService {
         telefono.setCaracteristica(dto.getCaracteristica());
         telefono.setActivo(dto.getActivo() != null ? dto.getActivo() : telefono.getActivo());
         telefono.setVerificado(dto.getVerificado() != null ? dto.getVerificado() : telefono.getVerificado());
-        if (dto.getEsCopiaDe() != null) {
-            telefono.setTelefonoCopiado(telefonoRepository.findById(dto.getEsCopiaDe()).orElse(null));
-        }
 
         telefono = telefonoRepository.save(telefono);
 
@@ -80,7 +118,6 @@ public class TelefonoService implements ITelefonoService {
         response.setCaracteristica(telefono.getCaracteristica());
         response.setActivo(telefono.getActivo());
         response.setVerificado(telefono.getVerificado());
-        response.setEsCopiaDe(telefono.getTelefonoCopiado() != null ? telefono.getTelefonoCopiado().getIdTelefono() : null);
 
         return response;
     }
@@ -97,7 +134,6 @@ public class TelefonoService implements ITelefonoService {
         response.setCaracteristica(telefono.getCaracteristica());
         response.setActivo(telefono.getActivo());
         response.setVerificado(telefono.getVerificado());
-        response.setEsCopiaDe(telefono.getTelefonoCopiado() != null ? telefono.getTelefonoCopiado().getIdTelefono() : null);
 
         return response;
     }
@@ -113,14 +149,14 @@ public class TelefonoService implements ITelefonoService {
             response.setCaracteristica(telefono.getCaracteristica());
             response.setActivo(telefono.getActivo());
             response.setVerificado(telefono.getVerificado());
-            response.setEsCopiaDe(telefono.getTelefonoCopiado() != null ? telefono.getTelefonoCopiado().getIdTelefono() : null);
+
             return response;
         }).collect(Collectors.toList());
     }
 
     @Override
     public List<TelefonoResponseDTO> listarTelefonosPorPerfilEmpresa(Long idPerfilEmpresa) {
-        List<Telefono> telefonos = telefonoRepository.findByPerfilEmpresa_Id(idPerfilEmpresa);
+        List<Telefono> telefonos = telefonoRepository.findByPerfilEmpresa_IdPerfilEmpresa(idPerfilEmpresa);
         return telefonos.stream().map(telefono -> {
             TelefonoResponseDTO response = new TelefonoResponseDTO();
             response.setIdTelefono(telefono.getIdTelefono());
@@ -129,7 +165,7 @@ public class TelefonoService implements ITelefonoService {
             response.setCaracteristica(telefono.getCaracteristica());
             response.setActivo(telefono.getActivo());
             response.setVerificado(telefono.getVerificado());
-            response.setEsCopiaDe(telefono.getTelefonoCopiado() != null ? telefono.getTelefonoCopiado().getIdTelefono() : null);
+
             return response;
         }).collect(Collectors.toList());
     }
@@ -144,7 +180,7 @@ public class TelefonoService implements ITelefonoService {
     }
 
     public void eliminarTelefonosPorPerfilEmpresa(Long idPerfilEmpresa) {
-        List<Telefono> telefonos = telefonoRepository.findByPerfilEmpresa_Id(idPerfilEmpresa);
+        List<Telefono> telefonos = telefonoRepository.findByPerfilEmpresa_IdPerfilEmpresa(idPerfilEmpresa);
         telefonoRepository.deleteAll(telefonos);
     }
 

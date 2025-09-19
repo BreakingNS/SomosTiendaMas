@@ -4,12 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,30 +15,14 @@ import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDT
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
-import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.EmailVerificacion;
-import com.breakingns.SomosTiendaMas.auth.model.LoginAttempt;
-import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
-import com.breakingns.SomosTiendaMas.auth.model.Rol;
-import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
-import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.repository.IEmailVerificacionRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ILoginAttemptRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
-import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
-import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
-import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
-import com.breakingns.SomosTiendaMas.auth.service.LoginAttemptService;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.security.exception.RefreshTokenException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenRevocadoException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,11 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 
 /*                                      EmailVerificationTest
 
@@ -153,18 +131,9 @@ class EmailVerificationTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
-    private final LoginAttemptService loginAttemptService;
-
     private final IUsuarioRepository usuarioRepository;
-    private final ITokenEmitidoRepository tokenEmitidoRepository;
-    private final ISesionActivaRepository sesionActivaRepository;
-    private final IRefreshTokenRepository refreshTokenRepository;
-    private final ILoginAttemptRepository loginAttemptRepository;
-    private final IRolRepository rolRepository;
     private final IEmailVerificacionRepository emailVerificacionRepository;
     private final ITokenResetPasswordRepository tokenResetPasswordRepository;
-
-    private final AuthService authService;
 
     private final PasswordEncoder passwordEncoder;
 

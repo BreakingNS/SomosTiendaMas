@@ -14,10 +14,13 @@ import java.util.List;
 
 //import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
+import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.repository.IEmailVerificacionRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
@@ -144,6 +147,7 @@ class AuthRepositoryTest {
     private final IDireccionRepository direccionRepository;
     private final ITelefonoRepository telefonoRepository;
     private final IEmailVerificacionRepository emailVerificacionRepository;
+    private final IRolRepository rolRepository;
 
     private Usuario usuarioTest;
     private RegistroUsuarioCompletoDTO registroDTO;
@@ -264,7 +268,11 @@ class AuthRepositoryTest {
         usuario.setRecibirNewsletters(false);
         usuario.setNotificacionesEmail(false);
         usuario.setNotificacionesSms(false);
-        usuario.setRoles(new HashSet<>()); // O asigna un rol si es obligatorio
+        
+        Rol rolUsuario = rolRepository.findByNombre(RolNombre.ROLE_USUARIO)
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuario.setRol(rolUsuario);
 
         usuarioRepository.save(usuario);
         assertTrue(usuarioRepository.findByUsername("usuario5").isPresent());
@@ -311,7 +319,7 @@ class AuthRepositoryTest {
         usuarioTest = usuarioRepository.findByEmail(usuarioTest.getEmail()).orElse(null);
         
         // 1. Eliminar asociaciones de roles
-        usuarioTest.getRoles().clear();
+        usuarioTest.setRol(null);
         usuarioRepository.save(usuarioTest);
 
         // 2. Eliminar telefonos
@@ -573,7 +581,11 @@ class AuthRepositoryTest {
         usuarioDuplicado.setRecibirNewsletters(false);
         usuarioDuplicado.setNotificacionesEmail(false);
         usuarioDuplicado.setNotificacionesSms(false);
-        usuarioDuplicado.setRoles(new HashSet<>());
+        
+        Rol rolUsuario = rolRepository.findByNombre(RolNombre.ROLE_USUARIO)
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuarioDuplicado.setRol(rolUsuario);
         try {
             usuarioRepository.save(usuarioDuplicado);
             assertTrue(false, "Se esperaba excepción por username duplicado");
@@ -609,7 +621,12 @@ class AuthRepositoryTest {
         usuarioDuplicado.setRecibirNewsletters(false);
         usuarioDuplicado.setNotificacionesEmail(false);
         usuarioDuplicado.setNotificacionesSms(false);
-        usuarioDuplicado.setRoles(new HashSet<>());
+        
+        Rol rolUsuario = rolRepository.findByNombre(RolNombre.ROLE_USUARIO)
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuarioDuplicado.setRol(rolUsuario);
+
         try {
             usuarioRepository.save(usuarioDuplicado);
             assertTrue(false, "Se esperaba excepción por email duplicado");
@@ -655,8 +672,8 @@ class AuthRepositoryTest {
         emailVerificacionRepository.findByUsuario_IdUsuario(usuarioTest.getIdUsuario()).ifPresent(emailVerificacionRepository::delete);
         // 7. Eliminar carrito
         carritoRepository.deleteAll(carritoRepository.findAllByUsuario_IdUsuario(usuarioTest.getIdUsuario()));
-        // 8. Limpiar roles
-        usuarioTest.getRoles().clear();
+        // 8. Limpiar rol
+        usuarioTest.setRol(null);
         usuarioRepository.save(usuarioTest);
         // 9. Eliminar usuario
         usuarioRepository.delete(usuarioTest);
@@ -693,7 +710,12 @@ class AuthRepositoryTest {
         usuario.setRecibirNewsletters(false);
         usuario.setNotificacionesEmail(false);
         usuario.setNotificacionesSms(false);
-        usuario.setRoles(new HashSet<>());
+        
+        Rol rolUsuario = rolRepository.findByNombre(RolNombre.ROLE_USUARIO)
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuario.setRol(rolUsuario);
+
         usuarioRepository.save(usuario);
         Usuario guardado = usuarioRepository.findByUsername("usuarioFecha").get();
         assertTrue(guardado.getFechaRegistro() != null);

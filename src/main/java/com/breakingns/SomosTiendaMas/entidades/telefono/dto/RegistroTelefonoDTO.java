@@ -12,5 +12,4 @@ public class RegistroTelefonoDTO {
     private String caracteristica;
     private Boolean activo;
     private Boolean verificado;
-    private Long esCopiaDe;
 }

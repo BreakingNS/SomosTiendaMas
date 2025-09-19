@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class PerfilEmpresa {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long idPerfilEmpresa;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "id_usuario")
@@ -87,12 +88,12 @@ public class PerfilEmpresa {
 
     // Relaciones bidireccionales
     @JsonIgnore
-    @OneToMany(mappedBy = "perfilEmpresa")
-    private List<Telefono> telefonos;
+    @OneToMany(mappedBy = "perfilEmpresa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Telefono> telefonos = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "perfilEmpresa")
-    private List<Direccion> direcciones;
+    @OneToMany(mappedBy = "perfilEmpresa", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Direccion> direcciones = new ArrayList<>();
 
     // Enums
     public enum CondicionIVA { RI, MONOTRIBUTO, EXENTO }

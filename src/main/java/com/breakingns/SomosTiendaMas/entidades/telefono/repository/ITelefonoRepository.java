@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface ITelefonoRepository extends JpaRepository<Telefono, Long> {
     List<Telefono> findByUsuario_IdUsuario(Long idUsuario);
-    List<Telefono> findByPerfilEmpresa_Id(Long idPerfilEmpresa);
+    List<Telefono> findByPerfilEmpresa_IdPerfilEmpresa(Long idPerfilEmpresa);
 }

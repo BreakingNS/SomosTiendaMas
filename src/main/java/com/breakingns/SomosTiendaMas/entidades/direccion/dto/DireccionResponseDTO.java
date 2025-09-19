@@ -10,13 +10,16 @@ public class DireccionResponseDTO {
     private String calle;
     private String numero;
     private String piso;
-    private String departamento;
-    private String ciudad;
-    private String provincia;
-    private String codigoPostal;
-    private String pais;
     private String referencia;
     private Boolean activa;
     private Boolean esPrincipal;
-    private Long esCopiaDe;
+    private String codigoPostal;
+    //private Boolean usarComoEnvio;
+
+    // Agrega estos campos y sus setters/getters
+    private Long idPais;
+    private Long idProvincia;
+    private Long idDepartamento;
+    private Long idLocalidad;
+    private Long idMunicipio;
 }

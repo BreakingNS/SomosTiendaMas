@@ -10,7 +10,5 @@ public class RegistroPerfilEmpresaDTO {
     private String cuit;
     private String condicionIVA;
     private String emailEmpresa;
-    private String telefonoEmpresa;
-    private String direccionFiscal;
     private Boolean requiereFacturacion;
 }

@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registro de Empresa | Tienda Mas</title>
+  <meta name="description" content="Registro de empresa - Tienda Mas. Completa los datos de la empresa y del representante legal." />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root{
+      --primary:#FF6B35;
+      --primary-dark:#E55627;
+      --muted:#6B7280;
+      --bg:#F8F9FA;
+    }
+    body{background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    .input-focus:focus{outline: none; box-shadow: 0 0 0 4px rgba(255,107,53,0.12); border-color: var(--primary);}
+    .error {color:#dc2626;}
+    .password-toggle{cursor:pointer}
+    .visually-hidden{position:absolute !important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px;}
+    /* small nicety for required star */
+    .req{color:#ef4444}
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <main class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
+    <header class="mb-6 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
+        <span class="text-orange-500">Tienda</span><span class="text-blue-600">Mas</span>
+      </h1>
+      <p class="text-sm text-gray-600 mt-1">Registro de Empresa — completa todos los campos para crear tu cuenta empresarial.</p>
+    </header>
+
+    <form id="companyForm" novalidate aria-describedby="formHelp" class="space-y-6">
+      <p id="formHelp" class="text-xs text-gray-500">Todos los campos marcados con <span class="req">*</span> son obligatorios.</p>
+
+      <!-- Datos de Cuenta -->
+      <section aria-labelledby="accountTitle" class="bg-gray-50 p-4 rounded-lg border">
+        <h2 id="accountTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos de Cuenta</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Usuario -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Usuario <span class="req">*</span></label>
+            <div class="relative">
+              <input id="username" name="username" type="text" required
+                minlength="6" maxlength="16"
+                aria-describedby="usernameHelp usernameError"
+                placeholder="mín. 6 - máx. 16 (letras, números, . _ -)"
+                class="input-focus w-full px-4 py-2 border rounded-lg"
+                autocomplete="username"
+              />
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-user-circle"></i></div>
+            </div>
+            <p id="usernameHelp" class="text-xs text-gray-500 mt-1">Permitidos: letras, números y los caracteres <code>. _ -</code>.</p>
+            <p id="usernameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email <span class="req">*</span></label>
+            <div class="relative">
+              <input id="email" name="email" type="email" required
+                aria-describedby="emailError"
+                placeholder="tu@empresa.com"
+                class="input-focus w-full px-4 py-2 border rounded-lg"
+                autocomplete="email"
+              />
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="far fa-envelope"></i></div>
+            </div>
+            <p id="emailError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Contraseña <span class="req">*</span></label>
+            <div class="relative">
+              <input id="password" name="password" type="password" required
+                minlength="6" maxlength="16"
+                aria-describedby="passwordHelp passwordError"
+                placeholder="mín. 6 - máx.16"
+                class="input-focus w-full px-4 py-2 border rounded-lg pr-10"
+                autocomplete="new-password"
+              />
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 password-toggle" onclick="togglePassword('password')"><i class="far fa-eye"></i></div>
+            </div>
+            <p id="passwordHelp" class="text-xs text-gray-500 mt-1">Permitidos: letras, números y !@#$%^&*()_+-={}[]:;,.?/</p>
+            <p id="passwordError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña <span class="req">*</span></label>
+            <div class="relative">
+              <input id="confirmPassword" name="confirmPassword" type="password" required
+                aria-describedby="confirmPasswordError"
+                placeholder="Repitela"
+                class="input-focus w-full px-4 py-2 border rounded-lg pr-10"
+                autocomplete="new-password"
+              />
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 password-toggle" onclick="togglePassword('confirmPassword')"><i class="far fa-eye"></i></div>
+            </div>
+            <p id="confirmPasswordError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Datos del Representante Legal -->
+      <section aria-labelledby="repTitle" class="bg-gray-50 p-4 rounded-lg border">
+        <h2 id="repTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos del Representante Legal</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nombre <span class="req">*</span></label>
+            <input id="repFirstName" name="repFirstName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="repFirstNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Apellido <span class="req">*</span></label>
+            <input id="repLastName" name="repLastName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="repLastNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Género <span class="req">*</span></label>
+            <select id="repGender" name="repGender" required class="input-focus w-full px-4 py-2 border rounded-lg">
+              <option value="">Seleccionar</option>
+              <option value="femenino">Femenino</option>
+              <option value="masculino">Masculino</option>
+              <option value="otro">Otro</option>
+            </select>
+            <p id="repGenderError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Documento (DNI/CUIL) <span class="req">*</span></label>
+            <input id="repDocument" name="repDocument" type="text" required inputmode="numeric" placeholder="Sólo números, sin puntos" class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="repDocumentError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Datos de la Empresa -->
+      <section aria-labelledby="companyTitle" class="bg-gray-50 p-4 rounded-lg border">
+        <h2 id="companyTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos de la Empresa</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Razón Social <span class="req">*</span></label>
+            <input id="businessName" name="businessName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="businessNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">CUIT <span class="req">*</span></label>
+            <input id="cuit" name="cuit" type="text" required placeholder="11 dígitos o formato XX-XXXXXXXX-X" class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="cuitError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Condición ante IVA <span class="req">*</span></label>
+            <select id="ivaCondition" name="ivaCondition" required class="input-focus w-full px-4 py-2 border rounded-lg">
+              <option value="">Seleccionar condición</option>
+              <option>Responsable Inscripto</option>
+              <option>Monotributo</option>
+              <option>Exento</option>
+              <option>Consumidor Final</option>
+              <option>Otro</option>
+            </select>
+            <p id="ivaConditionError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+        </div>
+
+        <!-- Dirección de la Empresa -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Calle <span class="req">*</span></label>
+            <input id="street" name="street" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="streetError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Número <span class="req">*</span></label>
+            <input id="streetNumber" name="streetNumber" required inputmode="numeric" class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="streetNumberError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Piso <span class="req">*</span></label>
+            <input id="floor" name="floor" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="floorError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Departamento <span class="req">*</span></label>
+            <input id="apartment" name="apartment" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="apartmentError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Ciudad <span class="req">*</span></label>
+            <input id="city" name="city" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="cityError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Provincia <span class="req">*</span></label>
+            <input id="province" name="province" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="provinceError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Código Postal <span class="req">*</span></label>
+            <input id="postalCode" name="postalCode" required class="input-focus w-full px-4 py-2 border rounded-lg" />
+            <p id="postalCodeError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div class="md:col-span-3">
+            <label class="block text-sm font-medium text-gray-700">Referencia <span class="req">*</span></label>
+            <textarea id="reference" name="reference" required rows="2" class="input-focus w-full px-4 py-2 border rounded-lg"></textarea>
+            <p id="referenceError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+        </div>
+
+        <!-- Teléfono -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Característica (ej: 011) <span class="req">*</span></label>
+            <input id="phoneArea" name="phoneArea" required class="input-focus w-full px-4 py-2 border rounded-lg" inputmode="numeric" />
+            <p id="phoneAreaError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Número <span class="req">*</span></label>
+            <input id="phoneNumber" name="phoneNumber" required class="input-focus w-full px-4 py-2 border rounded-lg" inputmode="numeric" />
+            <p id="phoneNumberError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Terms -->
+      <section class="flex items-start gap-3">
+        <input id="terms" name="terms" type="checkbox" required class="w-4 h-4 mt-1" />
+        <label for="terms" class="text-sm text-gray-700">Acepto los <a href="#" class="text-orange-500 underline">Términos y Condiciones</a> y la <a href="#" class="text-orange-500 underline">Política de Privacidad</a> <span class="req">*</span></label>
+      </section>
+      <p id="termsError" class="text-xs error visually-hidden" role="alert">Debes aceptar los términos y políticas.</p>
+
+      <!-- Submit -->
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="text-sm text-gray-600">¿Ya tienes cuenta? <a href="iniciarSesion.html" class="text-orange-500 underline">Iniciar sesión</a></div>
+        <button id="submitBtn" type="submit" class="bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-semibold px-6 py-2 rounded-lg shadow inline-flex items-center">
+          <span id="btnText">Crear cuenta</span>
+          <svg id="spinner" class="ml-3 hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- JS: Validaciones -->
+  <script>
+    // --- Helpers ---
+    const qs = id => document.getElementById(id);
+    const showErr = (id, text) => {
+      const el = qs(id);
+      el.textContent = text;
+      el.classList.remove('visually-hidden');
+    }
+    const hideErr = (id) => {
+      const el = qs(id);
+      if (el) { el.textContent = ''; el.classList.add('visually-hidden'); }
+    }
+
+    // --- Validation rules (client-side) ---
+    const usernameAllowed = /^[A-Za-z0-9._-]{6,16}$/;
+    // Password allowed characters set:
+    const passwordAllowed = /^[A-Za-z0-9!@#$%^&*()_+\-=\{\}\[\]:;,.?\/]{6,16}$/;
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // CUIT: accept 11 digits or formatted pattern like 20-12345678-3
+    const cuitRe = /^(?:\d{2}-?\d{8}-?\d{1})$/;
+    const digitsOnly = /^\d+$/;
+
+    // Toggle password visibility
+    function togglePassword(id) {
+      const field = qs(id);
+      const icon = field.parentElement.querySelector('.password-toggle i');
+      if (field.type === 'password') {
+        field.type = 'text';
+        if (icon) icon.classList.replace('fa-eye','fa-eye-slash');
+      } else {
+        field.type = 'password';
+        if (icon) icon.classList.replace('fa-eye-slash','fa-eye');
+      }
+    }
+
+    // Validate single fields
+    function validateField(fieldId) {
+      const v = qs(fieldId).value.trim();
+      switch(fieldId) {
+        case 'username':
+          if (!v) { showErr('usernameError','Usuario requerido'); return false; }
+          if (!usernameAllowed.test(v)) { showErr('usernameError','Usuario inválido. 6-16 chars; letras, números, . _ - permitidos.'); return false; }
+          hideErr('usernameError'); return true;
+
+        case 'email':
+          if (!v) { showErr('emailError','Email requerido'); return false; }
+          if (!emailRe.test(v)) { showErr('emailError','Formato de email inválido'); return false; }
+          hideErr('emailError'); return true;
+
+        case 'password':
+          if (!v) { showErr('passwordError','Contraseña requerida'); return false; }
+          if (!passwordAllowed.test(v)) { showErr('passwordError','Contraseña inválida. Usa 6-16 caracteres y sólo los símbolos permitidos.'); return false; }
+          hideErr('passwordError'); return true;
+
+        case 'confirmPassword':
+          const p = qs('password').value;
+          if (!v) { showErr('confirmPasswordError','Confirmar contraseña requerida'); return false; }
+          if (p !== v) { showErr('confirmPasswordError','Las contraseñas no coinciden'); return false; }
+          hideErr('confirmPasswordError'); return true;
+
+        case 'repFirstName':
+        case 'repLastName':
+        case 'repGender':
+        case 'businessName':
+        case 'street':
+        case 'streetNumber':
+        case 'floor':
+        case 'apartment':
+        case 'city':
+        case 'province':
+        case 'postalCode':
+        case 'reference':
+          if (!v) { showErr(fieldId + 'Error','Campo requerido'); return false; }
+          hideErr(fieldId + 'Error'); return true;
+
+        case 'repDocument':
+          if (!v) { showErr('repDocumentError','Documento requerido'); return false; }
+          if (!digitsOnly.test(v)) { showErr('repDocumentError','Documento sólo números'); return false; }
+          hideErr('repDocumentError'); return true;
+
+        case 'cuit':
+          if (!v) { showErr('cuitError','CUIT requerido'); return false; }
+          if (!cuitRe.test(v)) { showErr('cuitError','CUIT inválido. Debe ser 11 dígitos o formato XX-XXXXXXXX-X'); return false; }
+          hideErr('cuitError'); return true;
+
+        case 'ivaCondition':
+          if (!v) { showErr('ivaConditionError','Selecciona la condición ante IVA'); return false; }
+          hideErr('ivaConditionError'); return true;
+
+        case 'phoneArea':
+          if (!v) { showErr('phoneAreaError','Característica requerida'); return false; }
+          if (!digitsOnly.test(v)) { showErr('phoneAreaError','Sólo números'); return false; }
+          hideErr('phoneAreaError'); return true;
+
+        case 'phoneNumber':
+          if (!v) { showErr('phoneNumberError','Número de teléfono requerido'); return false; }
+          if (!digitsOnly.test(v)) { showErr('phoneNumberError','Sólo números'); return false; }
+          hideErr('phoneNumberError'); return true;
+
+        default:
+          return true;
+      }
+    }
+
+    // Wire real-time validation
+    const watched = ['username','email','password','confirmPassword','repFirstName','repLastName','repGender','repDocument','businessName','cuit','ivaCondition','street','streetNumber','floor','apartment','city','province','postalCode','reference','phoneArea','phoneNumber'];
+    watched.forEach(id => {
+      const el = qs(id);
+      if (!el) return;
+      el.addEventListener('input', () => validateField(id));
+      el.addEventListener('blur', () => validateField(id));
+    });
+    // Terms checkbox
+    qs('terms').addEventListener('change', () => {
+      if (qs('terms').checked) hideErr('termsError'); else showErr('termsError','Debes aceptar los términos');
+    });
+
+    // Form submit
+    qs('companyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // hide previous generic errors
+      hideErr('termsError');
+
+      // validate all
+      let ok = true;
+      for (const id of watched) {
+        const valid = validateField(id);
+        ok = ok && valid;
+      }
+      if (!qs('terms').checked) { showErr('termsError','Debes aceptar los términos'); ok = false; }
+
+      if (!ok) {
+        // focus the first visible error
+        const firstErr = document.querySelector('.error:not(.visually-hidden)');
+        if (firstErr) {
+          const related = firstErr.id.replace('Error','');
+          const field = qs(related);
+          if (field) field.focus();
+        }
+        return;
+      }
+
+      // Simulate submission (replace with real API call)
+      qs('submitBtn').disabled = true;
+      qs('btnText').textContent = 'Creando cuenta...';
+      qs('spinner').classList.remove('hidden');
+
+      try {
+        // Example delay to simulate server request:
+        await new Promise(r => setTimeout(r, 900));
+
+        // Success
+        alert('Cuenta de empresa creada correctamente. (Demo)');
+        qs('companyForm').reset();
+        // hide all errors again
+        document.querySelectorAll('[id$="Error"]').forEach(el => { el.textContent=''; el.classList.add('visually-hidden'); });
+      } catch(err) {
+        alert('Ocurrió un error al crear la cuenta. Intenta nuevamente.');
+      } finally {
+        qs('submitBtn').disabled = false;
+        qs('btnText').textContent = 'Crear cuenta';
+        qs('spinner').classList.add('hidden');
+      }
+    });
+
+    // Small accessibility improvement: hide error message containers initially
+    document.querySelectorAll('[id$="Error"]').forEach(el => el.classList.add('visually-hidden'));
+  </script>
+</body>
+</html>
+
+
+
+

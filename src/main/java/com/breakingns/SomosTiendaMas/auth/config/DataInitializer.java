@@ -28,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // Verificar si ya existe un superadmin
         boolean exists = usuarioRepository.findAll().stream()
-            .anyMatch(u -> u.getRoles().stream().anyMatch(r -> r.getNombre() == RolNombre.ROLE_SUPERADMIN));
+            .anyMatch(u -> u.getRol() != null && u.getRol().getNombre() == RolNombre.ROLE_SUPERADMIN);
         if (exists) {
             System.out.println("El superusuario ya existe.");
             return;

@@ -20,6 +20,28 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArg(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
+    /* 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Argumento ilegal",
+            "message", ex.getMessage(),
+            "timestamp", Instant.now().toString(),
+            "status", HttpStatus.BAD_REQUEST.value()
+        ));
+    }
+    */
+
     @ExceptionHandler(SesionExpiradaException.class)
     public ResponseEntity<?> handleSesionExpirada(SesionExpiradaException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -418,16 +440,6 @@ public class GlobalExceptionHandler {
     }
     */
     
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().body(Map.of(
-            "error", "Argumento ilegal",
-            "message", ex.getMessage(),
-            "timestamp", Instant.now().toString(),
-            "status", HttpStatus.BAD_REQUEST.value()
-        ));
-    }
-
     @ExceptionHandler(RolNoEncontradoException.class)
     public ResponseEntity<?> handleRolNoEncontrado(RolNoEncontradoException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(

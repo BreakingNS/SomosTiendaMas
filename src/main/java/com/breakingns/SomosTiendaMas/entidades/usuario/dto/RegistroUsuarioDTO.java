@@ -2,9 +2,13 @@ package com.breakingns.SomosTiendaMas.entidades.usuario.dto;
 
 import java.time.LocalDate;
 
+import com.breakingns.SomosTiendaMas.validation.MinAge;
+
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -43,10 +47,14 @@ public class RegistroUsuarioDTO {
     @NotNull(message = "Debe aceptar la política de privacidad")
     private Boolean aceptaPoliticaPriv;
     
-    // Nuevo campo: fecha de nacimiento del responsable
+    // Fecha de nacimiento del responsable
+    @NotNull(message = "La fecha de nacimiento es obligatoria")
+    @Past(message = "La fecha de nacimiento debe ser una fecha pasada")
+    @MinAge(value = 18, message = "Debe ser mayor de 18 años")
     private LocalDate fechaNacimientoResponsable;
 
     // Nuevo campo: género del responsable
+    @NotNull(message = "El género del responsable es obligatorio")
     private String generoResponsable; // MASCULINO, FEMENINO, OTRO
 
     //ELIMINADO TELEFONO Y DIRECCION <----------------------------------------------

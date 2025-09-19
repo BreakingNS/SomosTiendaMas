@@ -163,7 +163,7 @@ public class UsuarioServiceImpl implements IUsuarioService{
             usuario.setUsername(dto.getUsername());
             usuario.setPassword(dto.getPassword()); // Asegurate que después se encripta
             usuario.setEmail(dto.getEmail());
-            usuario.getRoles().add(rol);
+            usuario.setRol(rol);
             usuario.setNombreResponsable(dto.getNombreResponsable());
             usuario.setApellidoResponsable(dto.getApellidoResponsable());
             usuario.setDocumentoResponsable(dto.getDocumentoResponsable());
@@ -239,7 +239,7 @@ public class UsuarioServiceImpl implements IUsuarioService{
         Rol rol = rolService.getByNombre(rolNombre)
                 .orElseThrow(() -> new RolNoEncontradoException("Error: Rol no encontrado."));
 
-        usuario.getRoles().add(rol);
+        usuario.setRol(rol);
         registrar(usuario);
         carritoService.crearCarrito(usuario.getIdUsuario());
     }
@@ -267,7 +267,7 @@ public class UsuarioServiceImpl implements IUsuarioService{
             throw new UsuarioYaExisteException("El correo electrónico ya está en uso");
         }
 
-        usuario.getRoles().add(null);
+        usuario.setRol(null);
         registrar(usuario);
         carritoService.crearCarrito(usuario.getIdUsuario());
     }

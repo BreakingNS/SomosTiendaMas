@@ -4,10 +4,14 @@ import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDT
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.ActualizarDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.DireccionResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.direccion.service.IDireccionService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/direccion")
@@ -16,10 +20,19 @@ public class DireccionController {
     @Autowired
     private IDireccionService direccionService;
 
-    @PostMapping("/public")
-    public ResponseEntity<DireccionResponseDTO> registrarDireccion(@RequestBody RegistroDireccionDTO dto) {
+    @PostMapping("/public/registrar")
+    public ResponseEntity<DireccionResponseDTO> registrarDireccion(@RequestBody @Valid RegistroDireccionDTO dto) {
         DireccionResponseDTO response = direccionService.registrarDireccion(dto);
         return ResponseEntity.ok(response);
+    }
+
+    // Nuevo: permitir registrar varias direcciones en un solo request (útil en registro inicial)
+    @PostMapping("/public/registrar-multiple")
+    public ResponseEntity<List<DireccionResponseDTO>> registrarDirecciones(@RequestBody List<RegistroDireccionDTO> dtos) {
+        List<DireccionResponseDTO> responses = dtos.stream()
+            .map(direccionService::registrarDireccion)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/private/{id}")

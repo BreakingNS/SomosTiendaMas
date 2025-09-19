@@ -167,7 +167,7 @@ class AuthControllerTest {
     
     void crearAdminTestSiNoExiste() {
         boolean exists = usuarioRepository.findAll().stream()
-            .anyMatch(u -> u.getRoles().stream().anyMatch(r -> r.getNombre() == RolNombre.ROLE_ADMIN));
+            .anyMatch(u -> u.getRol() != null && u.getRol().getNombre() == RolNombre.ROLE_ADMIN);
         if (!exists) {
             Usuario admin = new Usuario();
             admin.setUsername("adminTest");

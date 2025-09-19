@@ -39,10 +39,6 @@ public class Telefono {
     @Column(nullable = false)
     private Boolean verificado;
 
-    @ManyToOne
-    @JoinColumn(name = "es_copia_de")
-    private Telefono telefonoCopiado;
-
     public enum TipoTelefono {
         PRINCIPAL, SECUNDARIO, EMPRESA, WHATSAPP
     }

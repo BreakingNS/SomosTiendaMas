@@ -302,7 +302,7 @@ public class RegisterControllerTest {
         // Asegurarse de que el rol no esté asignado
         Usuario usuarioGuardado = usuarioRepository.findByUsername("usuarioSinRol").orElse(null);
         assertNotNull(usuarioGuardado);
-        assertTrue(usuarioGuardado.getRoles().isEmpty()); // Verificar que no tenga roles asignados
+        assertNull(usuarioGuardado.getRol()); // Verificar que no tenga rol asignado
     }
     
     // 8) Registro con RequestBody Invalido
