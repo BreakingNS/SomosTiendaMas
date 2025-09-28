@@ -117,7 +117,7 @@ public class DatabaseConnectionTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("usuario1");
         usuario.setPassword("1234567");
-        usuario.setEmail("usu@usu.com");
+        usuario.setEmail("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +127,7 @@ public class DatabaseConnectionTest {
         Usuario duplicado = new Usuario();
         duplicado.setUsername("usuario2");
         duplicado.setPassword("1234569");
-        duplicado.setEmail("usu@usu.com"); // Mismo email
+        duplicado.setEmail("correoprueba@noenviar.com"); // Mismo email
 
         mockMvc.perform(post("/api/registro/public/usuario")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -189,7 +189,7 @@ public class DatabaseConnectionTest {
     @Test
     @Transactional
     void testTransactionRollbackPorUsuarioInexistente() {
-        Usuario usuario = new Usuario(999L, "hola", "mundo123", "ej@ej.com", null);
+        Usuario usuario = new Usuario(999L, "hola", "mundo123", "correoprueba@noenviar.com", null);
         Carrito carrito = new Carrito(); // o new Carrito(usuario), si tenés constructor
         carrito.setUsuario(usuario);
         usuario.setCarrito(carrito);

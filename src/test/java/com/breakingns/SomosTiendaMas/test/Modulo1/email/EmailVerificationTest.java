@@ -1,48 +1,57 @@
 package com.breakingns.SomosTiendaMas.test.Modulo1.email;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.Departamento;
+import com.breakingns.SomosTiendaMas.auth.model.Localidad;
+import com.breakingns.SomosTiendaMas.auth.model.Municipio;
+import com.breakingns.SomosTiendaMas.auth.model.Pais;
+import com.breakingns.SomosTiendaMas.auth.model.Provincia;
+import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IEmailVerificacionRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
+import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
-import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.model.EmailVerificacion;
-import com.breakingns.SomosTiendaMas.auth.repository.IEmailVerificacionRepository;
-import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
-import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
-import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestConstructor;
+import org.springframework.test.context.jdbc.SqlGroup;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import java.util.Optional;
+import com.breakingns.SomosTiendaMas.auth.model.EmailVerificacion;
+import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
+import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
+import org.mockito.ArgumentCaptor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /*                                      EmailVerificationTest
 
@@ -80,6 +89,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SqlGroup({
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
             "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
@@ -90,13 +100,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )/*,
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
             "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
@@ -107,7 +119,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
@@ -131,16 +144,23 @@ class EmailVerificationTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
-    private final IUsuarioRepository usuarioRepository;
-    private final IEmailVerificacionRepository emailVerificacionRepository;
-    private final ITokenResetPasswordRepository tokenResetPasswordRepository;
-
     private final PasswordEncoder passwordEncoder;
+
+    private final IUsuarioRepository usuarioRepository;
+    private final ITokenResetPasswordRepository tokenResetPasswordRepository;
+    private final IEmailVerificacionRepository emailVerificacionRepository;
+
+    private final IPaisRepository paisRepository;
+    private final IProvinciaRepository provinciaRepository;
+    private final IDepartamentoRepository departamentoRepository;
+    private final ILocalidadRepository localidadRepository;
+    private final IMunicipioRepository municipioRepository;
 
     @MockBean
     private EmailService emailService;
 
     private RegistroUsuarioCompletoDTO registroDTO;
+    private RegistroDireccionDTO direccionDTO;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -161,16 +181,27 @@ class EmailVerificationTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -244,16 +275,27 @@ class EmailVerificationTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -299,16 +341,27 @@ class EmailVerificationTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
-        direccionDTO.setCalle("Calle Nueva");
-        direccionDTO.setNumero("456");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("2000");
-        direccionDTO.setPais("Argentina");
+        direccionDTO.setCalle("Calle Falsa");
+        direccionDTO.setNumero("123");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");

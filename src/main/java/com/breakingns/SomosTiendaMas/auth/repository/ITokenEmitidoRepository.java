@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.repository;
 
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+
 import org.springframework.data.jpa.repository.Query;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
@@ -27,10 +28,14 @@ public interface ITokenEmitidoRepository extends JpaRepository<TokenEmitido, Lon
     void revocarTokensActivosPorUsuario(@Param("username") String username, @Param("ahora") Instant ahora);
 
     List<TokenEmitido> findAllByUsuario_UsernameAndRevocadoFalse(String username);
-
     List<TokenEmitido> findAllByUsuario_IdUsuarioAndRevocadoFalse(Long idUsuario);
 
-    public void deleteByToken(String tokenfalso);
-    Iterable<? extends TokenEmitido> findByUsuario_IdUsuario(Long idUsuario);
+    void deleteByToken(String tokenfalso);
 
+    // Si necesitas buscar todos los tokens de un usuario:
+    List<TokenEmitido> findByUsuario_IdUsuario(Long idUsuario);
+
+    // Método con @Query como alternativa
+    @Query("select t from TokenEmitido t where t.usuario.idUsuario = :usuarioId and t.revocado = false")
+    Optional<TokenEmitido> findActiveByUsuarioId(@Param("usuarioId") Long usuarioId);
 }

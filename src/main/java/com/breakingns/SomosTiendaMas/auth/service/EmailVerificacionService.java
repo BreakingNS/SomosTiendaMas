@@ -63,4 +63,14 @@ public class EmailVerificacionService {
         System.out.println("\n\n4Expiración: " + verificacion.getFechaExpiracion() + " | Ahora: " + LocalDateTime.now() + "\n\n");
         return true;
     }
+
+    // Devuelve el código de verificación no usado para un usuario (si existe)
+    public Optional<EmailVerificacion> obtenerCodigoActivoPorUsuario(Long usuarioId) {
+        return emailVerificacionRepository.findByUsuario_IdUsuarioAndUsadoFalse(usuarioId);
+    }
+
+    // Devuelve la entidad por código (si existe y no usado)
+    public Optional<EmailVerificacion> obtenerPorCodigoActivo(String codigo) {
+        return emailVerificacionRepository.findByCodigoAndUsadoFalse(codigo);
+    }
 }

@@ -7,6 +7,9 @@ import com.breakingns.SomosTiendaMas.entidades.telefono.model.Telefono;
 import com.breakingns.SomosTiendaMas.entidades.telefono.repository.ICodigoAreaRepository;
 import com.breakingns.SomosTiendaMas.entidades.telefono.repository.ITelefonoRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,10 +49,10 @@ public class TelefonoService implements ITelefonoService {
         // ---- NUEVO: asignar owner al telefono usando los ids del DTO ----
         if (hasUsuario) {
             telefono.setUsuario(usuarioRepository.findById(dto.getIdUsuario())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + dto.getIdUsuario())));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + dto.getIdUsuario())));
         } else {
             telefono.setPerfilEmpresa(perfilEmpresaRepository.findById(dto.getIdPerfilEmpresa())
-                .orElseThrow(() -> new IllegalArgumentException("PerfilEmpresa no encontrado: " + dto.getIdPerfilEmpresa())));
+                .orElseThrow(() -> new EntityNotFoundException("PerfilEmpresa no encontrado: " + dto.getIdPerfilEmpresa())));
         }
         // -----------------------------------------------------------------
 
@@ -101,6 +104,33 @@ public class TelefonoService implements ITelefonoService {
     @Override
     public TelefonoResponseDTO actualizarTelefono(Long id, ActualizarTelefonoDTO dto) {
         Telefono telefono = telefonoRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Telefono no encontrado: " + id));
+
+        // aplicar cambios solo si vienen no nulos (soporte partial update)
+        if (dto.getTipo() != null) {
+            telefono.setTipo(Telefono.TipoTelefono.valueOf(dto.getTipo()));
+        }
+        if (dto.getNumero() != null) {
+            telefono.setNumero(dto.getNumero().trim());
+        }
+        if (dto.getCaracteristica() != null) {
+            telefono.setCaracteristica(dto.getCaracteristica().trim());
+        }
+        if (dto.getActivo() != null) {
+            telefono.setActivo(dto.getActivo());
+        }
+        if (dto.getVerificado() != null) {
+            telefono.setVerificado(dto.getVerificado());
+        }
+
+        Telefono saved = telefonoRepository.save(telefono);
+        return mapToResponseDTO(saved);
+    }
+
+    /*
+    @Override
+    public TelefonoResponseDTO actualizarTelefono(Long id, ActualizarTelefonoDTO dto) {
+        Telefono telefono = telefonoRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("No se encontró el teléfono con id: " + id));
 
         telefono.setTipo(Telefono.TipoTelefono.valueOf(dto.getTipo()));
@@ -120,12 +150,12 @@ public class TelefonoService implements ITelefonoService {
         response.setVerificado(telefono.getVerificado());
 
         return response;
-    }
+    }*/
 
     @Override
     public TelefonoResponseDTO obtenerTelefono(Long id) {
         Telefono telefono = telefonoRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontró el teléfono con id: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("No se encontró el teléfono con id: " + id));
 
         TelefonoResponseDTO response = new TelefonoResponseDTO();
         response.setIdTelefono(telefono.getIdTelefono());

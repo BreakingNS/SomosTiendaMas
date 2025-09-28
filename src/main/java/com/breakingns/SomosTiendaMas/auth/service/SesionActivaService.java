@@ -1,9 +1,12 @@
 package com.breakingns.SomosTiendaMas.auth.service;
 
+import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
+import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.util.RevocacionUtils;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.DatosComprobacionSesionDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
@@ -12,6 +15,10 @@ import com.breakingns.SomosTiendaMas.security.exception.SesionActivaNoEncontrada
 import com.breakingns.SomosTiendaMas.security.exception.SesionNoEncontradaException;
 import com.breakingns.SomosTiendaMas.security.exception.UsuarioNoEncontradoException;
 import com.breakingns.SomosTiendaMas.security.jwt.JwtTokenProvider;
+import com.breakingns.SomosTiendaMas.utils.TokenUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +27,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.Base64;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,15 +41,20 @@ public class SesionActivaService {
     
     private final TokenEmitidoService tokenEmitidoService;
 
+    private final IRefreshTokenRepository refreshTokenRepository;
+
     private final IUsuarioRepository usuarioRepository;
     private final ISesionActivaRepository sesionActivaRepository;
     //private final ITokenEmitidoRepository tokenEmitidoRepository;
 
     private final RevocacionUtils revocacionUtils;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Autowired
     public SesionActivaService(JwtTokenProvider jwtTokenProvider, 
-                                TokenEmitidoService tokenEmitidoService, 
+                                TokenEmitidoService tokenEmitidoService,
+                                IRefreshTokenRepository refreshTokenRepository,
                                 IUsuarioRepository usuarioRepository, 
                                 ISesionActivaRepository sesionActivaRepository, 
                                 //ITokenEmitidoRepository tokenEmitidoRepository,
@@ -47,7 +62,8 @@ public class SesionActivaService {
         this.jwtTokenProvider = jwtTokenProvider;
         this.tokenEmitidoService = tokenEmitidoService;
         this.usuarioRepository = usuarioRepository;
-        this.sesionActivaRepository = sesionActivaRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.sesionActivaRepository = sesionActivaRepository;        
         //this.tokenEmitidoRepository = tokenEmitidoRepository;
         this.revocacionUtils = revocacionUtils;
     }
@@ -60,6 +76,18 @@ public class SesionActivaService {
             throw new AccesoDenegadoException("No puedes ver sesiones de otro usuario.");
         }
 
+        return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
+            .filter(s -> !s.isRevocado())
+            .map(this::convertirADTO)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Método de acceso directo para tests: NO valida token ni SecurityContext.
+     * Usar únicamente desde tests de integración donde se quiere consultar la BD directamente.
+     */
+    @Transactional(readOnly = true)
+    public List<SesionActivaDTO> listarSesionesActivasParaTests(Long usuarioId) {
         return sesionActivaRepository.findByUsuario_IdUsuario(usuarioId).stream()
             .filter(s -> !s.isRevocado())
             .map(this::convertirADTO)
@@ -216,4 +244,40 @@ public class SesionActivaService {
             .orElseThrow(() -> new SesionNoEncontradaException("Sesión no encontrada para el refresh token: " + token));
     }
 
+    public DatosComprobacionSesionDTO obtenerDatosDeSesion(String authorizationHeader) {
+        String accessToken = TokenUtils.extractTokenFromHeader(authorizationHeader);
+        boolean tokenValido = accessToken != null && jwtTokenProvider.validarToken(accessToken);
+
+        Long idUsuario = tokenEmitidoService.obtenerIdDesdeToken();
+        Optional<Usuario> uOpt = usuarioRepository.findById(idUsuario);
+        String username = uOpt.map(Usuario::getUsername).orElse("---");
+        String rol = uOpt.map(Usuario::getRol).map(r -> r.getNombre().name()).orElse("---");
+
+        Instant jwtExp = null;
+        if (accessToken != null) {
+            jwtExp = parseExpFromJwt(accessToken);
+        }
+
+        Instant refreshExp = null;
+        Optional<RefreshToken> maybeRefresh = refreshTokenRepository.findTopByUsuario_IdUsuarioOrderByFechaExpiracionDesc(idUsuario);
+        if (maybeRefresh.isPresent()) refreshExp = maybeRefresh.get().getFechaExpiracion();
+
+        boolean sesionActiva = tokenValido && !sesionActivaRepository.findByUsuario_IdUsuarioAndRevocadoFalse(idUsuario).isEmpty();
+
+        return new DatosComprobacionSesionDTO(sesionActiva, username, rol, jwtExp, refreshExp);
+    }
+
+    private Instant parseExpFromJwt(String token) {
+        try {
+            String payload = token.split("\\.")[1];
+            String padded = payload.replace('-', '+').replace('_', '/');
+            int mod4 = padded.length() % 4;
+            if (mod4 != 0) padded += "=".repeat(4 - mod4);
+            String json = new String(Base64.getDecoder().decode(padded));
+            Map<?,?> map = objectMapper.readValue(json, Map.class);
+            Number exp = (Number) map.get("exp");
+            if (exp != null) return Instant.ofEpochSecond(exp.longValue());
+        } catch (Exception ignored) {}
+        return null;
+    }
 }

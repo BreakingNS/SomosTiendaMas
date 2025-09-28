@@ -18,8 +18,7 @@ public class EmailService {
         "correoprueba2@noenviar.com",
         "correoempresa@noenviar.com",
         "correoempresa1@noenviar.com",
-        "correoempresa2@noenviar.com",
-        "nahuel_segura_17@hotmail.com"
+        "correoempresa2@noenviar.com"
     );
 
 
@@ -41,7 +40,7 @@ public class EmailService {
             helper.setTo(destinatario);
             helper.setSubject("Verifica tu email");
 
-            String enlace = "https://localhost:8443/verificar-email.html?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+            String enlace = "https://localhost:8443/public/correoVerificado.html?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
 
             String html = "<div style='font-family: Arial, sans-serif; color: #333; background: #f9f9f9; padding: 24px; border-radius: 8px;'>"
                 + "<h2 style='color: #1976d2;'>¡Bienvenido a SomosTiendaMas!</h2>"
@@ -75,7 +74,7 @@ public class EmailService {
             helper.setTo(destinatario);
             helper.setSubject("Restablece tu contraseña");
 
-            String enlace = "https://localhost:8443/reset-password.html?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
+            String enlace = "https://localhost:8443/public/cambiarContrasenia.html?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
 
             String html = "<div style='font-family: Arial, sans-serif; color: #333; background: #f9f9f9; padding: 24px; border-radius: 8px;'>"
                 + "<h2 style='color: #d32f2f;'>Recuperación de contraseña</h2>"

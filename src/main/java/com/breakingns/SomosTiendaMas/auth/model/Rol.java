@@ -16,10 +16,19 @@ public class Rol {
     @Column(nullable = false)
     private RolNombre nombre;
 
+    @Column(length = 255)
+    private String descripcion;
+
     public Rol() {}
 
     public Rol(RolNombre nombre) {
         this.nombre = nombre;
+    }
+
+    public Rol(Long id, RolNombre nombre, String descripcion) {
+        this.id_rol = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
     }
 
     public Object stream() {
@@ -27,5 +36,5 @@ public class Rol {
         throw new UnsupportedOperationException("Unimplemented method 'stream'");
     }
     
-    // Getters y Setters
+    // Getters y Setters (los genera Lombok)
 }

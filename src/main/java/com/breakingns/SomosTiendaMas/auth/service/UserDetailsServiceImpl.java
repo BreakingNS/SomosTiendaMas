@@ -7,12 +7,10 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioReposi
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import lombok.extern.slf4j.Slf4j;
@@ -58,10 +56,4 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return List.of(new SimpleGrantedAuthority(rol.getNombre().name()));
     }
 
-    private Collection<? extends GrantedAuthority> mapearRoles(Set<Rol> roles) {
-        log.info("Se mapean los roles: {}", roles);
-        return roles.stream()
-            .map(rol -> new SimpleGrantedAuthority(rol.getNombre().name()))
-            .collect(Collectors.toList());
-    }
 }

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer contraseña | Tienda Mas</title>
+    <meta name="description" content="Reset your Tienda Mas account password">
+    <!----Tailwind CSS---->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!----Font Awesome---->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!----Google Fonts - Inter---->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-blue: #004E89;
+            --light-gray: #F8F9FA;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .form-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-orange);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #E55627;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+            .form-container {
+                width: 100%;
+                border-radius: 0;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Inicio Estado de Sesion */
+        
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+        
+        /* Fin Estado de Sesion */
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <main class="form-container bg-white rounded-xl p-8 w-full max-w-md">
+        <!----Logo and Header---->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+                <span class="text-orange-500">Tienda</span>
+                <span class="text-blue-600 ml-1">Mas</span>
+            </h1>
+            <p class="text-gray-600">Restablecé la contraseña de tu cuenta</p>
+        </header>
+        
+        <!----Formulario de restablecimiento de contraseña---->
+        <form id="resetForm" class="space-y-6" novalidate>
+            <!----Mensaje de estado---->
+            <div id="statusMessage" class="hidden p-4 rounded-lg text-sm mb-4" aria-live="polite"></div>
+            
+            <!----Instrucciones---->
+            <p class="text-gray-600 text-sm">
+                Ingresá tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+            
+            <!----Campo de correo electrónico---->
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-gray-700">
+                    Correo electrónico <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        aria-required="true"
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 pl-10"
+                        placeholder="tu@email.com"
+                        autocomplete="email"
+                    >
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="far fa-envelope"></i>
+                    </div>
+                </div>
+                <p id="emailError" class="text-red-500 text-xs mt-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Por favor ingresá un correo electrónico válido
+                </p>
+            </div>
+            
+            <!----Botón Enviar---->
+            <button 
+                type="submit" 
+                id="submitBtn"
+                class="btn-primary w-full text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 flex items-center justify-center"
+                aria-label="Send reset instructions"
+            >
+                <span id="btnText">Enviar enlace de restablecimiento</span>
+                <div id="spinner" class="spinner ml-2" aria-hidden="true"></div>
+            </button>
+            
+            <!----Login Link---->
+            <div class="text-center text-sm text-gray-600">
+                <a href="/public/iniciarSesion.html" class="font-medium text-blue-600 hover:underline">
+                    <i class="fas fa-arrow-left mr-1"></i> ¿Recordaste tu contraseña? Iniciar sesión
+                </a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        /*----Funcionalidad del formulario (envío real al backend)----*/
+        
+        const resetForm = document.getElementById('resetForm');
+        const emailInput = document.getElementById('email');
+        const emailError = document.getElementById('emailError');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function showError(message) {
+            emailInput.classList.add('border-red-500');
+            emailError.textContent = message;
+            emailError.classList.remove('hidden');
+        }
+
+        function hideError() {
+            emailInput.classList.remove('border-red-500');
+            emailError.classList.add('hidden');
+        }
+
+        function showStatus(message, isSuccess) {
+            statusMessage.innerHTML = `
+                <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            `;
+            statusMessage.classList.remove('hidden');
+            if (isSuccess) {
+                statusMessage.classList.add('bg-green-100', 'text-green-700');
+                statusMessage.classList.remove('bg-red-100', 'text-red-700');
+            } else {
+                statusMessage.classList.add('bg-red-100', 'text-red-700');
+                statusMessage.classList.remove('bg-green-100', 'text-green-700');
+            }
+        }
+
+        resetForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+            statusMessage.classList.add('hidden');
+
+            const email = emailInput.value.trim();
+            if (!email) {
+                showError('Por favor ingresá tu correo electrónico');
+                return;
+            }
+            if (!isValidEmail(email)) {
+                showError('Por favor ingresá un correo electrónico válido');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.textContent = 'Enviando...';
+            spinner.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/password/public/olvide-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (res.ok) {
+                    // redirigir siempre a la página genérica (mensaje silencioso en backend)
+                    window.location.href = '/public/correoEnviado(recuperarContrasenia).html';
+                    return;
+                }
+
+                // intentar leer mensaje de error
+                let detail = await res.json().catch(() => null);
+                detail = detail?.message || detail?.error || await res.text().catch(() => null);
+                showStatus(detail || 'Ocurrió un error al procesar la solicitud.', false);
+            } catch (err) {
+                console.error(err);
+                showStatus('Error conectando al servidor. Intentá nuevamente más tarde.', false);
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Enviar enlace de restablecimiento';
+                spinner.style.display = 'none';
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            const email = this.value.trim();
+            if (email && !isValidEmail(email)) {
+                showError('Por favor ingresá un correo electrónico válido');
+            } else {
+                hideError();
+            }
+        });
+    </script>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+    </div>
+
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
+</body>
+</html>

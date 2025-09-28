@@ -318,8 +318,12 @@ public class UsuarioServiceImpl implements IUsuarioService{
         return dto;
     }
 
+    @Override
+    @Transactional
     public void eliminarUsuario(Long id) {
-        usuarioRepository.deleteById(id);
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("Usuario no encontrado"));
+        usuarioRepository.delete(usuario);
     }
 
     // Metodos Privados
@@ -345,6 +349,7 @@ public class UsuarioServiceImpl implements IUsuarioService{
     }
 
     @Override
+    @Transactional
     public void desactivarUsuario(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -353,5 +358,55 @@ public class UsuarioServiceImpl implements IUsuarioService{
 
         // Opcional: invalidar sesiones activas
         sesionActivaRepository.deleteByUsuario_IdUsuario(idUsuario);
+    }
+
+    @Override
+    public List<UsuarioResponseDTO> listarUsuarios() {
+        List<Usuario> usuarios = traerTodoUsuario();
+        return usuarios.stream().map(u -> {
+            UsuarioResponseDTO dto = new UsuarioResponseDTO();
+            dto.setIdUsuario(u.getIdUsuario());
+            dto.setUsername(u.getUsername());
+            dto.setEmail(u.getEmail());
+            dto.setNombreResponsable(u.getNombreResponsable());
+            dto.setApellidoResponsable(u.getApellidoResponsable());
+            dto.setDocumentoResponsable(u.getDocumentoResponsable());
+            dto.setTipoUsuario(u.getTipoUsuario() != null ? u.getTipoUsuario().name() : null);
+            dto.setIdioma(u.getIdioma());
+            dto.setTimezone(u.getTimezone());
+            dto.setActivo(u.getActivo());
+            dto.setEmailVerificado(u.getEmailVerificado());
+            // añade más campos si UsuarioResponseDTO los tiene
+            return dto;
+        }).toList();
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO actualizarUsuarioParcial(Long id, ActualizarUsuarioDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("Usuario no encontrado con id: " + id));
+
+        // aplicar solo campos no nulos
+        if (dto.getUsername() != null) usuario.setUsername(dto.getUsername());
+        if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
+        if (dto.getNombreResponsable() != null) usuario.setNombreResponsable(dto.getNombreResponsable());
+        if (dto.getApellidoResponsable() != null) usuario.setApellidoResponsable(dto.getApellidoResponsable());
+        if (dto.getDocumentoResponsable() != null) usuario.setDocumentoResponsable(dto.getDocumentoResponsable());
+        if (dto.getFechaNacimientoResponsable() != null) usuario.setFechaNacimientoResponsable(dto.getFechaNacimientoResponsable());
+        if (dto.getGeneroResponsable() != null) usuario.setGeneroResponsable(dto.getGeneroResponsable());
+        if (dto.getIdioma() != null) usuario.setIdioma(dto.getIdioma());
+        if (dto.getTimezone() != null) usuario.setTimezone(dto.getTimezone());
+        // Si se envía nueva contraseña, encriptarla
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        usuario.setFechaUltimaModificacion(java.time.LocalDateTime.now());
+
+        usuarioRepository.save(usuario);
+
+        // devolver DTO actualizado (reutiliza consultarUsuario para consistencia)
+        return consultarUsuario(usuario.getIdUsuario());
     }
 }

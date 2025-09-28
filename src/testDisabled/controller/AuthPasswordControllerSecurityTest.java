@@ -142,8 +142,8 @@ public class AuthPasswordControllerSecurityTest {
     @BeforeEach
     void setUp() throws Exception {
         // Siempre registrar y loguear, sin condicionales
-        registrarAdmin("admin", "987654", "admin@test.com");
-        registrarUsuario("usuario", "123456", "usuario@test.com");
+        registrarAdmin("admin", "987654", "correoempresa@noenviar.com");
+        registrarUsuario("usuario", "123456", "correoempresa1@noenviar.com");
         
         AuthResponse adminAuth = loginYGuardarDatos("admin", "987654");
         tokenAdmin = adminAuth.getAccessToken();
@@ -227,7 +227,7 @@ public class AuthPasswordControllerSecurityTest {
     @Test
     public void testLimiteIntentosFallidosOlvidePassword() throws Exception {
         
-        OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste1@noexiste1.com"); // sin @, sin dominio
+        OlvidePasswordRequest request = new OlvidePasswordRequest("correoprueba@noenviar.com"); // sin @, sin dominio
 
         // Intentos fallidos (simulamos que el código es incorrecto)
         for (int i = 0; i < 5; i++) {
@@ -255,7 +255,7 @@ public class AuthPasswordControllerSecurityTest {
     // Simular un bloqueo y esperar el reseteo:
     //@Test
     public void testReseteoIntentosFallidos() throws Exception {
-        OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste2@noexiste2.com"); // sin @, sin dominio
+        OlvidePasswordRequest request = new OlvidePasswordRequest("correoprueba@noenviar.com"); // sin @, sin dominio
 
         // Realizar 5 intentos fallidos
         for (int i = 0; i < 5; i++) {
@@ -290,7 +290,7 @@ public class AuthPasswordControllerSecurityTest {
     // 1) Solicitud válida sin autenticación
     @Test
     void solicitarRecuperacionPassword_solicitudValidaSinAutenticacion_retornaOk() throws Exception {
-        OlvidePasswordRequest request = new OlvidePasswordRequest("usuario@test.com");
+        OlvidePasswordRequest request = new OlvidePasswordRequest("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -312,7 +312,7 @@ public class AuthPasswordControllerSecurityTest {
     // 3) Email no registrado
     @Test
     void solicitarRecuperacionPassword_emailNoRegistrado_retornarOk() throws Exception {
-        OlvidePasswordRequest request = new OlvidePasswordRequest("noexiste2@test.com");
+        OlvidePasswordRequest request = new OlvidePasswordRequest("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -323,7 +323,7 @@ public class AuthPasswordControllerSecurityTest {
     // 4) Acceso con token válido (opcional)
     @Test
     void solicitarRecuperacionPassword_conTokenValido_retornarOk() throws Exception {
-        OlvidePasswordRequest request = new OlvidePasswordRequest("usuario@test.com");
+        OlvidePasswordRequest request = new OlvidePasswordRequest("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .header("Authorization", "Bearer " + tokenUsuario)
@@ -337,7 +337,7 @@ public class AuthPasswordControllerSecurityTest {
     @Test
     void resetPassword_conTokenValidoYCambioCorrecto_retornarOk() throws Exception {
         // 1. Registrar el usuario previamente (ya lo hiciste antes)
-        String email = "usuPrueba@test.com";
+        String email = "correoprueba@noenviar.com";
         registrarUsuario("usuPrueba", "abc123456", email);
         
         // 2. Simular solicitud de recuperación de contraseña
@@ -386,7 +386,7 @@ public class AuthPasswordControllerSecurityTest {
     void resetPassword_conTokenExpirado_retornarBadRequestExpirado() throws Exception {
         
         // 1. Registrar el usuario previamente (ya lo hiciste antes)
-        String email = "usuPrueba@test.com";
+        String email = "correoprueba@noenviar.com";
         registrarUsuario("usuPrueba", "abc123456", email);
         
         // 2. Simular solicitud de recuperación de contraseña
@@ -424,7 +424,7 @@ public class AuthPasswordControllerSecurityTest {
     void resetPassword_conTokenExpirado_retornarBadRequestUsado() throws Exception {
         
         // 1. Registrar el usuario previamente (ya lo hiciste antes)
-        String email = "usuPrueba@test.com";
+        String email = "correoprueba@noenviar.com";
         registrarUsuario("usuPrueba", "abc123456", email);
         
         // 2. Simular solicitud de recuperación de contraseña
@@ -461,7 +461,7 @@ public class AuthPasswordControllerSecurityTest {
     @Test
     void resetPassword_conContrasenaInvalida_retornarBadRequestMin() throws Exception {
         // 1. Registrar el usuario previamente (ya lo hiciste antes)
-        String email = "usuPrueba@test.com";
+        String email = "correoprueba@noenviar.com";
         registrarUsuario("usuPrueba", "abc123456", email);
         
         // 2. Simular solicitud de recuperación de contraseña
@@ -498,7 +498,7 @@ public class AuthPasswordControllerSecurityTest {
     @Test
     void resetPassword_conContrasenaInvalida_retornarBadRequestMax() throws Exception {
         // 1. Registrar el usuario previamente (ya lo hiciste antes)
-        String email = "usuPrueba@test.com";
+        String email = "correoprueba@noenviar.com";
         registrarUsuario("usuPrueba", "abc123456", email);
         
         // 2. Simular solicitud de recuperación de contraseña
@@ -535,21 +535,21 @@ public class AuthPasswordControllerSecurityTest {
     @Test
     void resetPassword_conTokenValidoPeroParaOtroUsuario_retornarBadRequest() throws Exception {
         // Disparar solicitud de recuperación de contraseña para el primer usuario
-        OlvidePasswordRequest olvidoRequest1 = new OlvidePasswordRequest("usuario@test.com");
+        OlvidePasswordRequest olvidoRequest1 = new OlvidePasswordRequest("correoprueba@noenviar.com");
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(olvidoRequest1)))
             .andExpect(status().isOk());
 
         // Disparar solicitud de recuperación de contraseña para el segundo usuario
-        OlvidePasswordRequest olvidoRequest2 = new OlvidePasswordRequest("otroUsuario@test.com");
+        OlvidePasswordRequest olvidoRequest2 = new OlvidePasswordRequest("correoprueba@noenviar.com");
         mockMvc.perform(post("/api/password/public/olvide-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(olvidoRequest2)))
             .andExpect(status().isOk());
 
         // Obtener el token generado para el primer usuario
-        Usuario usuario1 = usuarioRepository.findByEmail("usuario@test.com").orElseThrow();
+        Usuario usuario1 = usuarioRepository.findByEmail("correoprueba@noenviar.com").orElseThrow();
         TokenResetPassword token1 = tokenResetPasswordRepository.findTopByUsuarioOrderByIdDesc(usuario1)
             .orElseThrow();
 

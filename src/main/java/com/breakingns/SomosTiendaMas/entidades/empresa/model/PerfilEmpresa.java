@@ -68,6 +68,9 @@ public class PerfilEmpresa {
     @Column(nullable = false)
     private LocalDateTime fechaUltimaModificacion;
 
+    @Column(nullable = false)
+    private Boolean activo;
+
     // Campos opcionales
     @Column(length = 500)
     private String logoUrl;

@@ -24,4 +24,7 @@ public class PerfilEmpresaResponseDTO {
     private Integer tiempoProcesamientoPedidos;
     private String fechaCreacion;
     private String fechaUltimaModificacion;
+
+    // Nuevo: estado activo del perfil
+    private Boolean activo;
 }

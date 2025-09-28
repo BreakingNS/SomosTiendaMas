@@ -267,7 +267,6 @@ public class TelefonoRepositoryTest {
         dto.setReferencia(null);
         dto.setActiva(true);
         dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("1000");
         dto.setIdUsuario(usuario.getIdUsuario());
         return dto;
@@ -364,11 +363,12 @@ public class TelefonoRepositoryTest {
         empresa.setCuit("20900000001");
         empresa.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresa.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresa.setEmailEmpresa("empresaTel@noenviar.com");
+        empresa.setEmailEmpresa("correoprueba2@noenviar.com");
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         assertEquals(200, registrarTelefono(crearTelefonoParaEmpresa(empresa, "EMPRESA", "1144444444", "11", true, false)).getResponse().getStatus());
@@ -437,11 +437,12 @@ public class TelefonoRepositoryTest {
         empresa.setCuit("20900000002");
         empresa.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresa.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresa.setEmailEmpresa("empresaCascade@noenviar.com");
+        empresa.setEmailEmpresa("correoprueba2@noenviar.com");
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         registrarTelefono(crearTelefonoParaEmpresa(empresa, "EMPRESA", "1155555555", "11", true, false));
@@ -522,7 +523,7 @@ public class TelefonoRepositoryTest {
         // Usuario B
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuarioB");
-        usuarioDTO.setEmail("usuarioB@noenviar.com");
+        usuarioDTO.setEmail("correoprueba2@noenviar.com");
         usuarioDTO.setPassword("ClaveSegura123");
         usuarioDTO.setNombreResponsable("Maria");
         usuarioDTO.setApellidoResponsable("Lopez");
@@ -569,7 +570,7 @@ public class TelefonoRepositoryTest {
         // crear usuario B
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuarioCopia");
-        usuarioDTO.setEmail("usuarioCopia@noenviar.com");
+        usuarioDTO.setEmail("correoprueba2@noenviar.com");
         usuarioDTO.setPassword("ClaveSegura123");
         usuarioDTO.setNombreResponsable("Ana");
         usuarioDTO.setApellidoResponsable("Gomez");
@@ -684,7 +685,7 @@ public class TelefonoRepositoryTest {
         // armar un nuevo usuario con dos teléfonos
         RegistroUsuarioDTO uDto = new RegistroUsuarioDTO();
         uDto.setUsername("usuarioMultiTel");
-        uDto.setEmail("multiTel@noenviar.com");
+        uDto.setEmail("correoprueba2@noenviar.com");
         uDto.setPassword("ClaveSegura123");
         uDto.setNombreResponsable("Pepe");
         uDto.setApellidoResponsable("Argento");

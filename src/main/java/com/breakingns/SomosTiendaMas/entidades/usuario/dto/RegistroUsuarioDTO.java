@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 import com.breakingns.SomosTiendaMas.validation.MinAge;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -38,14 +38,19 @@ public class RegistroUsuarioDTO {
     @NotBlank(message = "El documento del responsable no puede estar vacío")
     private String documentoResponsable;
     
+    // tipoUsuario ahora obligatorio: PERSONA_FISICA o EMPRESA
     @NotBlank(message = "El tipo de usuario es obligatorio")
-    private String tipoUsuario; // PERSONA_FISICA, EMPRESA
+    @Pattern(regexp = "^(PERSONA_FISICA|EMPRESA)$", message = "Tipo de usuario inválido")
+    private String tipoUsuario;
+
+    // Asegurar que el usuario acepte políticas y términos (no nulos y true)
+    @NotNull(message = "Debe aceptar la política de privacidad")
+    @AssertTrue(message = "Debe aceptar la política de privacidad")
+    private Boolean aceptaPoliticaPriv;
 
     @NotNull(message = "Debe aceptar los términos y condiciones")
+    @AssertTrue(message = "Debe aceptar los términos y condiciones")
     private Boolean aceptaTerminos;
-
-    @NotNull(message = "Debe aceptar la política de privacidad")
-    private Boolean aceptaPoliticaPriv;
     
     // Fecha de nacimiento del responsable
     @NotNull(message = "La fecha de nacimiento es obligatoria")
@@ -57,18 +62,24 @@ public class RegistroUsuarioDTO {
     @NotNull(message = "El género del responsable es obligatorio")
     private String generoResponsable; // MASCULINO, FEMENINO, OTRO
 
-    //ELIMINADO TELEFONO Y DIRECCION <----------------------------------------------
+    // Hacer obligatorios idioma, timezone y rol (según tu requerimiento)
+    @NotBlank(message = "El idioma es obligatorio")
     private String idioma;
+
+    @NotBlank(message = "La zona horaria es obligatoria")
     private String timezone;
     
-    // Permite especificar el rol al registrar usuario
+    // Permite especificar el rol al registrar usuario (obligatorio según tu indicación)
+    @NotBlank(message = "El rol es obligatorio")
     private String rol;
     
     public RegistroUsuarioDTO() {}
-        public String getRol() {
-            return rol;
-        }
-        public void setRol(String rol) {
-            this.rol = rol;
-        }
+
+    // keep explicit rol accessors if quieres (Lombok los genera, estos son opcionales)
+    public String getRol() {
+        return rol;
+    }
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
 }

@@ -207,7 +207,6 @@ public class EmpresaRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
 
         // 7. Armar registro completo
@@ -265,7 +264,6 @@ public class EmpresaRepositoryTest {
         dto.setReferencia(null);
         dto.setActiva(true);
         dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("1000");
         dto.setIdUsuario(usuario.getIdUsuario());
         return dto;
@@ -300,6 +298,7 @@ public class EmpresaRepositoryTest {
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
+        empresa.setActivo(true);
         empresa.setUsuario(usuario); // Debes crear y asociar un usuario válido en un test real
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
@@ -324,6 +323,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
 
@@ -347,6 +347,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 
@@ -370,6 +371,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 
@@ -393,6 +395,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 
@@ -414,11 +417,12 @@ public class EmpresaRepositoryTest {
         empresaAprobada.setCuit("11111111111");
         empresaAprobada.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresaAprobada.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresaAprobada.setEmailEmpresa("empresaA@noenviar.com");
+        empresaAprobada.setEmailEmpresa("correoprueba2@noenviar.com");
         empresaAprobada.setRequiereFacturacion(true);
         empresaAprobada.setFechaCreacion(LocalDateTime.now());
         empresaAprobada.setFechaUltimaModificacion(LocalDateTime.now());
         empresaAprobada.setUsuario(usuario);
+        empresaAprobada.setActivo(true);
         perfilEmpresaRepository.save(empresaAprobada);
 
         // Crear usuario base para los tests
@@ -461,7 +465,6 @@ public class EmpresaRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
@@ -497,6 +500,7 @@ public class EmpresaRepositoryTest {
         empresaDesaprobada.setFechaCreacion(LocalDateTime.now());
         empresaDesaprobada.setFechaUltimaModificacion(LocalDateTime.now());
         empresaDesaprobada.setUsuario(usuario);
+        empresaDesaprobada.setActivo(true);
         perfilEmpresaRepository.save(empresaDesaprobada);
 
         // Verificar estados
@@ -525,6 +529,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
 
@@ -555,6 +560,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
 
@@ -584,6 +590,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
 
@@ -608,6 +615,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         PerfilEmpresa guardada = perfilEmpresaRepository.save(empresa);
 
@@ -647,6 +655,7 @@ public class EmpresaRepositoryTest {
         empresa1.setFechaCreacion(LocalDateTime.now());
         empresa1.setFechaUltimaModificacion(LocalDateTime.now());
         empresa1.setUsuario(usuario);
+        empresa1.setActivo(true);
         perfilEmpresaRepository.save(empresa1);
 
         PerfilEmpresa empresa2 = new PerfilEmpresa();
@@ -683,6 +692,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(null);; // Sin usuario responsable
+        empresa.setActivo(true);
 
         Exception exception = null;
         try {
@@ -708,6 +718,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);;
+        empresa.setActivo(true);
 
         Exception exception = null;
         try {
@@ -736,6 +747,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         PerfilEmpresa encontrada = perfilEmpresaRepository.findById(empresa.getIdPerfilEmpresa()).orElse(null);
@@ -758,6 +770,7 @@ public class EmpresaRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         usuarioRepository.delete(usuario);

@@ -226,3 +226,5 @@ beta 0.1.7.2: Modulo 1 Autorizacion finalizado y testeado. Final Avanzado
 	- Testeos completos de todo modulo 1 finalizado, faltaria auditoria.
 
 beta 0.1.7.3: Modulo 2 repository y service test en proceso.
+
+beta 0.1.7.4: Modulo 2 tests casi listos, falta centralizado y registro empresa.

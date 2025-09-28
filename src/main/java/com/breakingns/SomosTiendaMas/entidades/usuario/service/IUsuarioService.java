@@ -3,6 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.usuario.service;
 import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.UsuarioResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 import java.util.List;
@@ -31,5 +32,14 @@ public interface IUsuarioService {
     List<Usuario> traerTodoUsuario();
 
     void desactivarUsuario(Long id);
+
+    // ya existentes pueden tener otros nombres; añadir/normalizar estas
+    UsuarioResponseDTO consultarUsuario(Long id);
+
+    List<UsuarioResponseDTO> listarUsuarios();
+
+    UsuarioResponseDTO actualizarUsuarioParcial(Long id, ActualizarUsuarioDTO dto);
+
+    void eliminarUsuario(Long id);
     
 }

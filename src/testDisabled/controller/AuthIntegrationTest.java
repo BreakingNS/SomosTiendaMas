@@ -134,8 +134,8 @@ public class AuthIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         // Siempre registrar y loguear, sin condicionales
-        registrarUsuario("admin", "987654", "admin@test.com");
-        registrarUsuario("usuario", "123456", "usuario@test.com");
+        registrarUsuario("admin", "987654", "correoempresa1@noenviar.com");
+        registrarUsuario("usuario", "123456", "correoempresa2@noenviar.com");
         
         AuthResponse adminAuth = loginYGuardarDatos("admin", "987654");
         tokenAdmin = adminAuth.getAccessToken();
@@ -215,7 +215,7 @@ public class AuthIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("usuarioPrueba");
         usuario.setPassword("abcdef");
-        usuario.setEmail("usuario2@test.com");
+        usuario.setEmail("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -234,7 +234,7 @@ public class AuthIntegrationTest {
         Usuario usuario1 = new Usuario();
         usuario1.setUsername("");
         usuario1.setPassword("abcdef");
-        usuario1.setEmail("usuario1@test.com");
+        usuario1.setEmail("correoprueba@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -244,7 +244,7 @@ public class AuthIntegrationTest {
         Usuario usuario2 = new Usuario();
         usuario2.setUsername("abcdef");
         usuario2.setPassword("");
-        usuario2.setEmail("usuario2@test.com");
+        usuario2.setEmail("correoprueba1@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -254,7 +254,7 @@ public class AuthIntegrationTest {
         Usuario usuario3 = new Usuario();
         usuario3.setUsername("");
         usuario3.setPassword("");
-        usuario3.setEmail("usuario3@test.com");
+        usuario3.setEmail("correoprueba2@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -265,7 +265,7 @@ public class AuthIntegrationTest {
         Usuario usuario4 = new Usuario();
         usuario4.setUsername("usuario");
         usuario4.setPassword("asdfhgi");
-        usuario4.setEmail("usuario4@test.com");
+        usuario4.setEmail("correoempresa2@noenviar.com");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -276,7 +276,7 @@ public class AuthIntegrationTest {
         Usuario usuario5 = new Usuario();
         usuario5.setUsername("usuario");
         usuario5.setPassword("asdfhgi");
-        usuario5.setEmail("usuario4@test.com");
+        usuario5.setEmail("correoprueba@noenviar.comm");
 
         mockMvc.perform(post("/api/registro/public/usuario")
             .contentType(MediaType.APPLICATION_JSON)
@@ -314,7 +314,7 @@ public class AuthIntegrationTest {
     // 2) Login con usuario sin roles asignados
     @Test
     void loginSinRolesAsignados() throws Exception {
-        registrarUsuarioSinRoles("usuario_sin_roles", "456789", "usuarioSR@test.com");
+        registrarUsuarioSinRoles("usuario_sin_roles", "456789", "correoprueba@noenviar.com");
 
         LoginRequest loginRequest = new LoginRequest("usuario_sin_roles", "456789");
 

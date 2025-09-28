@@ -41,7 +41,6 @@ public class AuthController {
         2. Refresh Token
         3. Logout
         4. Logout Total
-        
     */
 
     @PostMapping("/public/login")

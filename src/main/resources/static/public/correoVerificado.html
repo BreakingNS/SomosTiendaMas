@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Correo verificado | Tienda Mas</title>
+  <meta name="description" content="Correo verificado con éxito - Tienda Mas">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #FF6B35;
+      --primary-hover: #E55627;
+      --secondary-color: #004E89;
+      --light-gray: #F8F9FA;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-gray);
+      color: #333;
+    }
+    .btn-primary {
+      transition: all 0.2s ease;
+      background-color: var(--primary-color);
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+    .card {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .muted { color:#666; font-size:0.95rem; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <main class="card bg-white rounded-xl p-8 w-full max-w-md text-center" id="root">
+    <!-- Logo -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+        <span class="text-orange-500">Tienda</span>
+        <span class="text-blue-600 ml-1">Mas</span>
+      </h1>
+    </header>
+
+    <!-- Icono -->
+    <div id="icon" class="text-6xl mb-4">
+      <i class="fas fa-spinner fa-spin text-gray-400"></i>
+    </div>
+
+    <!-- Título -->
+    <h2 id="title" class="text-2xl font-semibold text-gray-800 mb-2">Verificando correo...</h2>
+
+    <!-- Mensaje -->
+    <p id="message" class="text-gray-600 mb-6">Un momento, estamos comprobando tu código de verificación.</p>
+
+    <!-- Acciones / botones -->
+    <div id="actions" style="display:none">
+      <a id="to-login" class="btn-primary text-white font-medium py-3 px-6 rounded-lg inline-block mr-3" href="/public/iniciarSesion.html" rel="noopener noreferrer">
+        Ir a inicio de sesión
+      </a>
+    </div>
+
+    <div id="errorDetail" class="muted" style="display:none; margin-top:12px;"></div>
+  </main>
+
+  <script>
+    (function () {
+      const rootIcon = document.getElementById('icon');
+      const titleEl = document.getElementById('title');
+      const msgEl = document.getElementById('message');
+      const actions = document.getElementById('actions');
+      const errorDetail = document.getElementById('errorDetail');
+
+      function qs(param) {
+        try {
+          const u = new URL(window.location.href);
+          return u.searchParams.get(param);
+        } catch (e) { return null; }
+      }
+
+      const token = qs('token') || qs('codigo') || null;
+
+      function showSuccess() {
+        rootIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+        titleEl.textContent = '¡Correo verificado!';
+        msgEl.innerHTML = 'Tu cuenta ha sido verificada correctamente. Ahora puedes iniciar sesión y empezar a comprar en <strong>Tienda Mas</strong>.';
+        actions.style.display = 'block';
+        errorDetail.style.display = 'none';
+      }
+
+      function showNoToken() {
+        rootIcon.innerHTML = '<i class="fas fa-exclamation-circle text-yellow-500"></i>';
+        titleEl.textContent = 'Código ausente';
+        msgEl.textContent = 'El enlace no contiene un código de verificación. Verificá el correo o solicitá un nuevo enlace.';
+        actions.style.display = 'block';
+        errorDetail.style.display = 'none';
+      }
+
+      function showError(errMsg) {
+        rootIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+        titleEl.textContent = 'Verificación fallida';
+        msgEl.textContent = 'No se pudo verificar el correo. El enlace puede haber expirado o ser inválido.';
+        errorDetail.style.display = 'block';
+        errorDetail.textContent = errMsg || '';
+        actions.style.display = 'block';
+      }
+
+      async function verify(token) {
+        try {
+          const res = await fetch('/api/gestionusuario/public/verificar-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ codigo: token })
+          });
+
+          if (res.ok) {
+            showSuccess();
+            return;
+          }
+
+          // intentar leer mensaje de error
+          let detail = '';
+          try {
+            const j = await res.json();
+            detail = j?.message || JSON.stringify(j);
+          } catch (e) {
+            detail = await res.text().catch(() => '');
+          }
+
+          showError(detail || ('HTTP ' + res.status));
+        } catch (e) {
+          showError(String(e));
+        }
+      }
+
+      // flujo principal
+      if (!token) {
+        showNoToken();
+      } else {
+        // iniciar verificación
+        verify(token);
+      }
+    })();
+  </script>
+</body>
+</html>

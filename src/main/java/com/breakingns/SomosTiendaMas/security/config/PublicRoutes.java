@@ -20,8 +20,12 @@ public class PublicRoutes {
         "/test/api/auth/public/**",
         "/api/telefono/public/**",
         "/api/import-codigos-area/**",
+        "/api/sesiones/public/**",
+        "/api/sesiones/public/verificar-email/**",
+        "/api/test/public/**",
 
         // Rutas públicas para archivos estáticos
+        
         "/consultaRegistros.html",
         "/registro_usuario.html",
         "/registro_empresa.html",
@@ -37,6 +41,7 @@ public class PublicRoutes {
         "/registroCompleto.html",
         "/reset-password.html",
         "/verificar-email.html",
+        "/public/**",
         "/"
     };
 }

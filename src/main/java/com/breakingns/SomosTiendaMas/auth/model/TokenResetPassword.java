@@ -69,4 +69,8 @@ public class TokenResetPassword {
     public boolean isExpirado() {
         return Instant.now().isAfter(this.fechaExpiracion);
     }
+
+    public boolean isUsado() {
+        return this.usado;
+    }
 }

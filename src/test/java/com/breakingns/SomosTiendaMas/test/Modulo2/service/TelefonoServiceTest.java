@@ -223,7 +223,6 @@ public class TelefonoServiceTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
         direccionDTO.setIdUsuario(usuario.getIdUsuario()); // ID del usuario
         
@@ -279,11 +278,12 @@ public class TelefonoServiceTest {
         p.setCuit(cuit);
         p.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         p.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        p.setEmailEmpresa("no@noenviar.com");
+        p.setEmailEmpresa("correoempresa@noenviar.com");
         p.setRequiereFacturacion(true);
         p.setFechaCreacion(LocalDateTime.now());
         p.setFechaUltimaModificacion(LocalDateTime.now());
         p.setUsuario(usuario);
+        p.setActivo(true);
         return perfilEmpresaRepository.save(p);
     }
 
@@ -327,6 +327,7 @@ public class TelefonoServiceTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 
@@ -579,6 +580,7 @@ public class TelefonoServiceTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 

@@ -17,5 +17,10 @@ public interface IDireccionRepository extends JpaRepository<Direccion, Long> {
     void deleteAllByPerfilEmpresa_IdPerfilEmpresa(Long idPerfilEmpresa);
     void deleteAllByUsuario_IdUsuario(Long idUsuario);
 
+    // buscar direcciones por campos del perfil de empresa
+    List<Direccion> findByPerfilEmpresa_RazonSocial(String razonSocial);
+    List<Direccion> findByPerfilEmpresa_RazonSocialContainingIgnoreCase(String fragmentoRazonSocial);
+    List<Direccion> findByPerfilEmpresa_Cuit(String cuit);
+
     // ...eliminar los métodos findByUsuarioId y findByUsuarioIdAndTipo existentes...
 }

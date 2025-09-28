@@ -199,7 +199,6 @@ public class DireccionServiceTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
         direccionDTO.setIdUsuario(usuario.getIdUsuario()); // ID del usuario
     }
@@ -255,7 +254,6 @@ public class DireccionServiceTest {
         dto.setReferencia(null);
         dto.setActiva(true);
         dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("1000");
         dto.setIdUsuario(usuario.getIdUsuario());
         return dto;
@@ -291,6 +289,7 @@ public class DireccionServiceTest {
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
+        empresa.setActivo(true);
         empresa.setUsuario(usuario); // Debes crear y asociar un usuario válido en un test real
 
         perfilEmpresaRepository.save(empresa);
@@ -308,7 +307,6 @@ public class DireccionServiceTest {
         dto.setNumero("100");
         dto.setActiva(true);
         dto.setEsPrincipal(true);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("5000");
         dto.setIdUsuario(null); // dirección de empresa no tiene usuario directo
 
@@ -386,6 +384,7 @@ public class DireccionServiceTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         Pais pais = paisRepository.findByNombre("Argentina");
@@ -410,7 +409,6 @@ public class DireccionServiceTest {
         direccionEmpresaDTO.setReferencia(null);
         direccionEmpresaDTO.setActiva(true);
         direccionEmpresaDTO.setEsPrincipal(true);
-        direccionEmpresaDTO.setUsarComoEnvio(true);
         direccionEmpresaDTO.setCodigoPostal("1000");
 
         // crear dirección para la empresa una vez (usar helper para obtener ids de ubicación)
@@ -646,6 +644,7 @@ public class DireccionServiceTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         PerfilEmpresa empresa2 = new PerfilEmpresa();
@@ -658,6 +657,7 @@ public class DireccionServiceTest {
         empresa2.setFechaCreacion(LocalDateTime.now());
         empresa2.setFechaUltimaModificacion(LocalDateTime.now());
         empresa2.setUsuario(usuario);
+        empresa2.setActivo(true);
         perfilEmpresaRepository.save(empresa2);
 
         // dirección para empresa 1 (principal, activa)
@@ -673,7 +673,6 @@ public class DireccionServiceTest {
         dto.setNumero("1");
         dto.setActiva(true);
         dto.setEsPrincipal(true);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("5000");
         dto.setIdUsuario(null);
         registrarDireccionExpectOk(dto);
@@ -691,7 +690,6 @@ public class DireccionServiceTest {
         dto2.setNumero("2");
         dto2.setActiva(true);
         dto2.setEsPrincipal(false);
-        dto2.setUsarComoEnvio(true);
         dto2.setCodigoPostal("6000");
         dto2.setIdUsuario(null);
         registrarDireccionExpectOk(dto2);

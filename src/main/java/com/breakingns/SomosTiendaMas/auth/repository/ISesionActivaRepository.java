@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.auth.repository;
   
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.DatosComprobacionSesionDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 import java.util.List;

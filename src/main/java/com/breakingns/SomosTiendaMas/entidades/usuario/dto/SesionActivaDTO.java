@@ -9,4 +9,10 @@ public record SesionActivaDTO(
     Instant fechaInicioSesion,
     Instant fechaExpiracion,
     boolean revocado
-) {}
+    
+) {
+    // Compatibilidad con código/tests que esperan isRevocado()
+    public boolean isRevocado() {
+        return revocado;
+    }
+}

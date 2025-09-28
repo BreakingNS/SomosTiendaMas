@@ -5,6 +5,8 @@ import com.breakingns.SomosTiendaMas.entidades.direccion.dto.ActualizarDireccion
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.DireccionResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.direccion.service.IDireccionService;
 
+import org.springframework.http.MediaType;
+
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,11 @@ public class DireccionController {
     @Autowired
     private IDireccionService direccionService;
 
-    @PostMapping("/public/registrar")
+    @PostMapping(path = "/public/registrar",
+                 consumes = MediaType.APPLICATION_JSON_VALUE,
+                 produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DireccionResponseDTO> registrarDireccion(@RequestBody @Valid RegistroDireccionDTO dto) {
+     
         DireccionResponseDTO response = direccionService.registrarDireccion(dto);
         return ResponseEntity.ok(response);
     }

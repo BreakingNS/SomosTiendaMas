@@ -47,4 +47,6 @@ public interface IRefreshTokenRepository extends JpaRepository<RefreshToken, Lon
     @Transactional
     @Query("UPDATE RefreshToken r SET r.revocado = true WHERE r.token = :token")
     void revocarPorToken(@Param("token") String token);*/
+
+    Optional<RefreshToken> findTopByUsuario_IdUsuarioOrderByFechaExpiracionDesc(Long idUsuario);
 }

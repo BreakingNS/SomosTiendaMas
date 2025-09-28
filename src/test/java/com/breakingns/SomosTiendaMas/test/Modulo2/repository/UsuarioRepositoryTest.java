@@ -206,7 +206,6 @@ public class UsuarioRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
 
         // 7. Armar registro completo
@@ -264,7 +263,6 @@ public class UsuarioRepositoryTest {
         dto.setReferencia(null);
         dto.setActiva(true);
         dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("1000");
         dto.setIdUsuario(usuario.getIdUsuario());
         return dto;
@@ -343,7 +341,6 @@ public class UsuarioRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
 
         // 7. Armar registro completo
@@ -407,10 +404,10 @@ public class UsuarioRepositoryTest {
     // 5. Buscar usuarios por estado (activo/inactivo).
     @Test
     void buscarUsuariosPorEstado() throws Exception {
-        // Crear usuario base para los tests
+        // ---- preparar segundo usuario ----
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuario456");
-        usuarioDTO.setEmail("prueba456@noenviar.com");
+        usuarioDTO.setEmail("correoprueba1@noenviar.com");
         usuarioDTO.setPassword("ClaveSegura456");
         usuarioDTO.setNombreResponsable("Maria");
         usuarioDTO.setApellidoResponsable("Gomez");
@@ -424,58 +421,63 @@ public class UsuarioRepositoryTest {
         usuarioDTO.setTimezone("America/Argentina/Cordoba");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
-        direccionDTO.setTipo("PERSONAL");
-        direccionDTO.setCalle("Avenida Siempre Viva");
-        direccionDTO.setNumero("742");
+        RegistroDireccionDTO dirDTO = new RegistroDireccionDTO();
+        dirDTO.setTipo("PERSONAL");
+        dirDTO.setCalle("Avenida Siempre Viva");
+        dirDTO.setNumero("742");
         Pais pais = paisRepository.findByNombre("Argentina");
         Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
         Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
         Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
-        Optional<Localidad> localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
             "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
-        );
+        ).orElseThrow();
+        dirDTO.setIdPais(pais.getId());
+        dirDTO.setIdProvincia(provincia.getId());
+        dirDTO.setIdDepartamento(departamento.getId());
+        dirDTO.setIdLocalidad(localidad.getId());
+        dirDTO.setIdMunicipio(municipio.getId());
+        dirDTO.setActiva(true);
+        dirDTO.setEsPrincipal(true);
+        dirDTO.setCodigoPostal("1000");
 
-        direccionDTO.setIdPais(pais.getId());
-        direccionDTO.setIdProvincia(provincia.getId());
-        direccionDTO.setIdDepartamento(departamento.getId());
-        direccionDTO.setIdLocalidad(localidad.get().getId());
-        direccionDTO.setIdMunicipio(municipio.getId());
-
-        direccionDTO.setActiva(true);
-        direccionDTO.setEsPrincipal(true);
-
-        RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
-        telefonoDTO.setTipo("PRINCIPAL");
-        telefonoDTO.setNumero("1133445566");
-        telefonoDTO.setCaracteristica("0353");
-        telefonoDTO.setActivo(true);
-        telefonoDTO.setVerificado(true);
+        RegistroTelefonoDTO telDTO = new RegistroTelefonoDTO();
+        telDTO.setTipo("PRINCIPAL");
+        telDTO.setNumero("1133445566");
+        telDTO.setCaracteristica("0353");
+        telDTO.setActivo(true);
+        telDTO.setVerificado(true);
 
         RegistroUsuarioCompletoDTO registroDTO1 = new RegistroUsuarioCompletoDTO();
         registroDTO1.setUsuario(usuarioDTO);
-        registroDTO1.setDirecciones(List.of(direccionDTO));
-        registroDTO1.setTelefonos(List.of(telefonoDTO));
+        registroDTO1.setDirecciones(List.of(dirDTO));
+        registroDTO1.setTelefonos(List.of(telDTO));
 
-        // Registrar usuario antes de cada test
         registrarUsuarioCompleto(registroDTO1);
 
-        // Asegura que el usuario y el email están verificados
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario456");
-        assertTrue(usuarioOpt.isPresent());
-        Usuario usuario = usuarioOpt.get();
-        usuario.setEmailVerificado(true);
-        usuario.setActivo(false);
-        usuarioRepository.save(usuario);
+        // marcar verificado y desactivar usuario456
+        Usuario usuario456 = usuarioRepository.findByUsername("usuario456").orElseThrow();
+        usuario456.setEmailVerificado(true);
+        usuario456.setActivo(false);
+        usuarioRepository.saveAndFlush(usuario456); // flush para asegurar persistencia
 
-        Usuario usuarioActivo = usuarioRepository.findByUsername("usuario123").orElse(null);
-        Usuario usuarioInactivo = usuarioRepository.findByUsername("usuario456").orElse(null);
+        // asegurar usuario123 sigue activo (setUp lo creó)
+        Usuario usuario123 = usuarioRepository.findByUsername("usuario123").orElseThrow();
+        if (!usuario123.getActivo()) {
+            usuario123.setActivo(true);
+            usuarioRepository.saveAndFlush(usuario123);
+        }
 
+        // limpiar el contexto para evitar caché de primer nivel (opcional si @DataJpaTest, aquí forzamos reload)
+        // volver a consultar listas
         List<Usuario> activos = usuarioRepository.findByActivo(true);
         List<Usuario> inactivos = usuarioRepository.findByActivo(false);
 
-        assertTrue(activos.stream().anyMatch(u -> u.getUsername().equals("usuario123")));
-        assertTrue(inactivos.stream().anyMatch(u -> u.getUsername().equals("usuario456")));
+        // aserciones robustas
+        assertTrue(activos.stream().anyMatch(u -> u.getUsername().equals("usuario123")),
+            "usuario123 debería estar en la lista de activos. Activos=" + activos.stream().map(Usuario::getUsername).toList());
+        assertTrue(inactivos.stream().anyMatch(u -> u.getUsername().equals("usuario456")),
+            "usuario456 debería estar en la lista de inactivos. Inactivos=" + inactivos.stream().map(Usuario::getUsername).toList());
     }
     
     // 6. Buscar usuarios por rol (si aplica).
@@ -619,6 +621,7 @@ public class UsuarioRepositoryTest {
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
+        empresa.setActivo(true);
         empresa.setUsuario(usuario);
 
         perfilEmpresaRepository.save(empresa);
@@ -647,6 +650,7 @@ public class UsuarioRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
 
         perfilEmpresaRepository.save(empresa);
 

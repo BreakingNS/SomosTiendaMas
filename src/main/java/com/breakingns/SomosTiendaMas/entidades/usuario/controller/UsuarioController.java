@@ -1,47 +1,56 @@
 package com.breakingns.SomosTiendaMas.entidades.usuario.controller;
 
-import com.breakingns.SomosTiendaMas.service.CarritoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.UsuarioResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
+
+import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/api/usuario")
 public class UsuarioController {
-    
-    @Autowired
-    private CarritoService carritoService;
-    /*
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    */
 
+    @Autowired 
+    private UsuarioServiceImpl usuarioService;
+
+    // READ: obtener por id (cualquier usuario autenticado o admin según política)
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USUARIO')")
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UsuarioResponseDTO> obtenerUsuario(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.consultarUsuario(id));
+    }
+
+    // LIST: admins pueden listar usuarios
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/admin")
-    public ResponseEntity<String> soloAdmin() {
-        return ResponseEntity.ok("Hola Admin!");
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<UsuarioResponseDTO>> listarUsuarios() {
+        return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
-    @PreAuthorize("hasRole('ROLE_USUARIO')")
-    @GetMapping("/comun")
-    public ResponseEntity<String> soloUsuario() {
-        return ResponseEntity.ok("Hola usuario!");
+    // UPDATE parcial (PATCH) — los campos nulos no se sobrescriben
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USUARIO')")
+    @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UsuarioResponseDTO> patchUsuario(@PathVariable Long id,
+                                                           @RequestBody @Valid ActualizarUsuarioDTO dto) {
+        UsuarioResponseDTO updated = usuarioService.actualizarUsuarioParcial(id, dto);
+        return ResponseEntity.ok(updated);
     }
-    
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USUARIO')")
-    @GetMapping("/compartido")
-    public ResponseEntity<String> adminYUsuarios() {
-        return ResponseEntity.ok("Hola usuarios!");
+
+    // DELETE (soft o hard según política)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
-    
-    //------------ Funciones utiles
-    
-    public void crearCarrito(Long id_usuario){
-        
-        carritoService.crearCarrito(id_usuario);
-        
-    }
+
+    // NOTA: la creación (registro) puede delegarse al RegistroController centralizado.
 }

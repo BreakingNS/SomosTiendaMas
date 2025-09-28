@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
+import java.util.Comparator;
 
 import com.breakingns.SomosTiendaMas.auth.dto.shared.DepartamentoDTO;
 import com.breakingns.SomosTiendaMas.auth.dto.shared.LocalidadDTO;
@@ -33,11 +35,37 @@ public class UbicacionesService {
     public List<Provincia> getProvincias() {
         return provinciaRepository.findAll();
     }
-
+    // 1. Obtener provincias ordenadas alfabéticamente
     public List<ProvinciaDTO> getProvinciasDTO() {
-        return provinciaRepository.findAll()
+        return provinciaRepository.findAll(Sort.by(Sort.Order.asc("nombre")))
             .stream()
             .map(p -> new ProvinciaDTO(p.getId(), p.getNombre()))
+            .collect(Collectors.toList());
+    }
+    // 2. Departamentos ordenados alfabéticamente (case-insensitive)
+    public List<DepartamentoDTO> getDepartamentosPorProvinciaDTO(Long provinciaId) {
+        return departamentoRepository.findByProvinciaId(provinciaId)
+            .stream()
+            .sorted(Comparator.comparing(d -> d.getNombre() == null ? "" : d.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(d -> new DepartamentoDTO(d.getId(), d.getNombre()))
+            .collect(Collectors.toList());
+    }
+
+    // 3. Municipios ordenados alfabéticamente (case-insensitive)
+    public List<MunicipioDTO> getMunicipiosPorDepartamentoDTO(Long departamentoId) {
+        List<Municipio> municipios = municipioRepository.findByDepartamentoId(departamentoId);
+        return municipios.stream()
+            .sorted(Comparator.comparing(m -> m.getNombre() == null ? "" : m.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(m -> new MunicipioDTO(m.getId(), m.getNombre()))
+            .collect(Collectors.toList());
+    }
+
+    // 4. Localidades ordenadas alfabéticamente (case-insensitive)
+    public List<LocalidadDTO> getLocalidadesPorMunicipioDTO(Long municipioId) {
+        return localidadRepository.findByMunicipioId(municipioId)
+            .stream()
+            .sorted(Comparator.comparing(l -> l.getNombre() == null ? "" : l.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(l -> new LocalidadDTO(l.getId(), l.getNombre()))
             .collect(Collectors.toList());
     }
 
@@ -48,14 +76,7 @@ public class UbicacionesService {
     public List<Departamento> getDepartamentosPorProvincia(Long provinciaId) {
         return departamentoRepository.findByProvinciaId(provinciaId);
     }
-
-    public List<DepartamentoDTO> getDepartamentosPorProvinciaDTO(Long provinciaId) {
-        return departamentoRepository.findByProvinciaId(provinciaId)
-            .stream()
-            .map(d -> new DepartamentoDTO(d.getId(), d.getNombre()))
-            .collect(Collectors.toList());
-    }
-
+    
     public List<Localidad> getLocalidades(Long provinciaId, Long municipioId) {
         if (municipioId != null) {
             return localidadRepository.findByMunicipioId(municipioId);
@@ -65,23 +86,9 @@ public class UbicacionesService {
             return localidadRepository.findAll();
         }
     }
-
-    public List<LocalidadDTO> getLocalidadesPorMunicipioDTO(Long municipioId) {
-        return localidadRepository.findByMunicipioId(municipioId)
-            .stream()
-            .map(l -> new LocalidadDTO(l.getId(), l.getNombre()))
-            .collect(Collectors.toList());
-    }
-
+    
     public List<Municipio> getMunicipioPorLocalida(Long departamentoId) {
         return municipioRepository.findByDepartamentoId(departamentoId);
     }
-
-    public List<MunicipioDTO> getMunicipiosPorDepartamentoDTO(Long departamentoId) {
-        List<Municipio> municipios = municipioRepository.findByDepartamentoId(departamentoId);
-        return municipios.stream()
-            .map(m -> new MunicipioDTO(m.getId(), m.getNombre()))
-            .collect(Collectors.toList());
-    }
-
+    
 }

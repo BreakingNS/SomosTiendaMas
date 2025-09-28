@@ -6,20 +6,22 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -28,26 +30,28 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.Departamento;
 import com.breakingns.SomosTiendaMas.auth.model.Localidad;
 import com.breakingns.SomosTiendaMas.auth.model.Municipio;
 import com.breakingns.SomosTiendaMas.auth.model.Pais;
 import com.breakingns.SomosTiendaMas.auth.model.Provincia;
+import com.breakingns.SomosTiendaMas.auth.model.Rol;
+import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IRolRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
+import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
+import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
-import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
-import com.breakingns.SomosTiendaMas.entidades.direccion.repository.IDireccionRepository;
-import com.breakingns.SomosTiendaMas.entidades.direccion.service.DireccionService;
-import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
-import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.SesionActivaDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
@@ -124,27 +128,25 @@ import lombok.RequiredArgsConstructor;
     )*/
 })
 public class UsuarioServiceTest {
-    
-    private final IPerfilEmpresaRepository perfilEmpresaRepository;
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
 
     private final IUsuarioRepository usuarioRepository;
 
-    @MockBean
-    private EmailService emailService;
+    
 
     private final IPaisRepository paisRepository;
     private final IProvinciaRepository provinciaRepository;
     private final IDepartamentoRepository departamentoRepository;
     private final ILocalidadRepository localidadRepository;
     private final IMunicipioRepository municipioRepository;
-    private final IDireccionRepository direccionRepository;
 
-    private final DireccionService direccionService;
+    private final IRolRepository rolRepository;
+    private final TokenEmitidoService tokenEmitidoService;
     private final UsuarioServiceImpl usuarioService;
-
+    private final SesionActivaService sesionActivaService;
+    
     private RegistroUsuarioCompletoDTO registroDTO;
     private RegistroUsuarioDTO usuarioDTO;
     private RegistroDireccionDTO direccionDTO;
@@ -152,6 +154,8 @@ public class UsuarioServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        asegurarRolesBase();
+
         direccionDTO = new RegistroDireccionDTO();
         
         // 1. Instanciar y registrar usuario y teléfono
@@ -205,7 +209,6 @@ public class UsuarioServiceTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
 
         // 2. Armar el registro completo con las listas ya instanciadas
@@ -225,61 +228,44 @@ public class UsuarioServiceTest {
         usuarioRepository.save(usuario);*/
     }
 
-    // Método para registrar un usuario completo usando el endpoint de gestión de perfil
-    private int registrarUsuarioCompleto(RegistroUsuarioCompletoDTO registroDTO) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registroDTO)))
-            .andReturn();
-
-        return result.getResponse().getStatus();
+    private void asegurarRolesBase() {
+        if (rolRepository.findByNombre(RolNombre.ROLE_USUARIO).isEmpty()) {
+            Rol r = new Rol();
+            r.setNombre(RolNombre.ROLE_USUARIO);
+            r.setDescripcion("Rol usuario base");
+            rolRepository.save(r);
+        }
+        if (rolRepository.findByNombre(RolNombre.ROLE_ADMIN).isEmpty()) {
+            Rol r = new Rol();
+            r.setNombre(RolNombre.ROLE_ADMIN);
+            r.setDescripcion("Rol administrador");
+            rolRepository.save(r);
+        }
     }
-    
-    // helper único: hace POST y devuelve MvcResult para inspección en tests
-    private MvcResult registrarDireccion(RegistroDireccionDTO direccionDTO) throws Exception {
-        return mockMvc.perform(post("/api/direccion/public/registrar")
+
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public EmailService emailService() {
+            return mock(EmailService.class);
+        }
+        @Bean
+        public TokenEmitidoService tokenEmitidoService() {
+            return mock(TokenEmitidoService.class);
+        }
+    }
+
+    // Método para hacer login de un usuario
+    private MvcResult loginUsuario(String username, String password) throws Exception {
+        LoginRequest loginRequest = new LoginRequest(username, password);
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(direccionDTO)))
-            .andReturn();
-    }
+                .content(objectMapper.writeValueAsString(loginRequest))
+                .header("User-Agent", "MockMvc"))
+                .andExpect(status().isOk())
+                .andReturn();
 
-    private MvcResult registrarDireccionExpectOk(RegistroDireccionDTO direccionDTO) throws Exception {
-        return mockMvc.perform(post("/api/direccion/public/registrar")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(direccionDTO)))
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-            .andReturn();
-    }
-
-    private RegistroDireccionDTO crearDireccionParaUsuario(Usuario usuario, String tipo, String calle, String numero, boolean esPrincipal) {
-        Pais pais = paisRepository.findByNombre("Argentina");
-        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
-        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
-        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
-        Optional<Localidad> localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
-            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
-        );
-
-        RegistroDireccionDTO dto = new RegistroDireccionDTO();
-        dto.setIdPais(pais.getId());
-        dto.setIdProvincia(provincia.getId());
-        dto.setIdDepartamento(departamento.getId());
-        dto.setIdLocalidad(localidad.get().getId());
-        dto.setIdMunicipio(municipio.getId());
-        dto.setIdPerfilEmpresa(null);
-        dto.setTipo(tipo);
-        dto.setCalle(calle);
-        dto.setNumero(numero);
-        dto.setPiso(null);
-        dto.setReferencia(null);
-        dto.setActiva(true);
-        dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
-        dto.setCodigoPostal("1000");
-        dto.setIdUsuario(usuario.getIdUsuario());
-        return dto;
+        return loginResult;
     }
 
     // 1) registrarConRolDesdeDTO_OK: registrar usuario válido desde DTO, devuelve id y persiste.
@@ -486,7 +472,7 @@ public class UsuarioServiceTest {
     void actualizarUsuario_OK() throws Exception {
         // registrar usuario base
         RegistroUsuarioDTO reg = new RegistroUsuarioDTO();
-        reg.setUsername("usuarioActualizar");
+        reg.setUsername("usuarioAct");
         reg.setEmail("correoprueba1@noenviar.com");
         reg.setPassword("ClaveSegura123");
         reg.setNombreResponsable("Antes");
@@ -502,14 +488,14 @@ public class UsuarioServiceTest {
         reg.setRol("ROLE_USUARIO");
 
         usuarioService.registrarConRolDesdeDTO(reg, "1.1.1.1");
-        Usuario u = usuarioRepository.findByUsername("usuarioActualizar").orElseThrow();
+        Usuario u = usuarioRepository.findByUsername("usuarioAct").orElseThrow();
 
         // modificar y persistir mediante repository (si el service tiene método de update, preferirlo)
         u.setNombreResponsable("Despues");
         u.setApellidoResponsable("ApellidoNuevo");
         usuarioRepository.save(u);
 
-        Usuario updated = usuarioRepository.findByUsername("usuarioActualizar").orElseThrow();
+        Usuario updated = usuarioRepository.findByUsername("usuarioAct").orElseThrow();
         assertEquals("Despues", updated.getNombreResponsable());
         assertEquals("ApellidoNuevo", updated.getApellidoResponsable());
     }
@@ -546,14 +532,38 @@ public class UsuarioServiceTest {
     @Test
     void desactivarUsuario_Ok() throws Exception {
         usuarioService.registrarConRolDesdeDTO(usuarioDTO, "1.1.1.1");
-        Usuario usuario = usuarioRepository.findByUsername("usuario123").orElseThrow();
 
-        // simular desactivación vía repository
-        usuario.setActivo(false);
+        // Verificar usuario y email
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
+        assertTrue(usuarioOpt.isPresent());
+        Usuario usuario = usuarioOpt.get();
+        usuario.setEmailVerificado(true);
         usuarioRepository.save(usuario);
 
+        // hacer login para simular sesión activa (rellena tablas asociadas)
+        loginUsuario("usuario123", "ClaveSegura123");
+
+        // MOCK: devolver el id del usuario autenticado cuando el service lo solicite
+        Mockito.when(tokenEmitidoService.obtenerIdDesdeToken())
+           .thenReturn(usuario.getIdUsuario());
+
+        // verificar que el usuario tiene sesion activa (usa método para tests)
+        List<SesionActivaDTO> sesiones = sesionActivaService.listarSesionesActivasParaTests(usuario.getIdUsuario());
+        assertFalse(sesiones.isEmpty(), "Usuario debe tener sesión activa tras login");
+
+        // desactivar usuario (método del service)
+        usuarioService.desactivarUsuario(usuario.getIdUsuario());
+
+        // asegurar persistencia inmediata
+        usuarioRepository.flush();
+
+        // verificar que el usuario está desactivado
         Usuario after = usuarioRepository.findByUsername("usuario123").orElseThrow();
         assertFalse(after.isActivo(), "Usuario debe quedar desactivado");
+
+        // verificar que las sesiones se eliminaron (usar método para tests)
+        List<SesionActivaDTO> sesionesPost = sesionActivaService.listarSesionesActivasParaTests(usuario.getIdUsuario());
+        assertTrue(sesionesPost.isEmpty(), "Las sesiones activas deben eliminarse al desactivar el usuario");
     }
 
     // 14) existeUsuario_OK: existeUsuario devuelve true/false según repo.

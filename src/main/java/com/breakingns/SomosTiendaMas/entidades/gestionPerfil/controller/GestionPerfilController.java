@@ -81,8 +81,7 @@ public class GestionPerfilController {
         "correoprueba2@noenviar.com",
         "correoempresa@noenviar.com",
         "correoempresa1@noenviar.com",
-        "correoempresa2@noenviar.com",
-        "nahuel_segura_17@hotmail.com"
+        "correoempresa2@noenviar.com"
     );
 
     @PostMapping("/public/usuario/registro")
@@ -159,7 +158,6 @@ public class GestionPerfilController {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.ok("Usuario eliminado correctamente.");
     }
-
 
     @PostMapping("/public/empresa/registro")
     public ResponseEntity<String> registrarEmpresa(@RequestBody @Valid RegistroEmpresaCompletoDTO dto, HttpServletRequest request) {

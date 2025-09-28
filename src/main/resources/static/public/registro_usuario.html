@@ -28,6 +28,15 @@
         .section-title { font-weight: 600; color: #1f2937; margin-bottom: .5rem; }
         .section { border: 1px solid #e5e7eb; padding: 1rem; border-radius: .5rem; background: #fff; }
         .muted { color: #6b7280; font-size: .9rem; }
+
+        /* Inicio Estado de Sesion */
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+        /* Fin Estado de Sesion */
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -124,12 +133,12 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="localidadSelect" class="block text-sm font-medium text-gray-700">Localidad <span class="text-red-500">*</span></label>
-                            <select id="localidadSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
-                        </div>
-                        <div>
                             <label for="municipioSelect" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
                             <select id="municipioSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
+                        </div>
+                        <div>
+                            <label for="localidadSelect" class="block text-sm font-medium text-gray-700">Localidad <span class="text-red-500">*</span></label>
+                            <select id="localidadSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
                         </div>
                     </div>
 
@@ -198,6 +207,7 @@
     </main>
 
     <script>
+        /*
         const BASE = '/api/import-ubicaciones';
         const ENDPOINT = {
             IMPORT_PROVINCIAS: `${BASE}/provincias`,
@@ -220,8 +230,18 @@
                 // valida cliente si querés antes de enviar...
                 // e.preventDefault() si manejás envío manualmente
             });
+        });*/
+
+        // Nota: ubicaciones.js ya inicializa los selects (provincia/departamento/municipio/localidad).
+        document.addEventListener('DOMContentLoaded', () => {
+            initBirthDateConstraints();
+            // Si tenés initLocationSelectors local, puede repetirse. El script /js/ubicaciones.js también hace init.
+            try { if (typeof initLocationSelectors === 'function') initLocationSelectors(); } catch(e){/*ignore*/ }
+            const form = document.getElementById('registrationForm');
+            if (form) form.addEventListener('submit', handleSubmit);
         });
 
+        //function initBirthDateConstraints() {
         function initBirthDateConstraints() {
             const bd = document.getElementById('birthDate');
             if (!bd) return;
@@ -266,82 +286,48 @@
 
             if (!prov || !dept || !loc || !mun) return;
 
-            // cargar provincias: primero intentar importar (POST) y luego obtener (GET)
-            safeFetch(ENDPOINT.IMPORT_PROVINCIAS, { method: 'POST' })
-                .catch(() => { /* si ya importado, ignorar error */ })
-                .finally(() => {
-                    safeFetch(ENDPOINT.GET_PROVINCIAS)
-                        .then(data => setOptions(prov, data, 'Seleccionar provincia'))
-                        .catch(() => setOptions(prov, [], 'No disponible'));
-                });
+            // Cargar provincias (GET)
+            safeFetch(GET_PROVINCIAS)
+                .then(data => setOptions(prov, data, 'Seleccionar provincia'))
+                .catch(() => setOptions(prov, [], 'No disponible'));
 
-            // al cambiar provincia -> importar departamentos (por nombre) y luego obtener por provinciaId
             prov.addEventListener('change', () => {
                 const provinciaId = prov.value;
-                const provinciaNombre = prov.options[prov.selectedIndex]?.text || '';
-
-                // limpiar dependientes
                 setOptions(dept, [], 'Cargando departamentos...');
-                setOptions(loc, [], 'Seleccionar localidad');
                 setOptions(mun, [], 'Seleccionar municipio');
+                setOptions(loc, [], 'Seleccionar localidad');
 
-                if (!provinciaId) {
-                    setOptions(dept, [], 'Seleccionar departamento');
-                    return;
-                }
+                if (!provinciaId) return;
 
-                // POST importar departamentos por nombre de provincia (backend espera ?provincia=nombre)
-                safeFetch(`${ENDPOINT.IMPORT_DEPARTAMENTOS}?provincia=${encodeURIComponent(provinciaNombre)}`, { method: 'POST' })
-                    .catch(() => {})
-                    .finally(() => {
-                        // GET departamentos por provinciaId
-                        safeFetch(`${ENDPOINT.GET_DEPARTAMENTOS}?provinciaId=${encodeURIComponent(provinciaId)}`)
-                            .then(data => setOptions(dept, data, 'Seleccionar departamento'))
-                            .catch(() => setOptions(dept, [], 'No disponible'));
-                    });
+                // GET departamentos por provinciaId
+                safeFetch(`${GET_DEPARTAMENTOS}?provinciaId=${encodeURIComponent(provinciaId)}`)
+                    .then(data => setOptions(dept, data, 'Seleccionar departamento'))
+                    .catch(() => setOptions(dept, [], 'No disponible'));
             });
 
-            // al cambiar departamento -> importar localidades y luego obtener por departamentoId
             dept.addEventListener('change', () => {
                 const departamentoId = dept.value;
-                const departamentoNombre = dept.options[dept.selectedIndex]?.text || '';
+                setOptions(mun, [], 'Cargando municipios...');
+                setOptions(loc, [], 'Seleccionar localidad');
 
-                setOptions(loc, [], 'Cargando localidades...');
-                setOptions(mun, [], 'Seleccionar municipio');
+                if (!departamentoId) return;
 
-                if (!departamentoId) {
-                    setOptions(loc, [], 'Seleccionar localidad');
-                    return;
-                }
-
-                safeFetch(`${ENDPOINT.IMPORT_LOCALIDADES}?departamento=${encodeURIComponent(departamentoNombre)}`, { method: 'POST' })
-                    .catch(() => {})
-                    .finally(() => {
-                        safeFetch(`${ENDPOINT.GET_LOCALIDADES}?departamentoId=${encodeURIComponent(departamentoId)}`)
-                            .then(data => setOptions(loc, data, 'Seleccionar localidad'))
-                            .catch(() => setOptions(loc, [], 'No disponible'));
-                    });
+                // GET municipios por departamentoId
+                safeFetch(`${GET_MUNICIPIOS}?departamentoId=${encodeURIComponent(departamentoId)}`)
+                    .then(data => setOptions(mun, data, 'Seleccionar municipio'))
+                    .catch(() => setOptions(mun, [], 'No disponible'));
             });
 
-            // al cambiar localidad -> importar municipios y luego obtener por localidadId
-            loc.addEventListener('change', () => {
-                const localidadId = loc.value;
-                const localidadNombre = loc.options[loc.selectedIndex]?.text || '';
+            mun.addEventListener('change', () => {
+                const municipioId = mun.value;
+                setOptions(loc, [], 'Cargando localidades...');
 
-                setOptions(mun, [], 'Cargando municipios...');
+                if (!municipioId) return;
 
-                if (!localidadId) {
-                    setOptions(mun, [], 'Seleccionar municipio');
-                    return;
-                }
-
-                safeFetch(`${ENDPOINT.IMPORT_MUNICIPIOS}?localidad=${encodeURIComponent(localidadNombre)}`, { method: 'POST' })
-                    .catch(() => {})
-                    .finally(() => {
-                        safeFetch(`${ENDPOINT.GET_MUNICIPIOS}?localidadId=${encodeURIComponent(localidadId)}`)
-                            .then(data => setOptions(mun, data, 'Seleccionar municipio'))
-                            .catch(() => setOptions(mun, [], 'No disponible'));
-                    });
+                // GET localidades por municipioId
+                safeFetch(`${GET_LOCALIDADES}?municipioId=${encodeURIComponent(municipioId)}`)
+                    .then(data => setOptions(loc, data, 'Seleccionar localidad'))
+                    .catch(() => setOptions(loc, [], 'No disponible'));
             });
         }
     
@@ -367,11 +353,13 @@
                 documentoResponsable: document.getElementById('document').value,
                 generoResponsable: document.getElementById('gender').value,
                 fechaNacimientoResponsable: fechaNacimiento,
-                idioma: 'es',
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                // Campos obligatorios fijos para todos los registros
+                tipoUsuario: "PERSONA_FISICA",
+                idioma: "es",
+                timezone: "America/Argentina/Buenos_Aires",
+                rol: "ROLE_USUARIO",
                 aceptaTerminos: document.getElementById('terms').checked,
                 aceptaPoliticaPriv: document.getElementById('terms').checked
-                // agregá aquí otros campos de usuario que tu DTO requiera
             };
 
             // teléfono (lista)
@@ -380,25 +368,44 @@
                 numero: document.getElementById('phoneNumber').value,
                 tipo: 'PRINCIPAL'
             };
-
+            /*
             // dirección (lista) -> ajustá los nombres de id si tu DTO espera ids en lugar de nombres
             const direccionPayload = {
                 tipo: 'ENVIO',
                 idPais: null,
                 provincia: document.getElementById('provinciaSelect').options[document.getElementById('provinciaSelect').selectedIndex]?.text || '',
                 departamento: document.getElementById('departamentoSelect').options[document.getElementById('departamentoSelect').selectedIndex]?.text || '',
-                localidad: document.getElementById('localidadSelect').options[document.getElementById('localidadSelect').selectedIndex]?.text || '',
                 municipio: document.getElementById('municipioSelect').options[document.getElementById('municipioSelect').selectedIndex]?.text || '',
+                localidad: document.getElementById('localidadSelect').options[document.getElementById('localidadSelect').selectedIndex]?.text || '',
                 calle: document.getElementById('street').value,
                 numero: document.getElementById('number').value,
                 piso: document.getElementById('floor').value || null,
                 departamentoInterno: document.getElementById('apartment').value || null,
                 codigoPostal: document.getElementById('postalCode').value,
                 referencia: document.getElementById('reference').value || null,
-                activa: document.getElementById('addressActive').checked,
-                esPrincipal: document.getElementById('addressPrimary').checked
+                activa: document.getElementById('addressActive') ? document.getElementById('addressActive').checked : false,
+                esPrincipal: document.getElementById('addressPrimary') ? document.getElementById('addressPrimary').checked : false
+            };*/
+
+            // dirección (lista) -> usar IDs que exige RegistroDireccionDTO
+            // Ajustá idPais si tu país tiene otro id en la BD.
+            const direccionPayload = {
+                tipo: 'ENVIO',
+                idPais: 1, // <-- CAMBIAR si el id del país en tu BD no es 1
+                idProvincia: parseInt(document.getElementById('provinciaSelect').value) || null,
+                idDepartamento: parseInt(document.getElementById('departamentoSelect').value) || null,
+                idMunicipio: parseInt(document.getElementById('municipioSelect').value) || null,
+                idLocalidad: parseInt(document.getElementById('localidadSelect').value) || null,
+                calle: document.getElementById('street').value,
+                numero: document.getElementById('number').value,
+                piso: document.getElementById('floor').value || null,
+                referencia: document.getElementById('reference').value || null,
+                codigoPostal: document.getElementById('postalCode').value,
+                activa: document.getElementById('addressActive') ? document.getElementById('addressActive').checked : false,
+                esPrincipal: document.getElementById('addressPrimary') ? document.getElementById('addressPrimary').checked : false
             };
 
+            /*
             // envolver todo en el DTO completo que el backend espera
             const payload = {
                 usuario: usuarioPayload,
@@ -425,8 +432,53 @@
             .catch(err => {
                 console.error('Error registro:', err);
                 alert('Error al crear cuenta. Ver consola para más detalles.');
+            });*/
+
+            const payload = {
+                usuario: Object.assign(usuarioPayload, {
+                    // valores por defecto / obligatorios en el DTO
+                    tipoUsuario: usuarioPayload.tipoUsuario || 'PERSONA_FISICA'
+                }),
+                direcciones: [direccionPayload],
+                telefonos: [telefonoPayload],
+                perfilEmpresa: null
+            };
+
+            fetch('/api/gestionusuario/public/usuario/registro', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async res => {
+                spinner.style.display = 'none';
+                btnText.textContent = 'Crear cuenta';
+                if (res.ok) {
+                    // redirigir a la página de "correo enviado" al obtener 200
+                    window.location.href = '/public/correoEnviado(verificarCorreo).html';
+                    return;
+                }
+                const text = await res.text().catch(()=>null);
+                return Promise.reject(text || `HTTP ${res.status}`);
+            })
+            .catch(err => {
+                console.error('Error registro:', err);
+                alert(typeof err === 'string' ? err : 'Error al crear cuenta. Ver consola para más detalles.');
             });
         }
     </script>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+    </div>
+
+    <script src="/js/ubicaciones.js"></script>
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
 </body>
 </html>

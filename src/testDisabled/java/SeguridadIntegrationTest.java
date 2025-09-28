@@ -82,14 +82,14 @@ public class SeguridadIntegrationTest {
         Usuario admin = new Usuario();
         admin.setUsername("adminExample");
         admin.setPassword(rawPasswordAdmin);
-        admin.setEmail("example@admin.com");
+        admin.setEmail("correoprueba@noenviar.com");
         usuControl.registerAdmin(admin);
 
         // Crear usuario normal
         Usuario user = new Usuario();
         user.setUsername("usuarioExample");
         user.setPassword(rawPasswordUser);
-        user.setEmail("example@usuario.com");
+        user.setEmail("correoprueba@noenviar.com");
         usuControl.registerUser(user);
         
         // Creo LoginRequest

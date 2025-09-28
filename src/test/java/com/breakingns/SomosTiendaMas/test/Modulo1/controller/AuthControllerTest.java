@@ -28,8 +28,18 @@ import lombok.RequiredArgsConstructor;
 
 // Imports del proyecto
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.Departamento;
+import com.breakingns.SomosTiendaMas.auth.model.Localidad;
+import com.breakingns.SomosTiendaMas.auth.model.Municipio;
+import com.breakingns.SomosTiendaMas.auth.model.Pais;
+import com.breakingns.SomosTiendaMas.auth.model.Provincia;
 import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
+import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
@@ -101,6 +111,8 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImp
 @SqlGroup({
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
+            "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
@@ -110,13 +122,16 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImp
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )/*,
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
+            "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
             "DELETE FROM sesiones_activas",
@@ -126,7 +141,8 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImp
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
@@ -159,7 +175,15 @@ class AuthControllerTest {
     private final RefreshTokenService refreshTokenService;
 
     private RegistroUsuarioCompletoDTO registroDTO;
+
+    private final IPaisRepository paisRepository;
+    private final IProvinciaRepository provinciaRepository;
+    private final IDepartamentoRepository departamentoRepository;
+    private final ILocalidadRepository localidadRepository;
+    private final IMunicipioRepository municipioRepository;
     
+    private RegistroDireccionDTO direccionDTO;
+
     @BeforeEach
     void setUp() throws Exception {
         crearAdminTestSiNoExiste();
@@ -185,6 +209,7 @@ class AuthControllerTest {
             admin.setAceptaTerminos(true);
             admin.setAceptaPoliticaPriv(true);
             admin.setFechaUltimaModificacion(java.time.LocalDateTime.now());
+            admin.setFechaNacimientoResponsable(java.time.LocalDate.of(1990, 1, 1)); // <-- agregado
             usuarioService.registrarConRol(admin, RolNombre.ROLE_SUPERADMIN);
         }
     }
@@ -238,16 +263,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO"); // Si quieres especificar el rol
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -287,16 +323,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -336,16 +383,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -385,16 +443,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -434,16 +503,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -506,16 +586,27 @@ class AuthControllerTest {
         usuarioDTO2.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO2.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -569,16 +660,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -634,16 +736,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -706,16 +819,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -783,16 +907,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -862,16 +997,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -945,16 +1091,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1024,16 +1181,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1082,16 +1250,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1182,16 +1361,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1267,16 +1457,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1358,16 +1559,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1481,16 +1693,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1582,16 +1805,27 @@ class AuthControllerTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -1689,16 +1923,27 @@ class AuthControllerTest {
         usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO1.setRol("ROLE_USUARIO");
 
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
         RegistroDireccionDTO direccionDTO1 = new RegistroDireccionDTO();
+        direccionDTO1.setIdPais(pais.getId());
+        direccionDTO1.setIdProvincia(provincia.getId());
+        direccionDTO1.setIdDepartamento(departamento.getId());
+        direccionDTO1.setIdMunicipio(municipio.getId());
+        direccionDTO1.setIdLocalidad(localidad.getId());
+        direccionDTO1.setIdPerfilEmpresa(null);
         direccionDTO1.setTipo("PERSONAL");
         direccionDTO1.setCalle("Calle Falsa");
         direccionDTO1.setNumero("123");
-        direccionDTO1.setCiudad("Ciudad");
-        direccionDTO1.setProvincia("Provincia");
-        direccionDTO1.setCodigoPostal("1000");
-        direccionDTO1.setPais("Argentina");
         direccionDTO1.setActiva(true);
         direccionDTO1.setEsPrincipal(true);
+        direccionDTO1.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO1 = new RegistroTelefonoDTO();
         telefonoDTO1.setTipo("PRINCIPAL");
@@ -1743,15 +1988,19 @@ class AuthControllerTest {
         usuarioDTO2.setRol("ROLE_USUARIO");
 
         RegistroDireccionDTO direccionDTO2 = new RegistroDireccionDTO();
+        direccionDTO2.setIdPais(pais.getId());
+        direccionDTO2.setIdProvincia(provincia.getId());
+        direccionDTO2.setIdDepartamento(departamento.getId());
+        direccionDTO2.setIdMunicipio(municipio.getId());
+        direccionDTO2.setIdLocalidad(localidad.getId());
+        direccionDTO2.setIdPerfilEmpresa(null);
         direccionDTO2.setTipo("PERSONAL");
         direccionDTO2.setCalle("Calle Falsa");
         direccionDTO2.setNumero("123");
-        direccionDTO2.setCiudad("Ciudad");
-        direccionDTO2.setProvincia("Provincia");
-        direccionDTO2.setCodigoPostal("1000");
-        direccionDTO2.setPais("Argentina");
         direccionDTO2.setActiva(true);
         direccionDTO2.setEsPrincipal(true);
+        direccionDTO2.setCodigoPostal("1000");
+
 
         RegistroTelefonoDTO telefonoDTO2 = new RegistroTelefonoDTO();
         telefonoDTO2.setTipo("PRINCIPAL");
@@ -1849,16 +2098,27 @@ class AuthControllerTest {
         usuarioDTO1.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO1.setRol("ROLE_USUARIO");
 
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+        
         RegistroDireccionDTO direccionDTO1 = new RegistroDireccionDTO();
+        direccionDTO1.setIdPais(pais.getId());
+        direccionDTO1.setIdProvincia(provincia.getId());
+        direccionDTO1.setIdDepartamento(departamento.getId());
+        direccionDTO1.setIdMunicipio(municipio.getId());
+        direccionDTO1.setIdLocalidad(localidad.getId());
+        direccionDTO1.setIdPerfilEmpresa(null);
         direccionDTO1.setTipo("PERSONAL");
         direccionDTO1.setCalle("Calle Falsa");
         direccionDTO1.setNumero("123");
-        direccionDTO1.setCiudad("Ciudad");
-        direccionDTO1.setProvincia("Provincia");
-        direccionDTO1.setCodigoPostal("1000");
-        direccionDTO1.setPais("Argentina");
         direccionDTO1.setActiva(true);
         direccionDTO1.setEsPrincipal(true);
+        direccionDTO1.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO1 = new RegistroTelefonoDTO();
         telefonoDTO1.setTipo("PRINCIPAL");
@@ -1902,15 +2162,18 @@ class AuthControllerTest {
         usuarioDTO2.setRol("ROLE_USUARIO");
 
         RegistroDireccionDTO direccionDTO2 = new RegistroDireccionDTO();
+        direccionDTO2.setIdPais(pais.getId());
+        direccionDTO2.setIdProvincia(provincia.getId());
+        direccionDTO2.setIdDepartamento(departamento.getId());
+        direccionDTO2.setIdMunicipio(municipio.getId());
+        direccionDTO2.setIdLocalidad(localidad.getId());
+        direccionDTO2.setIdPerfilEmpresa(null);
         direccionDTO2.setTipo("PERSONAL");
         direccionDTO2.setCalle("Calle Falsa");
         direccionDTO2.setNumero("123");
-        direccionDTO2.setCiudad("Ciudad");
-        direccionDTO2.setProvincia("Provincia");
-        direccionDTO2.setCodigoPostal("1000");
-        direccionDTO2.setPais("Argentina");
         direccionDTO2.setActiva(true);
         direccionDTO2.setEsPrincipal(true);
+        direccionDTO2.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO2 = new RegistroTelefonoDTO();
         telefonoDTO2.setTipo("PRINCIPAL");

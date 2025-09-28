@@ -216,7 +216,6 @@ public class DireccionRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
         direccionDTO.setIdUsuario(usuario.getIdUsuario()); // ID del usuario
 
@@ -277,7 +276,6 @@ public class DireccionRepositoryTest {
         dto.setReferencia(null);
         dto.setActiva(true);
         dto.setEsPrincipal(esPrincipal);
-        dto.setUsarComoEnvio(true);
         dto.setCodigoPostal("1000");
         dto.setIdUsuario(usuario.getIdUsuario());
         return dto;
@@ -356,7 +354,6 @@ public class DireccionRepositoryTest {
         direccionDTO.setReferencia(null); // Opcional
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
-        direccionDTO.setUsarComoEnvio(true);    
         direccionDTO.setCodigoPostal("1000");
         direccionDTO.setIdUsuario(usuario.getIdUsuario()); // ID del usuario
 
@@ -477,6 +474,7 @@ public class DireccionRepositoryTest {
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         // crear dirección para la empresa (usar helper para obtener ids de ubicación)
@@ -597,11 +595,12 @@ public class DireccionRepositoryTest {
         empresa.setCuit("20999999999");
         empresa.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresa.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresa.setEmailEmpresa("empresa@noenviar.com");
+        empresa.setEmailEmpresa("correoprueba2@noenviar.com");
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         // crear dirección vinculada a la empresa
@@ -629,16 +628,18 @@ public class DireccionRepositoryTest {
         Usuario usuario = usuarioRepository.findByUsername("usuario123").orElseThrow();
 
         RegistroDireccionDTO dto = crearDireccionParaUsuario(usuario, "ENVIO", null, null, false);
-        // quitar campos obligatorios explícitamente
         dto.setCalle(null);
         dto.setNumero(null);
         dto.setCodigoPostal(null);
 
         MvcResult result = registrarDireccion(dto);
         int status = result.getResponse().getStatus();
-        // esperar que el endpoint no acepte (400 o 422). Aceptamos cualquier código de error >=400
-        System.out.println("\n\nStatus al intentar guardar sin datos obligatorios: " + status);
-        assertEquals(503, status, "Se esperaba 503 por fallo en la persistencia");
+        String body = result.getResponse().getContentAsString();
+        System.out.println("\nStatus invalid fields: " + status + " body=" + body);
+
+        assertEquals(400, status, "Debe devolver 400 por validación de campos obligatorios");
+        assertTrue(body.contains("calle") && body.contains("numero") && body.contains("codigoPostal"),
+            "El cuerpo debe detallar los campos faltantes: " + body);
     }
 
     // 10. No permitir guardar dirección duplicada para el mismo usuario.
@@ -675,11 +676,12 @@ public class DireccionRepositoryTest {
         empresa.setCuit("20988888888");
         empresa.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresa.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresa.setEmailEmpresa("empresaDup@noenviar.com");
+        empresa.setEmailEmpresa("correoprueba2@noenviar.com");
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         // crear DTO para la empresa: idUsuario NULL, idPerfilEmpresa = empresa.getIdPerfilEmpresa()
@@ -736,7 +738,7 @@ public class DireccionRepositoryTest {
         // crear un nuevo usuario B
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuarioCopiado");
-        usuarioDTO.setEmail("copiado@noenviar.com");
+        usuarioDTO.setEmail("correoprueba2@noenviar.com");
         usuarioDTO.setPassword("ClaveSegura123");
         usuarioDTO.setNombreResponsable("Ana");
         usuarioDTO.setApellidoResponsable("Gomez");
@@ -809,11 +811,12 @@ public class DireccionRepositoryTest {
         empresa.setCuit("20977777777");
         empresa.setCondicionIVA(PerfilEmpresa.CondicionIVA.RI);
         empresa.setEstadoAprobado(PerfilEmpresa.EstadoAprobado.APROBADO);
-        empresa.setEmailEmpresa("empresaRel@noenviar.com");
+        empresa.setEmailEmpresa("correoprueba2@noenviar.com");
         empresa.setRequiereFacturacion(true);
         empresa.setFechaCreacion(LocalDateTime.now());
         empresa.setFechaUltimaModificacion(LocalDateTime.now());
         empresa.setUsuario(usuario);
+        empresa.setActivo(true);
         perfilEmpresaRepository.save(empresa);
 
         RegistroDireccionDTO dtoEmp = crearDireccionParaUsuario(usuario, "FISCAL", "Calle Rel Empresa", "505", true);

@@ -11,7 +11,18 @@ import java.util.List;
 import java.util.Optional;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
+import com.breakingns.SomosTiendaMas.auth.model.Departamento;
+import com.breakingns.SomosTiendaMas.auth.model.Localidad;
+import com.breakingns.SomosTiendaMas.auth.model.Municipio;
+import com.breakingns.SomosTiendaMas.auth.model.Pais;
+import com.breakingns.SomosTiendaMas.auth.model.Provincia;
+import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
+import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ISesionActivaRepository;
+import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
@@ -27,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -111,6 +123,7 @@ import jakarta.servlet.http.Cookie;
 @SqlGroup({
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
             "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
@@ -121,13 +134,15 @@ import jakarta.servlet.http.Cookie;
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )/*,
     @Sql(
         statements = {
+            // HIJAS -> PADRE (orden evita FK violations)
             "DELETE FROM evento_auditoria",
             "DELETE FROM login_failed_attempts",
             "DELETE FROM tokens_reset_password",
@@ -138,7 +153,8 @@ import jakarta.servlet.http.Cookie;
             "DELETE FROM telefonos",
             "DELETE FROM email_verificacion",
             "DELETE FROM carrito",
-            "DELETE FROM usuario_roles",
+            "DELETE FROM perfil_empresa",
+            // Eliminado: DELETE FROM usuario_roles (no existe la tabla)
             "DELETE FROM usuario"
         },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
@@ -167,11 +183,20 @@ public class AuthModelTest {
 
     private final TokenEmitidoService tokenEmitidoService;
 
+    @MockBean
+    private EmailService emailService;
+
+    private final IPaisRepository paisRepository;
+    private final IProvinciaRepository provinciaRepository;
+    private final IDepartamentoRepository departamentoRepository;
+    private final ILocalidadRepository localidadRepository;
+    private final IMunicipioRepository municipioRepository;
+
     private RegistroUsuarioCompletoDTO registroDTO;
+    private RegistroDireccionDTO direccionDTO;
 
     @BeforeEach
     void setUp() throws Exception {
-        // Crear usuario base para los tests
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuario123");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
@@ -188,16 +213,30 @@ public class AuthModelTest {
         usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
         usuarioDTO.setRol("ROLE_USUARIO");
 
-        RegistroDireccionDTO direccionDTO = new RegistroDireccionDTO();
+        Pais pais = paisRepository.findByNombre("Argentina");
+        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
+        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
+        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
+        Localidad localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
+            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
+        ).orElseThrow();
+
+        // Instanciar el campo (no crear variable local que lo oculte)
+        direccionDTO = new RegistroDireccionDTO();
+        direccionDTO.setIdPais(pais.getId());
+        direccionDTO.setIdProvincia(provincia.getId());
+        direccionDTO.setIdDepartamento(departamento.getId());
+        direccionDTO.setIdMunicipio(municipio.getId());
+        direccionDTO.setIdLocalidad(localidad.getId());
+        direccionDTO.setIdPerfilEmpresa(null);
         direccionDTO.setTipo("PERSONAL");
         direccionDTO.setCalle("Calle Falsa");
         direccionDTO.setNumero("123");
-        direccionDTO.setCiudad("Ciudad");
-        direccionDTO.setProvincia("Provincia");
-        direccionDTO.setCodigoPostal("1000");
-        direccionDTO.setPais("Argentina");
+        direccionDTO.setPiso(null);
+        direccionDTO.setReferencia(null);
         direccionDTO.setActiva(true);
         direccionDTO.setEsPrincipal(true);
+        direccionDTO.setCodigoPostal("1000");
 
         RegistroTelefonoDTO telefonoDTO = new RegistroTelefonoDTO();
         telefonoDTO.setTipo("PRINCIPAL");
@@ -210,17 +249,6 @@ public class AuthModelTest {
         registroDTO.setUsuario(usuarioDTO);
         registroDTO.setDirecciones(List.of(direccionDTO));
         registroDTO.setTelefonos(List.of(telefonoDTO));
-
-        // Registrar usuario antes de cada test
-        //registrarUsuarioCompleto(registroDTO);
-
-        // Asegura que el usuario y el email están verificados
-        /* 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
-        assertTrue(usuarioOpt.isPresent());
-        Usuario usuario = usuarioOpt.get();
-        usuario.setEmailVerificado(true);
-        usuarioRepository.save(usuario);*/
     }
 
     // Método para registrar un usuario completo usando el endpoint de gestión de perfil
@@ -259,7 +287,7 @@ public class AuthModelTest {
             assertEquals(400, statusRegistro);
         }
     }
-
+    
     //2. Usuario demasiado corto (<6) o demasiado largo (>16) (400)
     @Test
     void registroUsuarioConPasswordCortoOLargoDebeRetornarBadRequest() throws Exception {
@@ -458,7 +486,7 @@ public class AuthModelTest {
     @Test
     void registroUsuarioConDatosValidosCaracteres3DebeSerExitoso() throws Exception {
         registroDTO.getUsuario().setUsername("usuarioValido3");
-        registroDTO.getUsuario().setEmail("nahuel_segura_17@hotmail.com");
+        registroDTO.getUsuario().setEmail("correoprueba1@noenviar.com");
         registroDTO.getUsuario().setPassword(":;,.?/con12");
         int statusRegistro = registrarUsuarioCompleto(registroDTO);
         assertEquals(200, statusRegistro);
