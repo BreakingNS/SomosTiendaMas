@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,21 +25,8 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.breakingns.SomosTiendaMas.auth.model.Departamento;
-import com.breakingns.SomosTiendaMas.auth.model.Localidad;
-import com.breakingns.SomosTiendaMas.auth.model.Municipio;
-import com.breakingns.SomosTiendaMas.auth.model.Pais;
-import com.breakingns.SomosTiendaMas.auth.model.Provincia;
-import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
-import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
-import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
 import com.breakingns.SomosTiendaMas.entidades.direccion.repository.IDireccionRepository;
-import com.breakingns.SomosTiendaMas.entidades.direccion.service.DireccionService;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
@@ -53,7 +38,6 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 
 import lombok.RequiredArgsConstructor;
 
@@ -129,24 +113,16 @@ public class TelefonoServiceTest {
     @MockBean
     private EmailService emailService;
 
-    private final IPaisRepository paisRepository;
-    private final IProvinciaRepository provinciaRepository;
-    private final IDepartamentoRepository departamentoRepository;
-    private final ILocalidadRepository localidadRepository;
-    private final IMunicipioRepository municipioRepository;
     private final IDireccionRepository direccionRepository;
     private final ITelefonoRepository telefonoRepository;
 
-    private final DireccionService direccionService;
     private final TelefonoService telefonoService;
 
     private RegistroUsuarioCompletoDTO registroDTO;
-    private RegistroDireccionDTO direccionDTO;
     private RegistroTelefonoDTO telefonoDTO;
 
     @BeforeEach
     void setUp() throws Exception {
-        direccionDTO = new RegistroDireccionDTO();
         
         // 1. Instanciar y configurar usuario y teléfono
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
@@ -285,11 +261,6 @@ public class TelefonoServiceTest {
         p.setUsuario(usuario);
         p.setActivo(true);
         return perfilEmpresaRepository.save(p);
-    }
-
-    private List<?> listarTelefonosRepoPorUsuario(Long idUsuario) {
-        // ajustá según el tipo devuelto por tu repo (List<Telefono>)
-        return (List<?>) direccionRepository.findByUsuario_IdUsuario(idUsuario); // reemplazar por telefonoRepository cuando exista
     }
 
     // 1) Registrar teléfono para usuario (MÓVIL/WORK/HOME) OK: crea teléfono asociado a usuario y persiste.

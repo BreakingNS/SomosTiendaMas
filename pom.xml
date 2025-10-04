@@ -39,12 +39,14 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>17</java.version>
-                <springdoc.version>1.7.0</springdoc.version>
-                <mapstruct.version>1.5.5.Final</mapstruct.version>
-	</properties>
+        <java.version>17</java.version>
+        <springdoc.version>1.7.0</springdoc.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <lombok.version>1.18.30</lombok.version>
+    </properties>
         
 	<dependencies>
+
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-test</artifactId>
@@ -132,11 +134,11 @@
             </dependency>  
 
             <!-- Documentación OpenAPI (Swagger) -->  
-            <dependency>  
-                <groupId>org.springdoc</groupId>  
-                <artifactId>springdoc-openapi-ui</artifactId>  
-                <version>${springdoc.version}</version>  
-            </dependency>  
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>2.1.0</version>
+            </dependency>
 
             <!-- MapStruct para mapeo de DTOs -->  
             <dependency>  
@@ -179,6 +181,12 @@
                 <version>0.11.5</version>
                 <scope>runtime</scope>
             </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <optional>true</optional>
+            </dependency>
         </dependencies>  
 
         <build>  
@@ -187,26 +195,26 @@
                     <groupId>org.springframework.boot</groupId>  
                     <artifactId>spring-boot-maven-plugin</artifactId>  
                 </plugin>  
-                <plugin>  
-                    <groupId>org.apache.maven.plugins</groupId>  
-                    <artifactId>maven-compiler-plugin</artifactId>  
-                    <configuration>  
-                        <source>${java.version}</source>  
-                        <target>${java.version}</target>  
-                        <annotationProcessorPaths>  
-                            <path>  
-                                <groupId>org.mapstruct</groupId>  
-                                <artifactId>mapstruct-processor</artifactId>  
-                                <version>${mapstruct.version}</version>  
-                            </path>  
-                            <path>  
-                                <groupId>org.projectlombok</groupId>  
-                                <artifactId>lombok</artifactId>  
-                                <version>1.18.30</version>  
-                            </path>  
-                        </annotationProcessorPaths>  
-                    </configuration>  
-                </plugin>  
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+            </plugin> 
             </plugins>  
         </build>  
 </project>

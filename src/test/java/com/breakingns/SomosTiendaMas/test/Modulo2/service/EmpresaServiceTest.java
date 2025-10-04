@@ -1,14 +1,11 @@
 package com.breakingns.SomosTiendaMas.test.Modulo2.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,13 +15,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import com.breakingns.SomosTiendaMas.auth.model.Departamento;
 import com.breakingns.SomosTiendaMas.auth.model.Localidad;
@@ -37,12 +31,8 @@ import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
-import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.auth.service.TokenEmitidoService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
-import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
-import com.breakingns.SomosTiendaMas.entidades.direccion.repository.IDireccionRepository;
-import com.breakingns.SomosTiendaMas.entidades.direccion.service.DireccionService;
 import com.breakingns.SomosTiendaMas.entidades.empresa.dto.RegistroPerfilEmpresaDTO;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
@@ -55,7 +45,6 @@ import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.security.exception.PerfilEmpresaNoEncontradoException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -120,9 +109,6 @@ public class EmpresaServiceTest {
     
     private final IPerfilEmpresaRepository perfilEmpresaRepository;
 
-    private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
-
     private final IUsuarioRepository usuarioRepository;
 
     @MockBean
@@ -136,11 +122,8 @@ public class EmpresaServiceTest {
     private final IDepartamentoRepository departamentoRepository;
     private final ILocalidadRepository localidadRepository;
     private final IMunicipioRepository municipioRepository;
-    private final IDireccionRepository direccionRepository;
 
-    private final DireccionService direccionService;
     private final UsuarioServiceImpl usuarioService;
-    private final SesionActivaService sesionActivaService;
     private final PerfilEmpresaService perfilEmpresaService;
 
     private RegistroUsuarioCompletoDTO registroDTO;
@@ -255,135 +238,8 @@ public class EmpresaServiceTest {
         registroEmpDTO.setResponsable(usuarioDTO); // el responsable puede ser el usuario ya preparado arriba
         registroEmpDTO.setDireccionesEmpresa(List.of(direccionEmpresaDTO));
         registroEmpDTO.setTelefonosEmpresa(List.of(telefonoEmpresaDTO));
-        // ============================
         
-        /*
-        // 3. Registrar usuario antes de registrar dirección
-        registrarUsuarioCompleto(registroDTO);
-
-        // 4. Verificar usuario y email
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername("usuario123");
-        assertTrue(usuarioOpt.isPresent());
-        Usuario usuario = usuarioOpt.get();
-        usuario.setEmailVerificado(true);
-        usuarioRepository.save(usuario);*/
     }
-
-    // Método para registrar un usuario completo usando el endpoint de gestión de perfil
-    private int registrarUsuarioCompleto(RegistroUsuarioCompletoDTO registroDTO) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/gestionusuario/public/usuario/registro")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registroDTO)))
-            .andReturn();
-
-     
-            return result.getResponse().getStatus();
-    }
-    /* 
-    @Test
-    void contextoCarga_OK() {
-        direccionDTO = new RegistroDireccionDTO();
-        
-        // 1. Instanciar y registrar usuario y teléfono
-        usuarioDTO = new RegistroUsuarioDTO();
-        usuarioDTO.setUsername("usuario123");
-        usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("ClaveSegura123");
-        usuarioDTO.setNombreResponsable("Juan");
-        usuarioDTO.setApellidoResponsable("Pérez");
-        usuarioDTO.setDocumentoResponsable("12345678");
-        usuarioDTO.setTipoUsuario("PERSONA_FISICA");
-        usuarioDTO.setAceptaTerminos(true);
-        usuarioDTO.setAceptaPoliticaPriv(true);
-        usuarioDTO.setFechaNacimientoResponsable(LocalDate.of(1990, 1, 1));
-        usuarioDTO.setGeneroResponsable("MASCULINO");
-        usuarioDTO.setIdioma("es");
-        usuarioDTO.setTimezone("America/Argentina/Buenos_Aires");
-        usuarioDTO.setRol("ROLE_USUARIO");
-
-        telefonoDTO = new RegistroTelefonoDTO();
-        telefonoDTO.setTipo("PRINCIPAL");
-        telefonoDTO.setNumero("1122334455");
-        telefonoDTO.setCaracteristica("11");
-        telefonoDTO.setActivo(true);
-        telefonoDTO.setVerificado(false);
-        
-        // 6. Buscar por nombre y obtener el ID real de cada entidad de ubicación
-        Pais pais = paisRepository.findByNombre("Argentina");
-        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
-        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
-        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
-        Optional<Localidad> localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
-            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
-        );
-        if (localidad.isPresent()) {
-            direccionDTO.setIdLocalidad(localidad.get().getId());
-        }
-        
-        // 7. Instanciar y configurar dirección con los IDs reales y el ID del usuario
-        direccionDTO = new RegistroDireccionDTO();
-        direccionDTO.setIdPais(pais.getId());
-        direccionDTO.setIdProvincia(provincia.getId());
-        direccionDTO.setIdDepartamento(departamento.getId());
-        direccionDTO.setIdMunicipio(municipio.getId());
-        direccionDTO.setIdLocalidad(localidad.get().getId());
-        direccionDTO.setIdPerfilEmpresa(null); // No es empresa
-        direccionDTO.setTipo("PERSONAL");
-        direccionDTO.setCalle("Calle Falsa");
-        direccionDTO.setNumero("123");
-        direccionDTO.setPiso(null); // Opcional
-        direccionDTO.setReferencia(null); // Opcional
-        direccionDTO.setActiva(true);
-        direccionDTO.setEsPrincipal(true);
-        direccionDTO.setCodigoPostal("1000");
-
-        // 2. Armar el registro completo con las listas ya instanciadas
-        registroDTO = new RegistroUsuarioCompletoDTO();
-        registroDTO.setUsuario(usuarioDTO);
-        registroDTO.setDirecciones(List.of(direccionDTO)); // Dirección se agrega después
-        registroDTO.setTelefonos(List.of(telefonoDTO));
-        
-        // ============================
-        // NUEVO: preparar PerfilEmpresa y RegistroEmpresaCompletoDTO (ejemplo)
-        // ============================
-        perfilEmpresaDTO = new RegistroPerfilEmpresaDTO();
-        // No setear idUsuario aquí: el controller/service asigna el id del responsable al crear el perfil
-        perfilEmpresaDTO.setRazonSocial("ACME S.R.L.");
-        perfilEmpresaDTO.setCuit("30555555558");            // 11 dígitos según validación
-        perfilEmpresaDTO.setCondicionIVA("RI");            // ejemplo: Responsable Inscripto
-        perfilEmpresaDTO.setEmailEmpresa("correoempresa@noenviar.com");
-        perfilEmpresaDTO.setRequiereFacturacion(true);
-
-        // dirección fiscal de la empresa (puede reutilizarse la estructura anterior con cambios)
-        RegistroDireccionDTO direccionEmpresaDTO = new RegistroDireccionDTO();
-        direccionEmpresaDTO.setIdPais(pais.getId());
-        direccionEmpresaDTO.setIdProvincia(provincia.getId());
-        direccionEmpresaDTO.setIdDepartamento(departamento.getId());
-        direccionEmpresaDTO.setIdMunicipio(municipio.getId());
-        direccionEmpresaDTO.setIdLocalidad(localidad.get().getId());
-        direccionEmpresaDTO.setIdPerfilEmpresa(null); // se asignará cuando se persista el perfil empresa
-        direccionEmpresaDTO.setTipo("FISCAL");
-        direccionEmpresaDTO.setCalle("Av. Industrial");
-        direccionEmpresaDTO.setNumero("500");
-        direccionEmpresaDTO.setActiva(true);
-        direccionEmpresaDTO.setEsPrincipal(true);
-        direccionEmpresaDTO.setCodigoPostal("1406");
-
-        // teléfono de la empresa
-        RegistroTelefonoDTO telefonoEmpresaDTO = new RegistroTelefonoDTO();
-        telefonoEmpresaDTO.setTipo("PRINCIPAL");
-        telefonoEmpresaDTO.setCaracteristica("381");
-        telefonoEmpresaDTO.setNumero("38155501111");
-        telefonoEmpresaDTO.setActivo(true);
-        telefonoEmpresaDTO.setVerificado(false);
-        
-        // armar DTO completo de empresa (responsable = usuarioDTO)
-        registroEmpDTO = new RegistroEmpresaCompletoDTO();
-        registroEmpDTO.setPerfilEmpresa(perfilEmpresaDTO);
-        registroEmpDTO.setResponsable(usuarioDTO); // el responsable puede ser el usuario ya preparado arriba
-        registroEmpDTO.setDireccionesEmpresa(List.of(direccionEmpresaDTO));
-        registroEmpDTO.setTelefonosEmpresa(List.of(telefonoEmpresaDTO));
-    }*/
 
     // 1) registrarPerfilEmpresa_Valido_OK: registra perfil empresa válido, devuelve DTO con id y campos mapeados.
     @Test

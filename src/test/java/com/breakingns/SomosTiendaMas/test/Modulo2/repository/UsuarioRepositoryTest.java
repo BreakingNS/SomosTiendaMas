@@ -236,51 +236,6 @@ public class UsuarioRepositoryTest {
         return result.getResponse().getStatus();
     }
 
-    // Helper para crear dirección para usuario
-    private RegistroDireccionDTO crearDireccionParaUsuario(Usuario usuario, String tipo, String calle, String numero, boolean esPrincipal) {
-        Pais pais = paisRepository.findByNombre("Argentina");
-        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
-        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
-        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
-        Optional<Localidad> localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
-            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
-        );
-        if (localidad.isPresent()) {
-            direccionDTO.setIdLocalidad(localidad.get().getId());
-        }
-
-        RegistroDireccionDTO dto = new RegistroDireccionDTO();
-        dto.setIdPais(pais.getId());
-        dto.setIdProvincia(provincia.getId());
-        dto.setIdDepartamento(departamento.getId());
-        dto.setIdLocalidad(localidad.get().getId());
-        dto.setIdMunicipio(municipio.getId());
-        dto.setIdPerfilEmpresa(null);
-        dto.setTipo(tipo);
-        dto.setCalle(calle);
-        dto.setNumero(numero);
-        dto.setPiso(null);
-        dto.setReferencia(null);
-        dto.setActiva(true);
-        dto.setEsPrincipal(esPrincipal);
-        dto.setCodigoPostal("1000");
-        dto.setIdUsuario(usuario.getIdUsuario());
-        return dto;
-    }
-
-    // Helper para crear teléfono para usuario
-    private RegistroTelefonoDTO crearTelefonoParaUsuario(Usuario usuario, String tipo, String numero, String caracteristica, Boolean activo, Boolean verificado) {
-        RegistroTelefonoDTO t = new RegistroTelefonoDTO();
-        t.setTipo(tipo);
-        t.setNumero(numero);
-        t.setCaracteristica(caracteristica);
-        t.setActivo(activo);
-        t.setVerificado(verificado);
-        t.setIdUsuario(usuario != null ? usuario.getIdUsuario() : null);
-        t.setIdPerfilEmpresa(null);
-        return t;
-    }
-
     @Test
     void contextoCargaCorrectamente() throws Exception {
         // 1. Instanciar y configurar usuario DTO

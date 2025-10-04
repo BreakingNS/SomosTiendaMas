@@ -10,7 +10,8 @@ public class RoleHierarchyConfig {
 
     @Bean
     public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.fromHierarchy(
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy(
             "ROLE_SUPERADMIN > ROLE_ADMIN\n" +
             "ROLE_ADMIN > ROLE_MODERADOR\n" +
             "ROLE_ADMIN > ROLE_SOPORTE\n" +
@@ -19,5 +20,6 @@ public class RoleHierarchyConfig {
             "ROLE_MODERADOR > ROLE_USUARIO\n" +
             "ROLE_EMPRESA > ROLE_USUARIO"
         );
+        return hierarchy;
     }
 }

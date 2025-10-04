@@ -433,12 +433,12 @@ public class AuthModelTest {
         assertEquals(400, statusRegistro);
     }
 
-    //14. Registro con cantidad minima (6) de caracteres (200)
+    //14. Registro con cantidad minima (8) de caracteres (200)
     @Test
     void registroUsuarioConPassworMinimodValidaDebeSerExitoso() throws Exception {
         registroDTO.getUsuario().setUsername("usuarioValido1");
         registroDTO.getUsuario().setEmail("correoprueba1@noenviar.com");
-        registroDTO.getUsuario().setPassword("a12345");
+        registroDTO.getUsuario().setPassword("a1234567");
         int statusRegistro = registrarUsuarioCompleto(registroDTO);
         assertEquals(200, statusRegistro);
     }
@@ -579,7 +579,7 @@ public class AuthModelTest {
     void contraseniaConLongitudLimiteMinimosDebeSerExitoso() throws Exception {
         registroDTO.getUsuario().setUsername("usuarioValido");
         registroDTO.getUsuario().setEmail("correoprueba1@noenviar.com");
-        registroDTO.getUsuario().setPassword("a12345"); // 6 caracteres
+        registroDTO.getUsuario().setPassword("a1234567"); // 8 caracteres
         int statusRegistro = registrarUsuarioCompleto(registroDTO);
         assertEquals(200, statusRegistro);
     }
@@ -884,7 +884,7 @@ public class AuthModelTest {
         // Registrar usuario y login para obtener los tokens
         registroDTO.getUsuario().setUsername("usuPrueba");
         registroDTO.getUsuario().setEmail("correoprueba1@noenviar.com");
-        registroDTO.getUsuario().setPassword("P123456");
+        registroDTO.getUsuario().setPassword("P12345678");
         int statusRegistro = registrarUsuarioCompleto(registroDTO);
         assertEquals(200, statusRegistro);
 
@@ -895,7 +895,7 @@ public class AuthModelTest {
         usuario.setEmailVerificado(true);
         usuarioRepository.save(usuario);
 
-        MvcResult loginResult = loginUsuario("usuPrueba", "P123456");
+        MvcResult loginResult = loginUsuario("usuPrueba", "P12345678");
 
         Cookie[] cookies = loginResult.getResponse().getCookies();
         String refreshToken = null;
@@ -941,7 +941,7 @@ public class AuthModelTest {
         // 1. Registrar usuario y login para obtener los tokens
         registroDTO.getUsuario().setUsername("usuExpira");
         registroDTO.getUsuario().setEmail("correoprueba1@noenviar.com");
-        registroDTO.getUsuario().setPassword("P123456");
+        registroDTO.getUsuario().setPassword("P12345678");
         int statusRegistro = registrarUsuarioCompleto(registroDTO);
         assertEquals(200, statusRegistro);
 
@@ -951,7 +951,7 @@ public class AuthModelTest {
         usuario.setEmailVerificado(true);
         usuarioRepository.save(usuario);
 
-        MvcResult loginResult = loginUsuario("usuExpira", "P123456");
+        MvcResult loginResult = loginUsuario("usuExpira", "P12345678");
         Cookie[] cookies = loginResult.getResponse().getCookies();
         String accessToken = null;
         String refreshToken = null;

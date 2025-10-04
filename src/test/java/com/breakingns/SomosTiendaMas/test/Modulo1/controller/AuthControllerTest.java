@@ -195,7 +195,7 @@ class AuthControllerTest {
         if (!exists) {
             Usuario admin = new Usuario();
             admin.setUsername("adminTest");
-            admin.setPassword("P123456");
+            admin.setPassword("P12345678");
             admin.setEmail("correoprueba2@noenviar.com");
             admin.setActivo(true);
             admin.setEmailVerificado(true);
@@ -370,7 +370,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername(""); // Username inválido
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("33333333");
@@ -490,7 +490,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("usuarioExistente");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("55555555");
@@ -557,7 +557,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
         usuarioDTO1.setUsername("usuarioEmail1");
         usuarioDTO1.setEmail("correoprueba@noenviar.com");
-        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setPassword("P12345678");
         usuarioDTO1.setNombreResponsable("Juan");
         usuarioDTO1.setApellidoResponsable("Pérez");
         usuarioDTO1.setDocumentoResponsable("66666666");
@@ -573,7 +573,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
         usuarioDTO2.setUsername("usuarioEmail2");
         usuarioDTO2.setEmail("correoprueba@noenviar.com"); // mismo email
-        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setPassword("P12345678");
         usuarioDTO2.setNombreResponsable("Juan");
         usuarioDTO2.setApellidoResponsable("Pérez");
         usuarioDTO2.setDocumentoResponsable("77777777");
@@ -647,7 +647,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("loginUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("88888888");
@@ -708,13 +708,18 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("loginUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("loginUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andReturn();
 
-        assertEquals(200, loginResult.getResponse().getStatus());
+        int status = loginResult.getResponse().getStatus();
+        if (status != 200) {
+            System.err.println("DEBUG login_exitoso - status: " + status);
+            try { System.err.println("Response body: " + loginResult.getResponse().getContentAsString()); } catch (Exception e) { /* ignore */ }
+        }
+        assertEquals(200, status);
     }
 
     // 8. Login falla con credenciales inválidas
@@ -723,7 +728,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("loginUserFail");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("99999999");
@@ -806,7 +811,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("tokenUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("10101010");
@@ -867,7 +872,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("tokenUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("tokenUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -894,7 +899,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("userProtegido");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("12121212");
@@ -955,7 +960,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("userProtegido", "P123456");
+        LoginRequest loginRequest = new LoginRequest("userProtegido", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -984,7 +989,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("userRefresh");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("13131313");
@@ -1045,7 +1050,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("userRefresh", "P123456");
+        LoginRequest loginRequest = new LoginRequest("userRefresh", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1078,7 +1083,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("refreshOkUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("14141414");
@@ -1139,7 +1144,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("refreshOkUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("refreshOkUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1168,7 +1173,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("refreshFailUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("15151515");
@@ -1237,7 +1242,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("refreshExpUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("16161616");
@@ -1298,7 +1303,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login y obtener refresh token
-        LoginRequest loginRequest = new LoginRequest("refreshExpUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("refreshExpUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1348,7 +1353,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("refreshRevUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("17171717");
@@ -1409,7 +1414,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("refreshRevUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("refreshRevUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1444,7 +1449,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("logoutUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("18181818");
@@ -1505,7 +1510,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("logoutUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("logoutUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1546,7 +1551,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("multiSesionUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("19191919");
@@ -1607,7 +1612,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login 1: user-agent y IP distintos
-        LoginRequest loginRequest = new LoginRequest("multiSesionUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("multiSesionUser", "P12345678");
         mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest))
@@ -1680,7 +1685,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("accesoUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("20202020");
@@ -1741,7 +1746,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("accesoUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("accesoUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1792,7 +1797,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO = new RegistroUsuarioDTO();
         usuarioDTO.setUsername("expiraUser");
         usuarioDTO.setEmail("correoprueba@noenviar.com");
-        usuarioDTO.setPassword("P123456");
+        usuarioDTO.setPassword("P12345678");
         usuarioDTO.setNombreResponsable("Juan");
         usuarioDTO.setApellidoResponsable("Pérez");
         usuarioDTO.setDocumentoResponsable("23232323");
@@ -1853,7 +1858,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario);
 
         // Login
-        LoginRequest loginRequest = new LoginRequest("expiraUser", "P123456");
+        LoginRequest loginRequest = new LoginRequest("expiraUser", "P12345678");
         MvcResult loginResult = mockMvc.perform(post("/api/auth/public/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
@@ -1910,7 +1915,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
         usuarioDTO1.setUsername("usuario1");
         usuarioDTO1.setEmail("correoprueba@noenviar.com");
-        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setPassword("P12345678");
         usuarioDTO1.setNombreResponsable("Juan");
         usuarioDTO1.setApellidoResponsable("Pérez");
         usuarioDTO1.setDocumentoResponsable("24242424");
@@ -1974,7 +1979,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
         usuarioDTO2.setUsername("usuario2");
         usuarioDTO2.setEmail("correoprueba1@noenviar.com");
-        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setPassword("P12345678");
         usuarioDTO2.setNombreResponsable("Juan");
         usuarioDTO2.setApellidoResponsable("Pérez");
         usuarioDTO2.setDocumentoResponsable("25252525");
@@ -2028,7 +2033,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario3);
 
         // Login admin
-        MvcResult loginResultAdmin = loginUsuario("adminTest", "P123456");
+        MvcResult loginResultAdmin = loginUsuario("adminTest", "P12345678");
         assertEquals(200, loginResultAdmin.getResponse().getStatus());
         String adminAccessToken = null;
         for (Cookie cookie : loginResultAdmin.getResponse().getCookies()) {
@@ -2039,7 +2044,7 @@ class AuthControllerTest {
         assertNotNull(adminAccessToken);
 
         // Login Usuario 1
-        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P123456");
+        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P12345678");
         assertEquals(200, loginResultUsuario1.getResponse().getStatus());
         String usuario1AccessToken = null;
         for (Cookie cookie : loginResultUsuario1.getResponse().getCookies()) {
@@ -2050,7 +2055,7 @@ class AuthControllerTest {
         assertNotNull(usuario1AccessToken);
 
         // Login Usuario 2
-        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P123456");
+        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P12345678");
         assertEquals(200, loginResultUsuario2.getResponse().getStatus());
         String usuario2AccessToken = null;
         for (Cookie cookie : loginResultUsuario2.getResponse().getCookies()) {
@@ -2085,7 +2090,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO1 = new RegistroUsuarioDTO();
         usuarioDTO1.setUsername("usuario1");
         usuarioDTO1.setEmail("correoprueba@noenviar.com");
-        usuarioDTO1.setPassword("P123456");
+        usuarioDTO1.setPassword("P12345678");
         usuarioDTO1.setNombreResponsable("Juan");
         usuarioDTO1.setApellidoResponsable("Pérez");
         usuarioDTO1.setDocumentoResponsable("24242424");
@@ -2148,7 +2153,7 @@ class AuthControllerTest {
         RegistroUsuarioDTO usuarioDTO2 = new RegistroUsuarioDTO();
         usuarioDTO2.setUsername("usuario2");
         usuarioDTO2.setEmail("correoprueba1@noenviar.com");
-        usuarioDTO2.setPassword("P123456");
+        usuarioDTO2.setPassword("P12345678");
         usuarioDTO2.setNombreResponsable("Juan");
         usuarioDTO2.setApellidoResponsable("Pérez");
         usuarioDTO2.setDocumentoResponsable("25252525");
@@ -2201,7 +2206,7 @@ class AuthControllerTest {
         usuarioRepository.save(usuario3);
 
         // Login usuario 1
-        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P123456");
+        MvcResult loginResultUsuario1 = loginUsuario("usuario1", "P12345678");
         assertEquals(200, loginResultUsuario1.getResponse().getStatus());
         String usuario1AccessToken = null;
         for (Cookie cookie : loginResultUsuario1.getResponse().getCookies()) {
@@ -2212,7 +2217,7 @@ class AuthControllerTest {
         assertNotNull(usuario1AccessToken);
 
         // Login usuario 2 (por si el endpoint requiere que ambos tengan sesión)
-        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P123456");
+        MvcResult loginResultUsuario2 = loginUsuario("usuario2", "P12345678");
         assertEquals(200, loginResultUsuario2.getResponse().getStatus());
 
         // Usuario 1 intenta acceder a endpoint solo admin para ver sesiones de usuario 2

@@ -32,8 +32,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
-import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
-import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;

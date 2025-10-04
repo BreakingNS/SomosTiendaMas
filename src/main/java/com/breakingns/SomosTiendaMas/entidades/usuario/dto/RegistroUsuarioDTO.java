@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter @Setter
 public class RegistroUsuarioDTO {
     @NotBlank(message = "El nombre de usuario no puede estar vacío")
-    @Pattern(regexp = "^[A-Za-z0-9._-]{6,16}$", message = "El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 6 y 16 caracteres")
+    @Pattern(regexp = "^[A-Za-z0-9._-]{8,128}$", message = "El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 8 y 128 caracteres")
     private String username;
 
     @Email(message = "El correo electrónico no tiene un formato válido")

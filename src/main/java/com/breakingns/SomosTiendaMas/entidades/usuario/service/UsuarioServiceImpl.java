@@ -91,12 +91,12 @@ public class UsuarioServiceImpl implements IUsuarioService{
             throw new EmailYaRegistradoException("El correo electrónico ya está en uso");
         }
 
-        if (dto.getPassword().length() < 6) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        if (dto.getPassword().length() < 8) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 8 caracteres.");
         }
 
-        if (dto.getPassword().length() > 16) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        if (dto.getPassword().length() > 128) {
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 128 caracteres.");
         }
 
         if (dto.getUsername().equals("forzar-error")) {
@@ -126,8 +126,8 @@ public class UsuarioServiceImpl implements IUsuarioService{
         }
 
         // Validación: username solo puede tener letras, números, guion bajo y punto
-        if (!dto.getUsername().matches("^[A-Za-z0-9._-]{6,16}$")) {
-            throw new NombreUsuarioVacioException("El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 6 y 16 caracteres.");
+        if (!dto.getUsername().matches("^[A-Za-z0-9._-]{8,128}$")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 8 y 128 caracteres.");
         }
 
         // Validación: username no puede tener dos puntos o dos guiones bajos seguidos
@@ -223,13 +223,13 @@ public class UsuarioServiceImpl implements IUsuarioService{
         }
 
         // Validación de la contraseña nueva (por ejemplo, longitud mínima)
-        if (usuario.getPassword().length() < 6) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        if (usuario.getPassword().length() < 8) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 8 caracteres.");
         }
         
         // Validación de la contraseña nueva (por ejemplo, longitud maxima)
-        if (usuario.getPassword().length() > 16) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        if (usuario.getPassword().length() > 128) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 128 caracteres.");
         }
         
         if (usuario.getUsername().equals("forzar-error")){ // SOLO PRUEBAS

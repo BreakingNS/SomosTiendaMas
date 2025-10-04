@@ -9,9 +9,9 @@ public record ResetPasswordRequest(
     String token,
 
     @NotBlank(message = "La contraseña no puede estar vacía")
-    @Size(min = 6, max = 16, message = "La contraseña debe tener entre 6 y 16 caracteres.")
+    @Size(min = 8, max = 128, message = "La contraseña debe tener entre 8 y 128 caracteres.")
     @Pattern(
-        regexp = "^(?=\\S+$).{6,16}$",
+        regexp = "^(?=\\S+$).{8,128}$",
         message = "La contraseña no debe contener espacios."
     )
     String nuevaPassword

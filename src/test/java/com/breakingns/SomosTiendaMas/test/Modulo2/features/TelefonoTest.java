@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,11 +22,7 @@ import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
-import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
-import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
@@ -92,8 +87,6 @@ public class TelefonoTest {
     private final IPerfilEmpresaRepository perfilEmpresaRepository;
     private final ITelefonoRepository telefonoRepository;
     private final TelefonoService telefonoService;
-    private final IPaisRepository paisRepository;
-    private final IProvinciaRepository provinciaRepository;
 
     @MockBean
     private ICodigoAreaRepository codigoAreaRepository;
@@ -128,7 +121,7 @@ public class TelefonoTest {
         registroDTO.setTelefonos(List.of());
 
         // registrar vía endpoint de gestion usuario (igual que DireccionTest)
-        MvcResult r = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/gestionusuario/public/usuario/registro")
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/gestionusuario/public/usuario/registro")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(registroDTO)))
             .andReturn();

@@ -32,11 +32,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
-import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;

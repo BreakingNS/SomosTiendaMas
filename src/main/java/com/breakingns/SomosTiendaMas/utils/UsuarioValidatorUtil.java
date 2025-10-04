@@ -26,8 +26,8 @@ public class UsuarioValidatorUtil {
         if (!dto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new EmailInvalidoException("El correo electrónico no tiene un formato válido.");
         }
-        if (dto.getPassword().length() < 6 || dto.getPassword().length() > 16) {
-            throw new PasswordInvalidaException("La contraseña debe tener entre 6 y 16 caracteres.");
+        if (dto.getPassword().length() < 8 || dto.getPassword().length() > 128) {
+            throw new PasswordInvalidaException("La contraseña debe tener entre 8 y 128 caracteres.");
         }
         if (!dto.getPassword().matches("^(?=.*[A-Za-z])(?=.*\\d).+$")) {
             throw new PasswordInvalidaException("La contraseña debe contener al menos una letra y un número.");
@@ -35,8 +35,8 @@ public class UsuarioValidatorUtil {
         if (dto.getPassword().equals(dto.getUsername())) {
             throw new PasswordInvalidaException("La contraseña no puede ser igual al nombre de usuario.");
         }
-        if (!dto.getUsername().matches("^[A-Za-z0-9._-]{6,16}$")) {
-            throw new NombreUsuarioVacioException("El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 6 y 16 caracteres.");
+        if (!dto.getUsername().matches("^[A-Za-z0-9._-]{8,128}$")) {
+            throw new NombreUsuarioVacioException("El nombre de usuario solo puede contener letras, números, guion bajo, guion medio y punto, y tener entre 8 y 128 caracteres.");
         }
         
         // Validaciones extra para los campos nuevos

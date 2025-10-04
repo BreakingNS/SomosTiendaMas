@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,421 +17,435 @@
       --bg:#F8F9FA;
     }
     body{background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
-    .input-focus:focus{outline: none; box-shadow: 0 0 0 4px rgba(255,107,53,0.12); border-color: var(--primary);}
-    .error {color:#dc2626;}
-    .password-toggle{cursor:pointer}
-    .visually-hidden{position:absolute !important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px;}
-    /* small nicety for required star */
+    .input-focus:focus{outline: none; box-shadow: 0 0 0 3px rgba(255,107,53,0.15); border-color: var(--primary);}
     .req{color:#ef4444}
+    /* small helpers */
+    .field-error { color: #dc2626; }
+
+    /* Inicio Estado de Sesion */
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+        /* Fin Estado de Sesion */
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6">
-  <main class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
-    <header class="mb-6 text-center">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
+  <main class="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-10">
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
         <span class="text-orange-500">Tienda</span><span class="text-blue-600">Mas</span>
       </h1>
-      <p class="text-sm text-gray-600 mt-1">Registro de Empresa — completa todos los campos para crear tu cuenta empresarial.</p>
+      <p class="text-gray-600 text-sm mt-2">Completa todos los campos para crear tu cuenta empresarial.</p>
     </header>
 
-    <form id="companyForm" novalidate aria-describedby="formHelp" class="space-y-6">
-      <p id="formHelp" class="text-xs text-gray-500">Todos los campos marcados con <span class="req">*</span> son obligatorios.</p>
+    <!-- Form -->
+    <form id="companyForm" novalidate class="grid grid-cols-1 lg:grid-cols-2 gap-8" aria-describedby="formHelp">
+      <p id="formHelp" class="lg:col-span-2 text-sm text-gray-500">Todos los campos marcados con <span class="req">*</span> son obligatorios.</p>
 
-      <!-- Datos de Cuenta -->
-      <section aria-labelledby="accountTitle" class="bg-gray-50 p-4 rounded-lg border">
-        <h2 id="accountTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos de Cuenta</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Usuario -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Usuario <span class="req">*</span></label>
-            <div class="relative">
-              <input id="username" name="username" type="text" required
-                minlength="6" maxlength="16"
-                aria-describedby="usernameHelp usernameError"
-                placeholder="mín. 6 - máx. 16 (letras, números, . _ -)"
-                class="input-focus w-full px-4 py-2 border rounded-lg"
-                autocomplete="username"
-              />
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-user-circle"></i></div>
+      <!-- Columna Izquierda -->
+      <div class="space-y-6">
+        <!-- Datos de Cuenta -->
+        <section class="bg-gray-50 p-5 rounded-xl border">
+          <h2 class="text-lg font-semibold text-gray-700 mb-4">Datos de Cuenta</h2>
+          <div class="space-y-4">
+            <div>
+              <label for="username" class="block text-sm font-medium">Usuario <span class="req">*</span></label>
+              <input id="username" name="username" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" placeholder="ej: miempresa2025"
+                     aria-describedby="usernameError" aria-invalid="false" autocomplete="username" />
+              <p id="usernameError" class="text-sm field-error mt-1 hidden" role="alert"></p>
             </div>
-            <p id="usernameHelp" class="text-xs text-gray-500 mt-1">Permitidos: letras, números y los caracteres <code>. _ -</code>.</p>
-            <p id="usernameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
 
-          <!-- Email -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Email <span class="req">*</span></label>
-            <div class="relative">
-              <input id="email" name="email" type="email" required
-                aria-describedby="emailError"
-                placeholder="tu@empresa.com"
-                class="input-focus w-full px-4 py-2 border rounded-lg"
-                autocomplete="email"
-              />
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="far fa-envelope"></i></div>
+            <div>
+              <label for="email" class="block text-sm font-medium">Email <span class="req">*</span></label>
+              <input id="email" name="email" type="email" class="w-full border rounded-lg px-4 py-2 input-focus" placeholder="empresa@correo.com"
+                     aria-describedby="emailError" aria-invalid="false" autocomplete="email" />
+              <p id="emailError" class="text-sm field-error mt-1 hidden" role="alert"></p>
             </div>
-            <p id="emailError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
 
-          <!-- Password -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Contraseña <span class="req">*</span></label>
-            <div class="relative">
-              <input id="password" name="password" type="password" required
-                minlength="6" maxlength="16"
-                aria-describedby="passwordHelp passwordError"
-                placeholder="mín. 6 - máx.16"
-                class="input-focus w-full px-4 py-2 border rounded-lg pr-10"
-                autocomplete="new-password"
-              />
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 password-toggle" onclick="togglePassword('password')"><i class="far fa-eye"></i></div>
+            <div>
+              <label for="password" class="block text-sm font-medium">Contraseña <span class="req">*</span></label>
+              <div class="relative">
+                <input id="password" name="password" type="password" class="w-full border rounded-lg px-4 py-2 pr-10 input-focus" placeholder="Mínimo 6 caracteres"
+                       aria-describedby="passwordError" aria-invalid="false" autocomplete="new-password" />
+                <button type="button" aria-label="Mostrar contraseña" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500" onclick="togglePassword('password', this)">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <p id="passwordError" class="text-sm field-error mt-1 hidden" role="alert"></p>
             </div>
-            <p id="passwordHelp" class="text-xs text-gray-500 mt-1">Permitidos: letras, números y !@#$%^&*()_+-={}[]:;,.?/</p>
-            <p id="passwordError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
 
-          <!-- Confirm Password -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña <span class="req">*</span></label>
-            <div class="relative">
-              <input id="confirmPassword" name="confirmPassword" type="password" required
-                aria-describedby="confirmPasswordError"
-                placeholder="Repitela"
-                class="input-focus w-full px-4 py-2 border rounded-lg pr-10"
-                autocomplete="new-password"
-              />
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 password-toggle" onclick="togglePassword('confirmPassword')"><i class="far fa-eye"></i></div>
+            <div>
+              <label for="confirmPassword" class="block text-sm font-medium">Confirmar Contraseña <span class="req">*</span></label>
+              <div class="relative">
+                <input id="confirmPassword" name="confirmPassword" type="password" class="w-full border rounded-lg px-4 py-2 pr-10 input-focus" placeholder="Repite la contraseña"
+                       aria-describedby="confirmPasswordError" aria-invalid="false" autocomplete="new-password" />
+                <button type="button" aria-label="Mostrar confirmar contraseña" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500" onclick="togglePassword('confirmPassword', this)">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <p id="confirmPasswordError" class="text-sm field-error mt-1 hidden" role="alert"></p>
             </div>
-            <p id="confirmPasswordError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
           </div>
+        </section>
+
+        <!-- Representante -->
+         <!-- Representante -->
+        <section class="bg-gray-50 p-5 rounded-xl border">
+          <h2 class="text-lg font-semibold text-gray-700 mb-4">Representante Legal</h2>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="repFirstName" class="block text-sm font-medium">Nombre <span class="req">*</span></label>
+                <input id="repFirstName" name="repFirstName" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repFirstNameError" aria-invalid="false" />
+                <p id="repFirstNameError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="repLastName" class="block text-sm font-medium">Apellido <span class="req">*</span></label>
+                <input id="repLastName" name="repLastName" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repLastNameError" aria-invalid="false" />
+                <p id="repLastNameError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+        
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="repGender" class="block text-sm font-medium">Género <span class="req">*</span></label>
+                <select id="repGender" name="repGender" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repGenderError" aria-invalid="false">
+                  <option value="">Seleccionar</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="no-binario">No binario</option>
+                  <option value="prefiero-no-decirlo">Prefiero no decirlo</option>
+                </select>
+                <p id="repGenderError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+        
+              <div>
+                <label for="repDocument" class="block text-sm font-medium">Documento (DNI/CUIL) <span class="req">*</span></label>
+                <input id="repDocument" name="repDocument" type="text" inputmode="numeric" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repDocumentError" aria-invalid="false" placeholder="Sólo números" />
+                <p id="repDocumentError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+        
+            <!-- NUEVOS CAMPOS -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="repPhone" class="block text-sm font-medium">Teléfono <span class="req">*</span></label>
+                <input id="repPhone" name="repPhone" type="text" inputmode="numeric" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repPhoneError" aria-invalid="false" placeholder="Ej: 3815123456" />
+                <p id="repPhoneError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="repEmail" class="block text-sm font-medium">Email <span class="req">*</span></label>
+                <input id="repEmail" name="repEmail" type="email" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="repEmailError" aria-invalid="false" placeholder="representante@correo.com" />
+                <p id="repEmailError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      
+      <!-- Columna Derecha -->
+      <div class="space-y-6">
+        <!-- Empresa -->
+        <section class="bg-gray-50 p-5 rounded-xl border">
+          <h2 class="text-lg font-semibold text-gray-700 mb-4">Datos de la Empresa</h2>
+          <div class="space-y-4">
+            <div>
+              <label for="businessName" class="block text-sm font-medium">Razón Social <span class="req">*</span></label>
+              <input id="businessName" name="businessName" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="businessNameError" aria-invalid="false" />
+              <p id="businessNameError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+
+            <div>
+              <label for="cuit" class="block text-sm font-medium">CUIT <span class="req">*</span></label>
+              <input id="cuit" name="cuit" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="cuitError" aria-invalid="false" placeholder="XX-XXXXXXXX-X o 11 dígitos" />
+              <p id="cuitError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+
+            <div>
+              <label for="ivaCondition" class="block text-sm font-medium">Condición ante IVA <span class="req">*</span></label>
+              <select id="ivaCondition" name="ivaCondition" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="ivaConditionError" aria-invalid="false">
+                <option value="">Seleccionar condición</option>
+                <option>Responsable Inscripto</option>
+                <option>Monotributo</option>
+                <option>Exento</option>
+                <option>Consumidor Final</option>
+                <option>Otro</option>
+              </select>
+              <p id="ivaConditionError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dirección -->
+        <section class="bg-gray-50 p-5 rounded-xl border">
+          <h2 class="text-lg font-semibold text-gray-700 mb-4">Dirección</h2>
+          <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-4">
+              <div class="col-span-2">
+                <label for="street" class="block text-sm font-medium">Calle <span class="req">*</span></label>
+                <input id="street" name="street" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="streetError" aria-invalid="false" />
+                <p id="streetError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="streetNumber" class="block text-sm font-medium">Número <span class="req">*</span></label>
+                <input id="streetNumber" name="streetNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="streetNumberError" aria-invalid="false" />
+                <p id="streetNumberError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label for="floor" class="block text-sm font-medium">Piso</label>
+                <input id="floor" name="floor" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="floorError" aria-invalid="false" />
+                <p id="floorError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="apartment" class="block text-sm font-medium">Departamento</label>
+                <input id="apartment" name="apartment" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="apartmentError" aria-invalid="false" />
+                <p id="apartmentError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="postalCode" class="block text-sm font-medium">Código Postal <span class="req">*</span></label>
+                <input id="postalCode" name="postalCode" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="postalCodeError" aria-invalid="false" />
+                <p id="postalCodeError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="city" class="block text-sm font-medium">Ciudad <span class="req">*</span></label>
+                <input id="city" name="city" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="cityError" aria-invalid="false" />
+                <p id="cityError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+              <div>
+                <label for="province" class="block text-sm font-medium">Provincia <span class="req">*</span></label>
+                <input id="province" name="province" type="text" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="provinceError" aria-invalid="false" />
+                <p id="provinceError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+              </div>
+            </div>
+
+            <div>
+              <label for="reference" class="block text-sm font-medium">Referencia</label>
+              <textarea id="reference" name="reference" rows="2" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="referenceError" aria-invalid="false"></textarea>
+              <p id="referenceError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Full width: Teléfono y Terms -->
+      <div class="lg:col-span-2 space-y-6">
+        <section class="bg-gray-50 p-5 rounded-xl border">
+          <h2 class="text-lg font-semibold text-gray-700 mb-4">Teléfono de Contacto</h2>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label for="phoneArea" class="block text-sm font-medium">Característica (ej: 011) <span class="req">*</span></label>
+              <input id="phoneArea" name="phoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="phoneAreaError" aria-invalid="false" placeholder="011">
+              <p id="phoneAreaError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+
+            <div class="col-span-2">
+              <label for="phoneNumber" class="block text-sm font-medium">Número <span class="req">*</span></label>
+              <input id="phoneNumber" name="phoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-4 py-2 input-focus" aria-describedby="phoneNumberError" aria-invalid="false" placeholder="15XXXXYYYY">
+              <p id="phoneNumberError" class="text-sm field-error mt-1 hidden" role="alert"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Terms -->
+        <div class="flex items-start gap-3">
+          <input id="terms" name="terms" type="checkbox" class="mt-1 w-4 h-4" aria-describedby="termsError" />
+          <label for="terms" class="text-sm text-gray-700">Acepto los <a href="#" class="text-orange-500 underline" target="_blank">Términos y Condiciones</a> y la <a href="#" class="text-orange-500 underline" target="_blank">Política de Privacidad</a> <span class="req">*</span></label>
         </div>
-      </section>
+        <p id="termsError" class="text-sm field-error hidden" role="alert">Debes aceptar los términos y políticas.</p>
 
-      <!-- Datos del Representante Legal -->
-      <section aria-labelledby="repTitle" class="bg-gray-50 p-4 rounded-lg border">
-        <h2 id="repTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos del Representante Legal</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Nombre <span class="req">*</span></label>
-            <input id="repFirstName" name="repFirstName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="repFirstNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Apellido <span class="req">*</span></label>
-            <input id="repLastName" name="repLastName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="repLastNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Género <span class="req">*</span></label>
-            <select id="repGender" name="repGender" required class="input-focus w-full px-4 py-2 border rounded-lg">
-              <option value="">Seleccionar</option>
-              <option value="femenino">Femenino</option>
-              <option value="masculino">Masculino</option>
-              <option value="otro">Otro</option>
-            </select>
-            <p id="repGenderError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Documento (DNI/CUIL) <span class="req">*</span></label>
-            <input id="repDocument" name="repDocument" type="text" required inputmode="numeric" placeholder="Sólo números, sin puntos" class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="repDocumentError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
+        <!-- Botón -->
+        <div class="flex justify-end">
+          <button id="submitBtn" type="submit" disabled class="bg-gradient-to-r from-orange-500 to-orange-400 disabled:opacity-60 text-white font-semibold px-8 py-3 rounded-lg shadow-lg inline-flex items-center transition">
+            <span id="btnText">Crear cuenta</span>
+            <svg id="spinner" class="ml-3 hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+          </button>
         </div>
-      </section>
-
-      <!-- Datos de la Empresa -->
-      <section aria-labelledby="companyTitle" class="bg-gray-50 p-4 rounded-lg border">
-        <h2 id="companyTitle" class="text-lg font-semibold text-gray-700 mb-3">Datos de la Empresa</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Razón Social <span class="req">*</span></label>
-            <input id="businessName" name="businessName" type="text" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="businessNameError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">CUIT <span class="req">*</span></label>
-            <input id="cuit" name="cuit" type="text" required placeholder="11 dígitos o formato XX-XXXXXXXX-X" class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="cuitError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Condición ante IVA <span class="req">*</span></label>
-            <select id="ivaCondition" name="ivaCondition" required class="input-focus w-full px-4 py-2 border rounded-lg">
-              <option value="">Seleccionar condición</option>
-              <option>Responsable Inscripto</option>
-              <option>Monotributo</option>
-              <option>Exento</option>
-              <option>Consumidor Final</option>
-              <option>Otro</option>
-            </select>
-            <p id="ivaConditionError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-        </div>
-
-        <!-- Dirección de la Empresa -->
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Calle <span class="req">*</span></label>
-            <input id="street" name="street" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="streetError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Número <span class="req">*</span></label>
-            <input id="streetNumber" name="streetNumber" required inputmode="numeric" class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="streetNumberError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Piso <span class="req">*</span></label>
-            <input id="floor" name="floor" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="floorError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Departamento <span class="req">*</span></label>
-            <input id="apartment" name="apartment" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="apartmentError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Ciudad <span class="req">*</span></label>
-            <input id="city" name="city" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="cityError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Provincia <span class="req">*</span></label>
-            <input id="province" name="province" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="provinceError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Código Postal <span class="req">*</span></label>
-            <input id="postalCode" name="postalCode" required class="input-focus w-full px-4 py-2 border rounded-lg" />
-            <p id="postalCodeError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div class="md:col-span-3">
-            <label class="block text-sm font-medium text-gray-700">Referencia <span class="req">*</span></label>
-            <textarea id="reference" name="reference" required rows="2" class="input-focus w-full px-4 py-2 border rounded-lg"></textarea>
-            <p id="referenceError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-        </div>
-
-        <!-- Teléfono -->
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Característica (ej: 011) <span class="req">*</span></label>
-            <input id="phoneArea" name="phoneArea" required class="input-focus w-full px-4 py-2 border rounded-lg" inputmode="numeric" />
-            <p id="phoneAreaError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Número <span class="req">*</span></label>
-            <input id="phoneNumber" name="phoneNumber" required class="input-focus w-full px-4 py-2 border rounded-lg" inputmode="numeric" />
-            <p id="phoneNumberError" class="text-xs error mt-1 visually-hidden" role="alert"></p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Terms -->
-      <section class="flex items-start gap-3">
-        <input id="terms" name="terms" type="checkbox" required class="w-4 h-4 mt-1" />
-        <label for="terms" class="text-sm text-gray-700">Acepto los <a href="#" class="text-orange-500 underline">Términos y Condiciones</a> y la <a href="#" class="text-orange-500 underline">Política de Privacidad</a> <span class="req">*</span></label>
-      </section>
-      <p id="termsError" class="text-xs error visually-hidden" role="alert">Debes aceptar los términos y políticas.</p>
-
-      <!-- Submit -->
-      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div class="text-sm text-gray-600">¿Ya tienes cuenta? <a href="iniciarSesion.html" class="text-orange-500 underline">Iniciar sesión</a></div>
-        <button id="submitBtn" type="submit" class="bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-semibold px-6 py-2 rounded-lg shadow inline-flex items-center">
-          <span id="btnText">Crear cuenta</span>
-          <svg id="spinner" class="ml-3 hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-        </button>
       </div>
     </form>
   </main>
 
-  <!-- JS: Validaciones -->
+  <!-- JS: Validaciones (email, contraseña, teléfono) -->
   <script>
     // --- Helpers ---
     const qs = id => document.getElementById(id);
-    const showErr = (id, text) => {
-      const el = qs(id);
-      el.textContent = text;
-      el.classList.remove('visually-hidden');
-    }
-    const hideErr = (id) => {
-      const el = qs(id);
-      if (el) { el.textContent = ''; el.classList.add('visually-hidden'); }
-    }
+    const showError = (fieldId, message) => {
+      const err = qs(fieldId + 'Error');
+      if (!err) return;
+      err.textContent = message;
+      err.classList.remove('hidden');
+      const field = qs(fieldId);
+      if (field) field.setAttribute('aria-invalid', 'true');
+    };
+    const hideError = (fieldId) => {
+      const err = qs(fieldId + 'Error');
+      if (!err) return;
+      err.textContent = '';
+      err.classList.add('hidden');
+      const field = qs(fieldId);
+      if (field) field.setAttribute('aria-invalid', 'false');
+    };
 
-    // --- Validation rules (client-side) ---
-    const usernameAllowed = /^[A-Za-z0-9._-]{6,16}$/;
-    // Password allowed characters set:
-    const passwordAllowed = /^[A-Za-z0-9!@#$%^&*()_+\-=\{\}\[\]:;,.?\/]{6,16}$/;
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // CUIT: accept 11 digits or formatted pattern like 20-12345678-3
-    const cuitRe = /^(?:\d{2}-?\d{8}-?\d{1})$/;
+    // Regex / reglas
+    const usernameRe = /^[A-Za-z0-9._-]{8,128}$/;
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // razonable para cliente
+    const passwordRe = /^[A-Za-z0-9!@#$%^&*()_+\-=\{\}\[\]:;,.?\/]{8,128}$/;
+    const phoneAreaRe = /^\d{2,4}$/; // e.g. 11, 381, 0299
+    const phoneNumberRe = /^\d{6,15}$/; // teléfono principal
     const digitsOnly = /^\d+$/;
 
     // Toggle password visibility
-    function togglePassword(id) {
-      const field = qs(id);
-      const icon = field.parentElement.querySelector('.password-toggle i');
+    function togglePassword(fieldId, btn) {
+      const field = qs(fieldId);
+      if (!field) return;
+      const icon = btn.querySelector('i');
       if (field.type === 'password') {
         field.type = 'text';
-        if (icon) icon.classList.replace('fa-eye','fa-eye-slash');
+        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
       } else {
         field.type = 'password';
-        if (icon) icon.classList.replace('fa-eye-slash','fa-eye');
+        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
       }
+      field.focus();
     }
 
-    // Validate single fields
-    function validateField(fieldId) {
-      const v = qs(fieldId).value.trim();
-      switch(fieldId) {
-        case 'username':
-          if (!v) { showErr('usernameError','Usuario requerido'); return false; }
-          if (!usernameAllowed.test(v)) { showErr('usernameError','Usuario inválido. 6-16 chars; letras, números, . _ - permitidos.'); return false; }
-          hideErr('usernameError'); return true;
-
-        case 'email':
-          if (!v) { showErr('emailError','Email requerido'); return false; }
-          if (!emailRe.test(v)) { showErr('emailError','Formato de email inválido'); return false; }
-          hideErr('emailError'); return true;
-
-        case 'password':
-          if (!v) { showErr('passwordError','Contraseña requerida'); return false; }
-          if (!passwordAllowed.test(v)) { showErr('passwordError','Contraseña inválida. Usa 6-16 caracteres y sólo los símbolos permitidos.'); return false; }
-          hideErr('passwordError'); return true;
-
-        case 'confirmPassword':
-          const p = qs('password').value;
-          if (!v) { showErr('confirmPasswordError','Confirmar contraseña requerida'); return false; }
-          if (p !== v) { showErr('confirmPasswordError','Las contraseñas no coinciden'); return false; }
-          hideErr('confirmPasswordError'); return true;
-
-        case 'repFirstName':
-        case 'repLastName':
-        case 'repGender':
-        case 'businessName':
-        case 'street':
-        case 'streetNumber':
-        case 'floor':
-        case 'apartment':
-        case 'city':
-        case 'province':
-        case 'postalCode':
-        case 'reference':
-          if (!v) { showErr(fieldId + 'Error','Campo requerido'); return false; }
-          hideErr(fieldId + 'Error'); return true;
-
-        case 'repDocument':
-          if (!v) { showErr('repDocumentError','Documento requerido'); return false; }
-          if (!digitsOnly.test(v)) { showErr('repDocumentError','Documento sólo números'); return false; }
-          hideErr('repDocumentError'); return true;
-
-        case 'cuit':
-          if (!v) { showErr('cuitError','CUIT requerido'); return false; }
-          if (!cuitRe.test(v)) { showErr('cuitError','CUIT inválido. Debe ser 11 dígitos o formato XX-XXXXXXXX-X'); return false; }
-          hideErr('cuitError'); return true;
-
-        case 'ivaCondition':
-          if (!v) { showErr('ivaConditionError','Selecciona la condición ante IVA'); return false; }
-          hideErr('ivaConditionError'); return true;
-
-        case 'phoneArea':
-          if (!v) { showErr('phoneAreaError','Característica requerida'); return false; }
-          if (!digitsOnly.test(v)) { showErr('phoneAreaError','Sólo números'); return false; }
-          hideErr('phoneAreaError'); return true;
-
-        case 'phoneNumber':
-          if (!v) { showErr('phoneNumberError','Número de teléfono requerido'); return false; }
-          if (!digitsOnly.test(v)) { showErr('phoneNumberError','Sólo números'); return false; }
-          hideErr('phoneNumberError'); return true;
-
-        default:
-          return true;
-      }
+    // Validadores individuales
+    function validateUsername() {
+      const v = (qs('username').value || '').trim();
+      if (!v) { showError('username', 'Usuario requerido'); return false; }
+      if (!usernameRe.test(v)) { showError('username', '6-16 caracteres. Letras, números, . _ - permitidos.'); return false; }
+      hideError('username'); return true;
     }
 
-    // Wire real-time validation
-    const watched = ['username','email','password','confirmPassword','repFirstName','repLastName','repGender','repDocument','businessName','cuit','ivaCondition','street','streetNumber','floor','apartment','city','province','postalCode','reference','phoneArea','phoneNumber'];
-    watched.forEach(id => {
-      const el = qs(id);
-      if (!el) return;
-      el.addEventListener('input', () => validateField(id));
-      el.addEventListener('blur', () => validateField(id));
-    });
-    // Terms checkbox
-    qs('terms').addEventListener('change', () => {
-      if (qs('terms').checked) hideErr('termsError'); else showErr('termsError','Debes aceptar los términos');
-    });
+    function validateEmail() {
+      const v = (qs('email').value || '').trim();
+      if (!v) { showError('email', 'Email requerido'); return false; }
+      if (!emailRe.test(v)) { showError('email', 'Formato de email inválido'); return false; }
+      hideError('email'); return true;
+    }
 
-    // Form submit
+    function validatePassword() {
+      const v = (qs('password').value || '');
+      if (!v) { showError('password','Contraseña requerida'); return false; }
+      if (!passwordRe.test(v)) { showError('password','6-16 caracteres. Solo los símbolos permitidos.'); return false; }
+      hideError('password'); return true;
+    }
+
+    function validateConfirmPassword() {
+      const p = (qs('password').value || '');
+      const v = (qs('confirmPassword').value || '');
+      if (!v) { showError('confirmPassword','Confirmar contraseña requerida'); return false; }
+      if (p !== v) { showError('confirmPassword','Las contraseñas no coinciden'); return false; }
+      hideError('confirmPassword'); return true;
+    }
+
+    function validatePhoneArea() {
+      const v = (qs('phoneArea').value || '').trim();
+      if (!v) { showError('phoneArea','Característica requerida'); return false; }
+      if (!phoneAreaRe.test(v)) { showError('phoneArea','Formato inválido (ej: 011, 381)'); return false; }
+      hideError('phoneArea'); return true;
+    }
+
+    function validatePhoneNumber() {
+      const v = (qs('phoneNumber').value || '').trim();
+      if (!v) { showError('phoneNumber','Número requerido'); return false; }
+      if (!phoneNumberRe.test(v)) { showError('phoneNumber','Número inválido. 6-15 dígitos.'); return false; }
+      hideError('phoneNumber'); return true;
+    }
+
+    // Estado del botón (habilitar solo cuando los checks básicos son válidos)
+    function updateSubmitState() {
+      const allValid = validateUsername() && validateEmail() && validatePassword() && validateConfirmPassword()
+                       && validatePhoneArea() && validatePhoneNumber() && qs('terms').checked;
+      qs('submitBtn').disabled = !allValid;
+      if (!qs('terms').checked) {
+        showError('terms','Debes aceptar los términos y políticas.');
+      } else {
+        hideError('terms');
+      }
+      return allValid;
+    }
+
+    // Eventos en tiempo real (debounce ligero para email)
+    const debounce = (fn, wait=300) => {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), wait); };
+    };
+
+    qs('username')?.addEventListener('input', () => { validateUsername(); updateSubmitState(); });
+    qs('email')?.addEventListener('input', debounce(()=>{ validateEmail(); updateSubmitState(); }, 250));
+    qs('password')?.addEventListener('input', () => { validatePassword(); validateConfirmPassword(); updateSubmitState(); });
+    qs('confirmPassword')?.addEventListener('input', () => { validateConfirmPassword(); updateSubmitState(); });
+    qs('phoneArea')?.addEventListener('input', () => { validatePhoneArea(); updateSubmitState(); });
+    qs('phoneNumber')?.addEventListener('input', () => { validatePhoneNumber(); updateSubmitState(); });
+    qs('terms')?.addEventListener('change', updateSubmitState);
+
+    // Submit
     qs('companyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      // hide previous generic errors
-      hideErr('termsError');
-
-      // validate all
-      let ok = true;
-      for (const id of watched) {
-        const valid = validateField(id);
-        ok = ok && valid;
-      }
-      if (!qs('terms').checked) { showErr('termsError','Debes aceptar los términos'); ok = false; }
-
+      // Revalidar todo
+      const ok = updateSubmitState();
       if (!ok) {
-        // focus the first visible error
-        const firstErr = document.querySelector('.error:not(.visually-hidden)');
+        // focus al primer campo inválido
+        const firstErr = document.querySelector('.field-error:not(.hidden)');
         if (firstErr) {
-          const related = firstErr.id.replace('Error','');
-          const field = qs(related);
-          if (field) field.focus();
+          const relatedId = firstErr.id.replace('Error','');
+          const fld = qs(relatedId);
+          if (fld) fld.focus();
         }
         return;
       }
 
-      // Simulate submission (replace with real API call)
+      // Simular envío
       qs('submitBtn').disabled = true;
       qs('btnText').textContent = 'Creando cuenta...';
       qs('spinner').classList.remove('hidden');
 
       try {
-        // Example delay to simulate server request:
+        // Simula llamada al servidor (reemplazar por fetch real)
         await new Promise(r => setTimeout(r, 900));
 
-        // Success
+        // Éxito demo
         alert('Cuenta de empresa creada correctamente. (Demo)');
         qs('companyForm').reset();
-        // hide all errors again
-        document.querySelectorAll('[id$="Error"]').forEach(el => { el.textContent=''; el.classList.add('visually-hidden'); });
-      } catch(err) {
+        // limpiar errores
+        document.querySelectorAll('[id$="Error"]').forEach(el => { el.textContent=''; el.classList.add('hidden'); });
+      } catch (err) {
         alert('Ocurrió un error al crear la cuenta. Intenta nuevamente.');
       } finally {
-        qs('submitBtn').disabled = false;
         qs('btnText').textContent = 'Crear cuenta';
         qs('spinner').classList.add('hidden');
+        qs('submitBtn').disabled = true; // dejar deshabilitado hasta que vuelva a validar
       }
     });
 
-    // Small accessibility improvement: hide error message containers initially
-    document.querySelectorAll('[id$="Error"]').forEach(el => el.classList.add('visually-hidden'));
+    // Inicializar (por si vuelve a cargar)
+    document.addEventListener('DOMContentLoaded', () => {
+      // ocultar errores por defecto
+      document.querySelectorAll('[id$="Error"]').forEach(el => el.classList.add('hidden'));
+      qs('submitBtn').disabled = true;
+    });
   </script>
-</body>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+    </div>
+
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
+  </body>
 </html>
-
-
-
-

@@ -32,12 +32,10 @@ import com.breakingns.SomosTiendaMas.auth.dto.request.LoginRequest;
 import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
 import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
-import com.breakingns.SomosTiendaMas.auth.repository.IEmailVerificacionRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.IRefreshTokenRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenEmitidoRepository;
 import com.breakingns.SomosTiendaMas.auth.repository.ITokenResetPasswordRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
-import com.breakingns.SomosTiendaMas.auth.service.EmailVerificacionService;
 import com.breakingns.SomosTiendaMas.auth.service.SesionActivaService;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
@@ -84,7 +82,6 @@ public class PasswordRecoveryTest {
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
     private final IUsuarioRepository usuarioRepository;
-    private final IEmailVerificacionRepository emailVerificacionRepository;
     private final ITokenResetPasswordRepository tokensResetPasswordRepository;
     private final SesionActivaService sesionActivaService;
     private final ITokenEmitidoRepository tokenEmitidoRepository;
@@ -96,7 +93,6 @@ public class PasswordRecoveryTest {
     private RegistroUsuarioCompletoDTO registroDTO;
     private String registeredEmail;
     private String originalPasswordHash;
-    private EmailVerificacionService emailVerificacionService;
     
 
     @BeforeEach

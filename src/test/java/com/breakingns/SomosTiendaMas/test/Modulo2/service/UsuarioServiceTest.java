@@ -579,12 +579,12 @@ public class UsuarioServiceTest {
     void traerTodoUsuario_OK() throws Exception {
         // crear dos usuarios distintos
         RegistroUsuarioDTO a = new RegistroUsuarioDTO();
-        a.setUsername("uLista1"); a.setEmail("correoprueba1@noenviar.com"); a.setPassword("Clave123"); a.setNombreResponsable("A"); a.setApellidoResponsable("A");
+        a.setUsername("UsuLista1"); a.setEmail("correoprueba1@noenviar.com"); a.setPassword("Clave123"); a.setNombreResponsable("A"); a.setApellidoResponsable("A");
         a.setDocumentoResponsable("70000001"); a.setTipoUsuario("PERSONA_FISICA"); a.setAceptaTerminos(true); a.setAceptaPoliticaPriv(true);
         a.setFechaNacimientoResponsable(LocalDate.of(1990,1,1)); a.setGeneroResponsable("MASCULINO"); a.setIdioma("es"); a.setTimezone("America/Argentina/Buenos_Aires"); a.setRol("ROLE_USUARIO");
 
         RegistroUsuarioDTO b = new RegistroUsuarioDTO();
-        b.setUsername("uLista2"); b.setEmail("correoprueba2@noenviar.com"); b.setPassword("Clave123"); b.setNombreResponsable("B"); b.setApellidoResponsable("B");
+        b.setUsername("UsuLista2"); b.setEmail("correoprueba2@noenviar.com"); b.setPassword("Clave123"); b.setNombreResponsable("B"); b.setApellidoResponsable("B");
         b.setDocumentoResponsable("70000002"); b.setTipoUsuario("PERSONA_FISICA"); b.setAceptaTerminos(true); b.setAceptaPoliticaPriv(true);
         b.setFechaNacimientoResponsable(LocalDate.of(1990,1,1)); b.setGeneroResponsable("MASCULINO"); b.setIdioma("es"); b.setTimezone("America/Argentina/Buenos_Aires"); b.setRol("ROLE_USUARIO");
 

@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas.test.Modulo2.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,19 +24,7 @@ import org.springframework.test.context.jdbc.SqlGroup;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.breakingns.SomosTiendaMas.auth.model.Departamento;
-import com.breakingns.SomosTiendaMas.auth.model.Localidad;
-import com.breakingns.SomosTiendaMas.auth.model.Municipio;
-import com.breakingns.SomosTiendaMas.auth.model.Pais;
-import com.breakingns.SomosTiendaMas.auth.model.Provincia;
-import com.breakingns.SomosTiendaMas.auth.repository.IDepartamentoRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.ILocalidadRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IMunicipioRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
-import com.breakingns.SomosTiendaMas.auth.repository.IProvinciaRepository;
 import com.breakingns.SomosTiendaMas.auth.service.EmailService;
-import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
-import com.breakingns.SomosTiendaMas.entidades.direccion.repository.IDireccionRepository;
 import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.empresa.repository.IPerfilEmpresaRepository;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
@@ -142,16 +129,9 @@ public class TelefonoRepositoryTest {
     @MockBean
     private EmailService emailService;
 
-    private final IPaisRepository paisRepository;
-    private final IProvinciaRepository provinciaRepository;
-    private final IDepartamentoRepository departamentoRepository;
-    private final ILocalidadRepository localidadRepository;
-    private final IMunicipioRepository municipioRepository;
-    private final IDireccionRepository direccionRepository;
     private final ITelefonoRepository telefonoRepository;
 
     private RegistroUsuarioCompletoDTO registroDTO;
-    private RegistroDireccionDTO direccionDTO;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -215,62 +195,6 @@ public class TelefonoRepositoryTest {
 
         return result.getResponse().getStatus();
     }
-    
-    // helper único: hace POST y devuelve MvcResult para inspección en tests
-    private MvcResult registrarDireccion(RegistroDireccionDTO direccionDTO) throws Exception {
-        return mockMvc.perform(post("/api/direccion/public/registrar")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(direccionDTO)))
-            .andReturn();
-    }
-
-    private MvcResult registrarDireccionExpectOk(RegistroDireccionDTO direccionDTO) throws Exception {
-        return mockMvc.perform(post("/api/direccion/public/registrar")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(direccionDTO)))
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-            .andReturn();
-    }
-
-    private void importarUbicacionesMock() throws Exception {
-        mockMvc.perform(post("/api/import-ubicaciones/provincias")).andReturn();
-        mockMvc.perform(post("/api/import-ubicaciones/departamentos")
-            .param("provincia", "CATAMARCA")).andReturn();
-        mockMvc.perform(post("/api/import-ubicaciones/localidades")
-            .param("departamento", "CAPITAL")).andReturn();
-        mockMvc.perform(post("/api/import-ubicaciones/municipios")
-            .param("localidad", "SAN FERNANDO DEL VALLE DE CATAMARCA")).andReturn();
-    }
-
-    private RegistroDireccionDTO crearDireccionParaUsuario(Usuario usuario, String tipo, String calle, String numero, boolean esPrincipal) {
-        Pais pais = paisRepository.findByNombre("Argentina");
-        Provincia provincia = provinciaRepository.findByNombreAndPais("CATAMARCA", pais);
-        Departamento departamento = departamentoRepository.findByNombreAndProvincia("CAPITAL", provincia);
-        Municipio municipio = municipioRepository.findByNombre("SAN FERNANDO DEL VALLE DE CATAMARCA");
-        Optional<Localidad> localidad = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
-            "SAN FERNANDO DEL VALLE DE CATAMARCA", municipio, departamento, provincia
-        );
-
-        RegistroDireccionDTO dto = new RegistroDireccionDTO();
-        dto.setIdPais(pais.getId());
-        dto.setIdProvincia(provincia.getId());
-        dto.setIdDepartamento(departamento.getId());
-        dto.setIdLocalidad(localidad.get().getId());
-        dto.setIdMunicipio(municipio.getId());
-        dto.setIdPerfilEmpresa(null);
-        dto.setTipo(tipo);
-        dto.setCalle(calle);
-        dto.setNumero(numero);
-        dto.setPiso(null);
-        dto.setReferencia(null);
-        dto.setActiva(true);
-        dto.setEsPrincipal(esPrincipal);
-        dto.setCodigoPostal("1000");
-        dto.setIdUsuario(usuario.getIdUsuario());
-        return dto;
-    }
 
     // helper único: hace POST y devuelve MvcResult para inspección en tests (telefonos)
     private MvcResult registrarTelefono(RegistroTelefonoDTO telefonoDTO) throws Exception {
@@ -278,15 +202,6 @@ public class TelefonoRepositoryTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(telefonoDTO)))
-            .andReturn();
-    }
-
-    private MvcResult registrarTelefonoExpectOk(RegistroTelefonoDTO telefonoDTO) throws Exception {
-        return mockMvc.perform(post("/api/telefono/public")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(telefonoDTO)))
-            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
             .andReturn();
     }
 

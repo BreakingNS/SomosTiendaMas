@@ -92,9 +92,13 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", Instant.now().toString());
         body.put("status", HttpStatus.BAD_REQUEST.value());
+
         String param = ex.getName();
-        String value = ex.getValue() != null ? ex.getValue().toString() : "null";
-        body.put("message", String.format("Parámetro '%s' inválido: valor '%s'", param, value));
+        String value = String.valueOf(ex.getValue()); // seguro para null
+        Class<?> expectedType = ex.getRequiredType();
+        String expected = expectedType != null ? expectedType.getSimpleName() : "desconocido";
+
+        body.put("message", String.format("Parámetro '%s' inválido: valor '%s' (esperado: %s)", param, value, expected));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 

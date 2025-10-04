@@ -4,13 +4,9 @@ import com.breakingns.SomosTiendaMas.auth.model.TokenResetPassword;
 import com.breakingns.SomosTiendaMas.auth.repository.IPasswordResetTokenRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.repository.IUsuarioRepository;
-import com.breakingns.SomosTiendaMas.security.exception.EmailNoVerificadoException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIgualAAnteriorException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordIncorrectaException;
 import com.breakingns.SomosTiendaMas.security.exception.PasswordInvalidaException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenExpiradoException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenNoEncontradoException;
-import com.breakingns.SomosTiendaMas.security.exception.TokenYaUsadoException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -114,13 +110,13 @@ public class PasswordResetService {
         }
 
         // Validación de la contraseña nueva (por ejemplo, longitud mínima)
-        if (newPassword.length() < 6) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        if (newPassword.length() < 8) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 8 caracteres.");
         }
         
         // Validación de la contraseña nueva (por ejemplo, longitud maxima)
-        if (newPassword.length() > 16) { 
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        if (newPassword.length() > 128) { 
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 128 caracteres.");
         }
 
         // Si pasa todas las validaciones, actualizamos la contraseña
@@ -204,7 +200,7 @@ public class PasswordResetService {
         }
 
         // 3) validar contraseña nueva (no marcar token todavía)
-        if (nuevaPassword == null || nuevaPassword.length() < 6) {
+        if (nuevaPassword == null || nuevaPassword.length() < 8) {
             throw new PasswordInvalidaException("La contraseña no cumple requisitos");
         }
         if (nuevaPassword.length() > 128) {
@@ -267,11 +263,11 @@ public class PasswordResetService {
             .orElseThrow(() -> new IllegalStateException("Token no encontrado tras marcarlo como usado"));
 
         // Validaciones de contraseña
-        if (nuevaPassword == null || nuevaPassword.length() < 6) {
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 6 caracteres.");
+        if (nuevaPassword == null || nuevaPassword.length() < 8) {
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener al menos 8 caracteres.");
         }
-        if (nuevaPassword.length() > 16) {
-            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 16 caracteres.");
+        if (nuevaPassword.length() > 128) {
+            throw new PasswordInvalidaException("La contraseña no cumple con los requisitos. Debe tener como maximo 128 caracteres.");
         }
 
         Usuario usuario = tokenEntity.getUsuario();

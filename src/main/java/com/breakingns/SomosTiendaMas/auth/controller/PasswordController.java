@@ -11,7 +11,6 @@ import com.breakingns.SomosTiendaMas.security.exception.EmailNoVerificadoExcepti
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +40,6 @@ public class PasswordController {
         3. Change Password
         
     */
-
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9!@#$%^&*()\\-_=+\\[\\]{}|;:,.<>?]{32}$");
 
     private static final Logger log = LoggerFactory.getLogger(PasswordController.class);
 
