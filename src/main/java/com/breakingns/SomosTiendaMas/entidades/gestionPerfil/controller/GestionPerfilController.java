@@ -1,24 +1,23 @@
 package com.breakingns.SomosTiendaMas.entidades.gestionPerfil.controller;
 
-import com.breakingns.SomosTiendaMas.auth.model.EmailVerificacion;
-import com.breakingns.SomosTiendaMas.auth.service.EmailService;
 import com.breakingns.SomosTiendaMas.auth.service.EmailVerificacionService;
-import com.breakingns.SomosTiendaMas.entidades.direccion.service.DireccionService;
-import com.breakingns.SomosTiendaMas.entidades.empresa.service.PerfilEmpresaService;
+import com.breakingns.SomosTiendaMas.entidades.direccion.service.DireccionServiceImpl;
+import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.service.PerfilEmpresaService;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.ActualizarEmpresaCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.ActualizarUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.ConsultaEmpresaCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.ConsultaUsuarioCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroEmpresaCompletoDTO;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.RegistroUsuarioCompletoDTO;
-import com.breakingns.SomosTiendaMas.entidades.telefono.service.TelefonoService;
-import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
+import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.service.GestionPerfilService;
+import com.breakingns.SomosTiendaMas.entidades.telefono.service.TelefonoServiceImpl;
 import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
 import com.breakingns.SomosTiendaMas.utils.RequestUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,23 +38,24 @@ public class GestionPerfilController {
     
     private final UsuarioServiceImpl usuarioService;
     private final PerfilEmpresaService perfilEmpresaService;
-    private final DireccionService direccionService;
-    private final TelefonoService telefonoService;
+    private final DireccionServiceImpl direccionService;
+    private final TelefonoServiceImpl telefonoService;
     private final EmailVerificacionService emailVerificacionService;
-    private final EmailService emailService;
+    private final GestionPerfilService gestionPerfilService;
+
 
     public GestionPerfilController(UsuarioServiceImpl usuarioService, 
                                 PerfilEmpresaService perfilEmpresaService,
-                                DireccionService direccionService,
-                                TelefonoService telefonoService,
+                                DireccionServiceImpl direccionService,
+                                TelefonoServiceImpl telefonoService,
                                 EmailVerificacionService emailVerificacionService,
-                                EmailService emailService) {
+                                GestionPerfilService gestionPerfilService) {
         this.usuarioService = usuarioService;
         this.perfilEmpresaService = perfilEmpresaService;
         this.direccionService = direccionService;
         this.telefonoService = telefonoService;
         this.emailVerificacionService = emailVerificacionService;
-        this.emailService = emailService;
+        this.gestionPerfilService = gestionPerfilService;
     }
     
     /*                                   Endpoints:
@@ -74,7 +74,7 @@ public class GestionPerfilController {
             4. /public/empresa/eliminar/{id}    -> eliminarEmpresa
         
     */
-
+    
     private static final Set<String> EMAILS_BLOQUEADOS = Set.of(
         "correoprueba@noenviar.com",
         "correoprueba1@noenviar.com",
@@ -87,30 +87,11 @@ public class GestionPerfilController {
     @PostMapping("/public/usuario/registro")
     public ResponseEntity<String> registrarUsuario(@RequestBody @Valid RegistroUsuarioCompletoDTO dto, HttpServletRequest request) {
         String ip = RequestUtil.obtenerIpCliente(request);
-        // 1. Registrar usuario
-        Long idUsuario = usuarioService.registrarConRolDesdeDTO(dto.getUsuario(), ip);
-        // 2. Registrar direcciones
-        if (dto.getDirecciones() != null) {
-            dto.getDirecciones().forEach(direccion -> {
-                direccion.setIdUsuario(idUsuario);
-                direccionService.registrarDireccion(direccion);
-            });
-        }
-        // 3. Registrar teléfonos
-        if (dto.getTelefonos() != null) {
-            dto.getTelefonos().forEach(telefono -> {
-                telefono.setIdUsuario(idUsuario);
-                telefonoService.registrarTelefono(telefono);
-            });
-        }
-        // Generar código de verificación y enviar email
-        Usuario usu = usuarioService.findById(idUsuario).orElseThrow(() -> new RuntimeException("Usuario no encontrado")); 
-        EmailVerificacion verificacion = emailVerificacionService.generarCodigoParaUsuario(usu);
-        if (!EMAILS_BLOQUEADOS.contains(usu.getEmail())) {
-            emailService.enviarEmailVerificacion(usu.getEmail(), verificacion.getCodigo());
-        }
-        
-        return ResponseEntity.ok("Usuario registrado correctamente. Verifica tu email.");
+
+        GestionPerfilService.RegistroResult result = gestionPerfilService.registrarUsuarioCompleto(dto, ip);
+
+        java.net.URI location = java.net.URI.create("/api/usuario/" + result.idUsuario);
+        return ResponseEntity.created(location).body("Usuario registrado correctamente. Verifica tu email.");
     }
 
     @PutMapping("/public/usuario/edicion/{id}")
@@ -160,50 +141,11 @@ public class GestionPerfilController {
     }
 
     @PostMapping("/public/empresa/registro")
-    public ResponseEntity<String> registrarEmpresa(@RequestBody @Valid RegistroEmpresaCompletoDTO dto, HttpServletRequest request) {
+    public ResponseEntity<String> registrarEmpresaCompleta(@RequestBody @Valid RegistroEmpresaCompletoDTO dto, HttpServletRequest request) {
         String ip = RequestUtil.obtenerIpCliente(request);
-        // 1. Registrar responsable
-        Long idUsuario = usuarioService.registrarConRolDesdeDTO(dto.getResponsable(), ip);
-        // 2. Registrar direcciones y teléfonos de responsable
-        if (dto.getDireccionesResponsable() != null) {
-            dto.getDireccionesResponsable().forEach(direccion -> {
-                direccion.setIdUsuario(idUsuario);
-                direccionService.registrarDireccion(direccion);
-            });
-        }
-        if (dto.getTelefonosResponsable() != null) {
-            dto.getTelefonosResponsable().forEach(telefono -> {
-                telefono.setIdUsuario(idUsuario);
-                telefonoService.registrarTelefono(telefono);
-            });
-        }
-        // 3. Registrar perfil empresa
-        final Long idPerfilEmpresa;
-        if (dto.getPerfilEmpresa() != null) {
-            dto.getPerfilEmpresa().setIdUsuario(idUsuario);
-            idPerfilEmpresa = perfilEmpresaService.registrarPerfilEmpresa(dto.getPerfilEmpresa()).getId();
-        } else {
-            idPerfilEmpresa = null;
-        }
-        // 4. Registrar direcciones y teléfonos de la empresa
-        if (dto.getDireccionesEmpresa() != null && idPerfilEmpresa != null) {
-            dto.getDireccionesEmpresa().forEach(direccion -> {
-                direccion.setIdPerfilEmpresa(idPerfilEmpresa);
-                direccionService.registrarDireccion(direccion);
-            });
-        }
-        if (dto.getTelefonosEmpresa() != null && idPerfilEmpresa != null) {
-            dto.getTelefonosEmpresa().forEach(telefono -> {
-                telefono.setIdPerfilEmpresa(idPerfilEmpresa);
-                telefonoService.registrarTelefono(telefono);
-            });
-        }
-        // Generar código de verificación y enviar email
-        Usuario usuario = usuarioService.findById(idUsuario).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        EmailVerificacion verificacion = emailVerificacionService.generarCodigoParaUsuario(usuario);
-        emailService.enviarEmailVerificacion(usuario.getEmail(), verificacion.getCodigo());
-
-        return ResponseEntity.ok("Usuario registrado correctamente. Verifica tu email.");
+        GestionPerfilService.RegistroEmpresaResult res = gestionPerfilService.registrarEmpresaConResponsable(dto, ip);
+        URI location = URI.create("/api/perfilEmpresa/" + res.idPerfilEmpresa);
+        return ResponseEntity.created(location).body("Empresa registrada correctamente.");
     }
 
     @PutMapping("/public/empresa/edicion/{id}")

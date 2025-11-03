@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Subir Producto — Producto</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--primary-orange: #FF6B35;
+			--primary-blue: #004E89;
+			--light-gray: #F8F9FA;
+			--muted: #e6e7ea;
+		}
+		body { font-family: 'Inter', sans-serif; background:var(--light-gray); color:#222; margin:0; padding:24px; }
+		/* marca / header */
+		.site-brand-title {
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			color: #1f2937;
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+			font-size: 1.25rem;
+			line-height: 1.1;
+		}
+		@media (min-width: 640px) { .site-brand-title { font-size: 1.875rem; } }
+		.site-brand-accent-orange { color: var(--primary-orange); }
+		.site-brand-accent-blue   { color: var(--primary-blue); }
+
+		/* progress card igual que categoria.html */
+		.progress-wrap { max-width:900px; margin:22px auto; padding:18px 12px; background:white; border-radius:10px; box-shadow:0 6px 20px rgba(2,6,23,0.04); }
+		.progress { 
+			display:flex; 
+			gap:0; 
+			align-items:center; 
+			justify-content:space-between; 
+			position:relative; 
+			padding:24px 8px;
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.step { position:relative; flex:1; text-align:center; padding:0 6px; z-index:2; }
+		.step .circle { width:40px; height:40px; border-radius:50%; display:inline-block; border:3px solid var(--muted); background:white; box-sizing:border-box; }
+		.step .label { display:block; margin-top:10px; font-weight:600; color:#222; font-size:14px; }
+		.step:not(:last-child)::after {
+			content:"";
+			position:absolute;
+			top:25%;
+			left:60%;
+			right:-40%;
+			height:6px;
+			background:var(--muted);
+			transform:translateY(-50%);
+			z-index:1;
+			border-radius:4px;
+		}
+		.step.completed .circle,
+		.step.active .circle { background:var(--primary-orange); border-color:var(--primary-orange); box-shadow:0 0 0 6px rgba(255,107,53,0.08); }
+		.step.completed:not(:last-child)::after { background: linear-gradient(90deg,var(--primary-orange), #e55627); }
+		.step.active .circle { transform:scale(1.05); }
+
+		/* tarjeta de contenido (espacio para formulario de producto) */
+		.content-card {
+			max-width: 900px;
+			margin: 22px auto;
+			background: #ffffff;
+			border-radius: 10px;
+			padding: 28px;
+			box-shadow: 0 8px 30px rgba(2,6,23,0.06);
+			box-sizing: border-box;
+			min-height: 240px;
+		}
+
+		/* ==== NUEVO: estilos del botón primario (copiados de categoria) ==== */
+		.primary-btn {
+			background: linear-gradient(90deg, var(--primary-orange), #e55627);
+			color: #fff;
+			padding: 10px 18px;
+			border-radius: 8px;
+			border: none;
+			font-weight: 700;
+			cursor: pointer;
+			box-shadow: 0 6px 18px rgba(255,107,53,0.12);
+		}
+		.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(229,86,39,0.14); }
+		.primary-btn[disabled] { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+	</style>
+</head>
+<body>
+	<header class="mb-6 md:mb-8 text-center">
+		<h1 class="site-brand-title"><span class="site-brand-accent-orange">Tienda</span><span class="site-brand-accent-blue">Mas</span></h1>
+		<p class="text-gray-600 text-xs sm:text-sm mt-2">Agregar tu producto — paso Producto</p>
+	</header>
+
+	<main class="progress-wrap">
+		<ol class="progress" aria-label="Progreso de carga de producto">
+			<li class="step completed">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Categoria</span>
+			</li>
+			<li class="step active" aria-current="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Producto</span>
+			</li>
+			<li class="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Caracteristicas</span>
+			</li>
+			<li class="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Precio</span>
+			</li>
+		</ol>
+	</main>
+
+	<!-- tarjeta blanca para contenido del paso Producto -->
+	<div class="content-card" aria-label="Contenido paso Producto">
+		<!-- espacio vacío por ahora para que puedas agregar el formulario de producto -->
+
+		<!-- fila de acciones: botón Anterior (copiado de categoria) + Siguiente -->
+		<div style="display:flex; justify-content:space-between; gap:12px; margin-top:20px;">
+			<button id="backToCategoria" class="primary-btn" type="button" aria-label="Anterior">Anterior</button>
+			<button id="nextToCaracteristicas" class="primary-btn" type="button" aria-label="Siguiente">Siguiente</button>
+		</div>
+	</div>
+
+	<script>
+		const nextToCaracteristicas = document.getElementById('nextToCaracteristicas');
+		if(nextToCaracteristicas){
+			nextToCaracteristicas.addEventListener('click', () => {
+				window.location.href = 'https://localhost:8443/public/producto/caracteristicas.html';
+			});
+		}
+
+		// Nuevo listener botón "Anterior" -> vuelve a Categoría
+		const backToCategoria = document.getElementById('backToCategoria');
+		if (backToCategoria) {
+			backToCategoria.addEventListener('click', () => {
+				window.location.href = 'https://localhost:8443/public/producto/categoria.html';
+			});
+		}
+	</script>
+</body>
+</html>

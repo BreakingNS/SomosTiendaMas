@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Productos | Tienda Mas</title>
+	<meta name="description" content="Listado de productos - Tienda Mas" />
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--primary-orange: #FF6B35;
+			--primary-blue: #004E89;
+			--light-gray: #F8F9FA;
+		}
+		body { font-family: 'Inter', sans-serif; background: var(--light-gray); color: #222; -webkit-font-smoothing:antialiased; }
+		.product-card { transition: transform .15s ease, box-shadow .15s ease; }
+		.product-card:hover { transform: translateY(-6px); box-shadow: 0 14px 30px rgba(2,6,23,0.08); }
+		.price-badge { background: linear-gradient(90deg, var(--primary-orange), #e55627); color: #fff; font-weight:600; }
+		.empty-state { color:#6b7280; }
+	</style>
+</head>
+<body class="min-h-screen p-6">
+	<header class="max-w-6xl mx-auto mb-6">
+		<div class="flex items-center justify-between">
+			<h1 class="text-2xl md:text-3xl font-bold">
+				<span class="text-orange-500">Tienda</span><span class="text-blue-600 ml-1">Mas</span>
+			</h1>
+			<div class="hidden md:flex items-center space-x-4">
+				<input id="search" type="search" placeholder="Buscar producto..." class="px-3 py-2 border rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-orange-300" />
+				<button id="clearBtn" class="px-3 py-2 bg-white border rounded-lg text-sm">Limpiar</button>
+			</div>
+		</div>
+		<p class="text-gray-600 mt-2">Explorá los productos disponibles. Haz click en una tarjeta para ver más (demo).</p>
+	</header>
+
+	<main class="max-w-6xl mx-auto">
+		<section id="productsSection">
+			<div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+				<!-- Productos renderizados por JS -->
+			</div>
+
+			<div id="emptyState" class="hidden mt-8 text-center empty-state">
+				<i class="fas fa-box-open text-4xl mb-3 text-gray-400"></i>
+				<div>No se encontraron productos</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		// Estado local
+		let fetchedProducts = [];
+		// referencias DOM (restauradas para evitar errores si se eliminó la declaración)
+		const grid = document.getElementById('productsGrid');
+		const emptyState = document.getElementById('emptyState');
+		const search = document.getElementById('search');
+		const clearBtn = document.getElementById('clearBtn');
+ 
+		// Helpers para extraer imagen y precio de distintas formas que pueda devolver el backend
+		// extracción de imagen devuelve null si no existe (no forzamos placeholder aquí)
+		function extractImage(p) {
+			const candidates = [
+				p.img, p.image, p.imagen, p.imagenUrl, p.thumbnail, p.foto, p.urlImagen
+			];
+			for (const c of candidates) if (c) return c;
+			const meta = parseMetadata(p.metadataJson);
+			if (meta) {
+				const mCandidates = [meta.image, meta.img, meta.images, meta.thumbnail, meta.foto];
+				for (const mc of mCandidates) {
+					if (!mc) continue;
+					if (Array.isArray(mc) && mc.length) return mc[0];
+					if (typeof mc === 'string') return mc;
+				}
+			}
+			// si no hay imagen, devolvemos null y el render decide mostrar avatar/placeholder
+			return null;
+		}
+ 
+ 		function extractPrice(p) {
+ 			const candidates = ['precio', 'price', 'amount', 'precioVenta', 'valor'];
+ 			for (const k of candidates) {
+ 				if (p[k] != null && !isNaN(Number(p[k]))) return Number(p[k]);
+ 			}
+ 			// metadataJson puede incluir precio
+ 			const meta = parseMetadata(p.metadataJson);
+ 			if (meta) {
+ 				for (const k of candidates) {
+ 					if (meta[k] != null && !isNaN(Number(meta[k]))) return Number(meta[k]);
+ 				}
+ 			}
+ 			return null;
+ 		}
+ 
+ 		function parseMetadata(m) {
+ 			if (!m) return null;
+ 			if (typeof m === 'object') return m;
+ 			try { return JSON.parse(m); } catch(e) { return null; }
+ 		}
+ 
+ 		// Normalizar producto del backend a {id, title, price, img}
+ 		function normalizeProduct(p) {
+			const title = p.nombre || p.title || p.name || p.titulo || 'Sin título';
+ 			const price = extractPrice(p);
+ 			const img = extractImage(p);
+ 			return { id: p.id, title: title, price: price, img: img, raw: p };
+ 		}
+ 
+ 		// Mostrar loader simple en el grid
+ 		function showLoading() {
+ 			grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">Cargando productos...</div>';
+ 			emptyState.classList.add('hidden');
+ 		}
+ 
+ 		// Fetch desde el endpoint del backend y render
+ 		async function loadProducts() {
+ 			showLoading();
+ 			try {
+ 				const res = await fetch('/api/catalogo/productos', { headers: { 'Accept': 'application/json' } });
+ 				if (!res.ok) throw new Error('Respuesta no OK ' + res.status);
+ 				let data = await res.json();
+				// data puede venir como array o como pageable { content: [...] }
+				if (data && Array.isArray(data.content)) data = data.content;
+				if (!Array.isArray(data)) throw new Error('Respuesta inesperada del servidor');
+				fetchedProducts = data.map(normalizeProduct);
+ 				renderProducts(fetchedProducts);
+ 			} catch (err) {
+ 				console.error('Error cargando productos', err);
+ 				grid.innerHTML = `<div class="col-span-full py-12 text-center text-red-500">Error cargando productos</div>`;
+ 				emptyState.classList.add('hidden');
+ 			}
+ 		}
+ 
+ 		function formatPrice(v) {
+ 			return Number(v).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+ 		}
+ 
+ 		// Adaptar renderProducts para recibir objetos normalizados (usa same function)
+ 		function renderProducts(list) {
+ 			grid.innerHTML = '';
+ 			if (!list || list.length === 0) {
+ 				emptyState.classList.remove('hidden');
+ 				return;
+ 			}
+ 			emptyState.classList.add('hidden');
+ 			list.forEach(p => {
+ 				const card = document.createElement('article');
+ 				card.className = 'product-card bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm';
+				// construir HTML condicionalmente si hay imagen/price
+				const priceHtml = p.price != null ? `<div class="price-badge px-3 py-1 rounded-full text-sm">${formatPrice(p.price)}</div>` : '';
+				const mediaHtml = p.img
+					? `<figure class="w-full h-48 bg-gray-100 overflow-hidden flex items-center justify-center"><img src="${p.img}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover"></figure>`
+					: `<figure class="w-full h-48 bg-gradient-to-br from-gray-400 to-gray-600 text-white flex items-center justify-center">
+							<div class="text-3xl font-bold">${escapeHtml((p.title||'')[0] || '')}</div>
+					   </figure>`;
+
+				card.innerHTML = `
+					<button aria-label="Ver ${escapeHtml(p.title)}" class="w-full text-left focus:outline-none">
+						${mediaHtml}
+						<div class="p-4">
+							<h3 class="text-sm md:text-base font-medium text-gray-800 mb-2 truncate">${escapeHtml(p.title)}</h3>
+							<div class="flex items-center justify-between">
+								<div class="text-sm text-gray-500">En stock</div>
+								${priceHtml}
+							</div>
+						</div>
+					</button>
+				`;
+ 				card.querySelector('button').addEventListener('click', () => {
+ 					// ejemplo: redirigir a página de detalle si existe slug o id
+ 					const raw = p.raw || {};
+ 					const slug = raw.slug || raw.id;
+ 					window.location.href = '/producto/' + encodeURIComponent(slug);
+ 				});
+ 				grid.appendChild(card);
+ 			});
+ 		}
+ 
+ 		// Seguridad simple para evitar inyección en este ejemplo
+ 		function escapeHtml(str = '') {
+ 			return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+ 		}
+ 
+ 		// Render inicial: cargar desde backend
+ 		loadProducts();
+ 
+ 		// Buscador sobre los productos ya cargados
+ 		search.addEventListener('input', (e) => {
+ 			const q = e.target.value.trim().toLowerCase();
+ 			const filtered = fetchedProducts.filter(p => (p.title || '').toLowerCase().includes(q));
+ 			renderProducts(filtered);
+ 		});
+ 		clearBtn.addEventListener('click', () => {
+ 			search.value = '';
+ 			renderProducts(fetchedProducts);
+ 		});
+ 	</script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Registro de Empresa | Tienda Mas</title>
+    <meta name="description" content="Registro de empresa - Tienda Mas. Completa los datos de la empresa y del representante legal." />
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root{
+            --primary:#FF6B35;
+            --primary-dark:#E55627;
+            --muted:#6B7280;
+            --bg:#F8F9FA;
+        }
+        body{background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+        .input-focus:focus{outline: none; box-shadow: 0 0 0 3px rgba(255,107,53,0.15); border-color: var(--primary);}
+        .req{color:#ef4444}
+        /* small helpers */
+        .field-error { color: #dc2626; }
+        .section-title { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .address-section, .phone-section { background-color: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
+        .tab-button { background-color: #f3f4f6; border-radius: 0.375rem; padding: 0.5rem 1rem; margin-right: 0.5rem; cursor: pointer; }
+        .tab-button.active { background-color: #FF6B35; color: white; }
+        /* Mejoras responsive */
+        @media (max-width: 640px) {
+            .mobile-full-width { width: 100%; }
+            .mobile-stack { display: flex; flex-direction: column; }
+            .mobile-stack > * { width: 100%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 md:p-6">
+    <main class="w-full max-w-6xl bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 lg:p-10">
+        <header class="mb-6 md:mb-8 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+                <span class="text-orange-500">Tienda</span><span class="text-blue-600">Mas</span>
+            </h1>
+            <p class="text-gray-600 text-xs sm:text-sm mt-2">Completa todos los campos para crear tu cuenta empresarial.</p>
+        </header>
+
+        <!-- Form -->
+        <form id="companyForm" novalidate class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8" aria-describedby="formHelp">
+            <p id="formHelp" class="lg:col-span-2 text-xs sm:text-sm text-gray-500 mb-2">Todos los campos marcados con <span class="req">*</span> son obligatorios.</p>
+
+            <!-- Cuadro de errores global -->
+            <div class="lg:col-span-2">
+                <div id="errorBox" class="hidden border border-red-300 bg-red-50 text-red-800 rounded-lg p-4 text-sm" role="alert" aria-live="assertive">
+                    <div class="font-semibold mb-1">No se pudo completar el registro:</div>
+                    <ul id="errorList" class="list-disc pl-5 space-y-1"></ul>
+                </div>
+            </div>
+
+            <!-- Columna Izquierda -->
+            <div class="space-y-4 md:space-y-6">
+                <!-- A.1 Datos de Usuario -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos de Usuario</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700">Usuario <span class="text-red-500">*</span></label>
+                                <input type="text" id="username" name="username" required minlength="6" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Elige un nombre de usuario" autocomplete="username">
+                                <div id="usernameStatus" class="text-sm mt-1 h-5" aria-live="polite"></div>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" name="email" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="empresa@correo.com" autocomplete="email">
+                                <div id="emailStatus" class="text-sm mt-1 h-5" aria-live="polite"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="password" name="password" required minlength="8" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Repetir contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Repite la contraseña" autocomplete="new-password">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <ul id="passwordChecklist" class="mt-2 space-y-1 text-sm" aria-live="polite">
+                                    <li id="title" class="flex items-center"><i class="fa-solid"></i> La contraseña debe contener:</li>
+                                    <li id="pwc-length" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Mínimo 8 caracteres</li>
+                                    <li id="pwc-upper" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 mayúscula</li>
+                                    <li id="pwc-number" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 número</li>
+                                    <li id="pwc-special" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 caracter especial</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <div id="passwordMatch" class="text-sm mt-1 h-5" aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- A.2 Datos del Responsable -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos del Responsable</h2>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                                <label for="repFirstName" class="block text-xs sm:text-sm font-medium">Nombre <span class="req">*</span></label>
+                                <input id="repFirstName" name="repFirstName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                            </div>
+                            <div>
+                                <label for="repLastName" class="block text-xs sm:text-sm font-medium">Apellido <span class="req">*</span></label>
+                                <input id="repLastName" name="repLastName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                                <label for="repGender" class="block text-xs sm:text-sm font-medium">Género <span class="req">*</span></label>
+                                <select id="repGender" name="repGender" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                                    <option value="">Seleccionar</option>
+                                    <option value="FEMENINO">Femenino</option>
+                                    <option value="MASCULINO">Masculino</option>
+                                    <option value="NO_BINARIO">No binario</option>
+                                    <option value="PREFIERO_NO_DECIRLO">Prefiero no decirlo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="repDocument" class="block text-xs sm:text-sm font-medium">Documento (DNI/CUIL) <span class="req">*</span></label>
+                                <input id="repDocument" name="repDocument" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="Sólo números">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                                <label for="repBirthDate" class="block text-xs sm:text-sm font-medium">Fecha de Nacimiento <span class="req">*</span></label>
+                                <input id="repBirthDate" name="repBirthDate" type="date" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- A.3 Teléfono del Responsable -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Teléfono del Responsable</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div>
+                            <label for="repPhoneArea" class="block text-xs sm:text-sm font-medium">Característica <span class="req">*</span></label>
+                            <input id="repPhoneArea" name="repPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="011">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="repPhoneNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
+                            <input id="repPhoneNumber" name="repPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="15XXXXYYYY">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label for="repPhoneType" class="block text-xs sm:text-sm font-medium">Tipo de Teléfono <span class="req">*</span></label>
+                        <select id="repPhoneType" name="repPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                            <option value="">Seleccionar</option>
+                            <option value="PRINCIPAL">Principal</option>
+                            <option value="SECUNDARIO">Secundario</option>
+                            <option value="LABORAL">Laboral</option>
+                        </select>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Columna Derecha -->
+            <div class="space-y-4 md:space-y-6">
+                <!-- B.1 Datos de la Empresa -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos de la Empresa</h2>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div>
+                            <label for="businessName" class="block text-xs sm:text-sm font-medium">Razón Social <span class="req">*</span></label>
+                            <input id="businessName" name="businessName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                        </div>
+                        <div>
+                            <label for="commercialName" class="block text-xs sm:text-sm font-medium">Nombre Comercial</label>
+                            <input id="commercialName" name="commercialName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                        </div>  
+                        <div>
+                            <label for="cuit" class="block text-xs sm:text-sm font-medium">CUIT <span class="req">*</span></label>
+                            <input id="cuit" name="cuit" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="XX-XXXXXXXX-X o 11 dígitos">
+                        </div>
+                        <div>
+                            <label for="ivaCondition" class="block text-xs sm:text-sm font-medium">Condición ante IVA <span class="req">*</span></label>
+                            <select id="ivaCondition" name="ivaCondition" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                                <option value="">Seleccionar condición</option>
+                                <option value="RI">Responsable Inscripto</option>
+                                <option value="MONOTRIBUTO">Monotributo</option>
+                                <option value="EXENTO">Exento</option>
+                                <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="companyEmail" class="block text-xs sm:text-sm font-medium">Email de la Empresa <span class="req">*</span></label>
+                            <input id="companyEmail" name="companyEmail" type="email" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="empresa@correo.com">
+                        </div>
+                        <div class="flex items-center">
+                            <input id="requiresBilling" name="requiresBilling" type="checkbox" class="mr-2 w-4 h-4" />
+                            <label for="requiresBilling" class="text-xs sm:text-sm text-gray-700">Requiere Facturación</label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- B.2 Dirección Empresa (con selects en cascada como registro_usuario) -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Dirección Empresa</h2>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Cascading selects para ubicación -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="provinciaSelect" class="block text-sm font-medium text-gray-700">Provincia <span class="text-red-500">*</span></label>
+                                <select id="provinciaSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg"></select>
+                            </div>
+                            <div>
+                                <label for="departamentoSelect" class="block text-sm font-medium text-gray-700">Departamento (jurisdicción) <span class="text-red-500">*</span></label>
+                                <select id="departamentoSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="municipioSelect" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
+                                <select id="municipioSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
+                            </div>
+                            <div>
+                                <label for="localidadSelect" class="block text-sm font-medium text-gray-700">Localidad <span class="text-red-500">*</span></label>
+                                <select id="localidadSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
+                            </div>
+                        </div>
+
+                        <!-- Calle, numero, piso, departamento interno, cp y referencia -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="street" class="block text-sm font-medium text-gray-700">Calle <span class="text-red-500">*</span></label>
+                                <input type="text" id="street" name="street" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: San Martín">
+                            </div>
+                            <div>
+                                <label for="number" class="block text-sm font-medium text-gray-700">Número <span class="text-red-500">*</span></label>
+                                <input type="text" id="number" name="number" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 1234">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label for="floor" class="block text-sm font-medium text-gray-700">Piso</label>
+                                <input type="text" id="floor" name="floor" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 2">
+                            </div>
+                            <div>
+                                <label for="apartment" class="block text-sm font-medium text-gray-700">Departamento (interno)</label>
+                                <input type="text" id="apartment" name="apartment" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: A">
+                            </div>
+                            <div>
+                                <label for="postalCode" class="block text-sm font-medium text-gray-700">Código Postal <span class="text-red-500">*</span></label>
+                                <input type="text" id="postalCode" name="postalCode" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 1000">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reference" class="block text-sm font-medium text-gray-700">Referencia</label>
+                            <textarea id="reference" name="reference" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: Frente a la plaza"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- B.3 Teléfono de la Empresa -->
+                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Teléfono de la Empresa</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div>
+                            <label for="companyPhoneArea" class="block text-xs sm:text-sm font-medium">Característica <span class="req">*</span></label>
+                            <input id="companyPhoneArea" name="companyPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="011">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="companyPhoneNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
+                            <input id="companyPhoneNumber" name="companyPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="15XXXXYYYY">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label for="companyPhoneType" class="block text-xs sm:text-sm font-medium">Tipo de Teléfono <span class="req">*</span></label>
+                        <select id="companyPhoneType" name="companyPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                            <option value="">Seleccionar</option>
+                            <option value="PRINCIPAL">Principal</option>
+                            <option value="SECUNDARIO">Secundario</option>
+                            <option value="FAX">Fax</option>
+                        </select>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Terms + botón -->
+            <div class="lg:col-span-2 space-y-4 md:space-y-6">
+                <!-- Terms -->
+                <div class="flex items-start gap-3">
+                    <input id="terms" name="terms" type="checkbox" class="mt-1 w-4 h-4" aria-describedby="termsError" />
+                    <label for="terms" class="text-xs sm:text-sm text-gray-700">Acepto los <a href="#" class="text-orange-500 underline" target="_blank">Términos y Condiciones</a> y la <a href="#" class="text-orange-500 underline" target="_blank">Política de Privacidad</a> <span class="req">*</span></label>
+                </div>
+                <p id="termsError" class="text-xs sm:text-sm field-error hidden" role="alert">Debes aceptar los términos y políticas.</p>
+
+                <!-- Botón -->
+                <div class="flex justify-center sm:justify-end">
+                    <button id="submitBtn" type="submit" class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-400 disabled:opacity-60 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg shadow-lg inline-flex items-center justify-center transition">
+                        <span id="btnText" class="text-sm sm:text-base">Crear cuenta</span>
+                        <svg id="spinner" class="ml-3 hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // Constantes de API para comprobaciones en tiempo real
+        const ORIGIN = window.location.origin || 'https://localhost:8443';
+        const ACCOUNT_API = {
+        CHECK_USERNAME: `${ORIGIN}/api/usuario/public/check-username`,
+        CHECK_EMAIL:    `${ORIGIN}/api/usuario/public/check-email`
+        };
+
+        // Utils
+        const qs = id => document.getElementById(id);
+        function safeFetch(url, options) {
+            return fetch(url, options).then(r => {
+                if (!r.ok) return Promise.reject(r);
+                const ct = r.headers.get('content-type') || '';
+                return ct.includes('application/json') ? r.json() : r.text();
+            });
+        }
+        function debounce(fn, wait=600){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),wait); }; }
+        function setInlineStatus(el, state, message) {
+            if (!el) return;
+            const states = {
+                checking: { cls: 'text-gray-600', icon: '<i class="fa-solid fa-spinner fa-spin mr-2"></i>' },
+                ok:       { cls: 'text-green-600', icon: '<i class="fa-solid fa-circle-check mr-2"></i>' },
+                error:    { cls: 'text-red-600',   icon: '<i class="fa-solid fa-circle-xmark mr-2"></i>' },
+                idle:     { cls: 'text-gray-600',  icon: '' }
+            };
+            const s = states[state] || states.idle;
+            el.className = `text-sm mt-1 h-5 ${s.cls}`;
+            el.innerHTML = message ? `${s.icon}${message}` : '';
+        }
+        function availableFromResponse(data) {
+            if (typeof data === 'boolean') return data;
+            if (data && typeof data === 'object') {
+                if ('available' in data) return !!data.available;
+                if ('disponible' in data) return !!data.disponible;
+                if ('exists' in data) return !data.exists;
+                if ('taken' in data) return !data.taken;
+            }
+            if (typeof data === 'string') {
+                const s = data.toLowerCase();
+                if (s.includes('disponible') || s.includes('available')) return true;
+                if (s.includes('no disponible') || s.includes('existe') || s.includes('taken')) return false;
+            }
+            return null;
+        }
+
+        // ErrorBox
+        function clearErrors(){ const box=qs('errorBox'); const list=qs('errorList'); if(list) list.innerHTML=''; if(box) box.classList.add('hidden'); }
+        function showErrors(errors){
+            const box=qs('errorBox'); const list=qs('errorList'); if(!box||!list) return;
+            list.innerHTML=''; errors.forEach(m=>{ const li=document.createElement('li'); li.textContent=m; list.appendChild(li); });
+            box.classList.remove('hidden'); box.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+
+        // Checklist contraseña
+        (function initPasswordChecklistLabels(){
+            ['pwc-length','pwc-upper','pwc-number','pwc-special'].forEach(id=>{
+                const li=document.getElementById(id); if(!li) return;
+                if(!li.dataset.label){ li.dataset.label = li.textContent.replace(/^[\u25CF\u25CB\u25A0\u25A1\uf000-\uf8ff\s]+/,'').trim() || li.textContent.trim(); }
+            });
+        })();
+        function updatePasswordChecklist(pass){
+            const setItem=(id,ok)=>{
+                const li=document.getElementById(id); if(!li) return;
+                const iconOk='<i class="fa-solid fa-circle-check mr-2"></i>';
+                const iconKo='<i class="fa-solid fa-circle-xmark mr-2"></i>';
+                const label=li.dataset.label||li.textContent.trim();
+                li.classList.toggle('text-green-600',!!ok);
+                li.classList.toggle('text-red-600',!ok);
+                li.innerHTML=(ok?iconOk:iconKo)+' '+label;
+            };
+            setItem('pwc-length', pass.length>=8);
+            setItem('pwc-upper', /[A-Z]/.test(pass));
+            setItem('pwc-number', /[0-9]/.test(pass));
+            setItem('pwc-special', /[^A-Za-z0-9]/.test(pass));
+        }
+        function updatePasswordMatch(){
+            const pass=qs('password')?.value||'';
+            const pass2=qs('confirmPassword')?.value||'';
+            const el=qs('passwordMatch');
+            if(!el || (!pass && !pass2)){ if(el) setInlineStatus(el,'idle',''); return; }
+            setInlineStatus(el, pass && pass2 && pass===pass2 ? 'ok' : 'error', pass===pass2 ? 'Las contraseñas coinciden.' : 'Las contraseñas no coinciden.');
+        }
+
+        // Realtime username/email
+        async function checkUsernameAvailability(u){ try{ const d=await safeFetch(`${ACCOUNT_API.CHECK_USERNAME}?username=${encodeURIComponent(u)}`); return availableFromResponse(d);}catch{return null;} }
+        async function checkEmailAvailability(e){ try{ const d=await safeFetch(`${ACCOUNT_API.CHECK_EMAIL}?email=${encodeURIComponent(e)}`); return availableFromResponse(d);}catch{return null;} }
+        function wireRealtimeValidation(){
+            const u=qs('username'), uS=qs('usernameStatus');
+            const e=qs('email'), eS=qs('emailStatus');
+            const p=qs('password'), p2=qs('confirmPassword');
+            if(u && uS){
+                const doCheck=debounce(async()=>{
+                    const v=(u.value||'').trim(); if(!v || v.length<6){ setInlineStatus(uS,'idle',''); return; }
+                    setInlineStatus(uS,'checking','Comprobando disponibilidad...');
+                    const ok=await checkUsernameAvailability(v);
+                    if(ok===true) setInlineStatus(uS,'ok','Usuario disponible.');
+                    else if(ok===false) setInlineStatus(uS,'error','Usuario no disponible.');
+                    else setInlineStatus(uS,'idle','No se pudo verificar ahora.');
+                },700);
+                u.addEventListener('input',doCheck); u.addEventListener('blur',()=>doCheck());
+            }
+            if(e && eS){
+                const doCheck=debounce(async()=>{
+                    const v=(e.value||'').trim(); if(!v){ setInlineStatus(eS,'idle',''); return; }
+                    if(e.validity?.typeMismatch){ setInlineStatus(eS,'error','Formato de correo inválido.'); return; }
+                    setInlineStatus(eS,'checking','Comprobando disponibilidad...');
+                    const ok=await checkEmailAvailability(v);
+                    if(ok===true) setInlineStatus(eS,'ok','Correo disponible.');
+                    else if(ok===false) setInlineStatus(eS,'error','Correo ya registrado.');
+                    else setInlineStatus(eS,'idle','No se pudo verificar ahora.');
+                },700);
+                e.addEventListener('input',doCheck); e.addEventListener('blur',()=>doCheck());
+            }
+            if(p){ updatePasswordChecklist(p.value||''); p.addEventListener('input',()=>{ updatePasswordChecklist(p.value||''); updatePasswordMatch(); }); }
+            if(p2){ p2.addEventListener('input', updatePasswordMatch); }
+        }
+
+        // Validación central (adaptada: se QUITAN las validaciones solicitadas y se actualiza CUIT)
+        function validateForm(){
+            const errors=[]; const val=id=>(qs(id)?.value||'').trim(); const onlyDigits=v=>/^\d+$/.test(v);
+            // Usuario
+            const username=val('username'); if(!username) errors.push('El campo Usuario no puede estar vacío.');
+            else if(username.length<6 || username.length>16) errors.push('El Usuario debe tener entre 6 y 16 caracteres.');
+            const email=val('email'); if(!email) errors.push('El campo Correo electrónico es obligatorio.');
+            else if(qs('email')?.validity?.typeMismatch) errors.push('El Correo electrónico no es válido.');
+            // Password
+            const pass=val('password'), pass2=val('confirmPassword');
+            if(!pass) errors.push('El campo Contraseña es obligatorio.');
+            if(!pass2) errors.push('El campo Repetir contraseña es obligatorio.');
+            if(pass && pass.length<8) errors.push('La Contraseña debe tener al menos 8 caracteres.');
+            if(pass && !/[A-Z]/.test(pass)) errors.push('La Contraseña debe incluir al menos una letra mayúscula.');
+            if(pass && !/[0-9]/.test(pass)) errors.push('La Contraseña debe incluir al menos un número.');
+            if(pass && !/[^A-Za-z0-9]/.test(pass)) errors.push('La Contraseña debe incluir al menos un caracter especial.');
+            if(pass && pass2 && pass!==pass2) errors.push('El campo Contraseña y Repetir contraseña no coinciden.');
+
+            // Responsable (solo campos personales básicos; se QUITAN validaciones de dirección y de email del responsable)
+            if(!val('repFirstName')) errors.push('El Nombre del responsable es obligatorio.');
+            if(!val('repLastName')) errors.push('El Apellido del responsable es obligatorio.');
+            if(!val('repGender')) errors.push('Debes seleccionar un Género del responsable.');
+            if(!val('repDocument')) errors.push('El Documento del responsable es obligatorio.');
+            else if(!onlyDigits(val('repDocument'))) errors.push('El Documento del responsable debe contener solo números.');
+            if(!val('repBirthDate')) errors.push('La Fecha de nacimiento del responsable es obligatoria.');
+            // Nota: se QUITAN las comprobaciones de repEmail, repStreet, repStreetNumber, repPostalCode, repCity, repProvince, repAddressType
+
+            // Teléfono Responsable
+            if(!val('repPhoneArea')) errors.push('La Característica del responsable es obligatoria.');
+            else if(!onlyDigits(val('repPhoneArea'))) errors.push('La Característica del responsable debe ser numérica.');
+            if(!val('repPhoneNumber')) errors.push('El Número de teléfono del responsable es obligatorio.');
+            else if(!onlyDigits(val('repPhoneNumber'))) errors.push('El Número de teléfono del responsable debe ser numérico.');
+            if(!val('repPhoneType')) errors.push('El Tipo de teléfono del responsable es obligatorio.');
+
+            // Empresa (ajustada: se QUITA la obligación de email de empresa si no existe en el HTML)
+            if(!val('businessName') && !val('razonSocial')) errors.push('La Razón social es obligatoria.');
+            // validar CUIT: admitir con o sin guiones pero exigir 11 dígitos numéricos
+            const rawCuit = (val('cuit') || '').replace(/\D/g,'');
+            if(!rawCuit) errors.push('El CUIT es obligatorio.');
+            else if(!/^\d{11}$/.test(rawCuit)) errors.push('El CUIT debe tener formato XX-XXXXXXXX-X (11 dígitos).');
+
+            // NEW: validar email de la empresa (el backend lo requiere)
+            const companyEmail = val('companyEmail');
+            if(!companyEmail) errors.push('El Email de la empresa es obligatorio.');
+            else if(qs('companyEmail')?.validity?.typeMismatch) errors.push('El Email de la empresa no es válido.');
+
+            // Dirección Empresa (selects en cascada)
+            if(!val('provinciaSelect')) errors.push('Debes seleccionar una Provincia de la empresa.');
+            if(!val('departamentoSelect')) errors.push('Debes seleccionar un Departamento de la empresa.');
+            if(!val('municipioSelect')) errors.push('Debes seleccionar un Municipio de la empresa.');
+            if(!val('localidadSelect')) errors.push('Debes seleccionar una Localidad de la empresa.');
+            if(!val('street')) errors.push('La Calle de la empresa es obligatoria.');
+            if(!val('number')) errors.push('El Número de la empresa es obligatorio.');
+            else if(!onlyDigits(val('number'))) errors.push('El Número de la empresa debe ser numérico.');
+            if(!val('postalCode')) errors.push('El Código Postal de la empresa es obligatorio.');
+
+            // Teléfono Empresa
+            if(!val('companyPhoneArea')) errors.push('La Característica de la empresa es obligatoria.');
+            else if(!onlyDigits(val('companyPhoneArea'))) errors.push('La Característica de la empresa debe ser numérica.');
+            if(!val('companyPhoneNumber')) errors.push('El Número de teléfono de la empresa es obligatorio.');
+            else if(!onlyDigits(val('companyPhoneNumber'))) errors.push('El Número de teléfono de la empresa debe ser numérico.');
+            if(!val('companyPhoneType')) errors.push('El Tipo de teléfono de la empresa es obligatorio.');
+
+            // Términos
+            if(!qs('terms')?.checked) errors.push('Debes aceptar los Términos y Condiciones y la Política de Privacidad.');
+            return errors;
+        }
+
+        // -------------------------
+        // Formateo automático de CUIT (inserta guiones tras 2 y tras 10 dígitos)
+        // -------------------------
+        function formatCuitInput(e){
+            const input = e.target;
+            let digits = (input.value || '').replace(/\D/g,'').slice(0,11); // máximo 11 dígitos
+            if(digits.length <= 2){
+                input.value = digits;
+                return;
+            }
+            if(digits.length <= 10){
+                input.value = digits.slice(0,2) + '-' + digits.slice(2);
+                return;
+            }
+            // 11 dígitos: 2-8-1
+            input.value = digits.slice(0,2) + '-' + digits.slice(2,10) + '-' + digits.slice(10);
+        }
+
+        // DOM Ready: vincular listener de formateo CUIT
+        document.addEventListener('DOMContentLoaded', ()=>{
+            try{ if(typeof initLocationSelectors==='function') initLocationSelectors(); }catch(e){}
+            wireRealtimeValidation();
+            const cuitEl = qs('cuit');
+            if(cuitEl) cuitEl.addEventListener('input', formatCuitInput);
+            const form=document.getElementById('companyForm');
+            if(form) form.addEventListener('submit', handleSubmit);
+        });
+
+        // Submit
+        async function handleSubmit(evt){
+            evt.preventDefault();
+            clearErrors();
+            const errs=validateForm();
+            if(errs.length){ showErrors(errs); return; }
+
+            const btn=qs('submitBtn'); const spinner=qs('spinner'); const btnText=qs('btnText');
+            btn.disabled=true; btnText.textContent='Creando cuenta...'; if(spinner) spinner.classList.remove('hidden');
+
+            // Map tipo usuario responsable
+            const tipoUsuario='EMPRESA'; // registro de empresa
+
+            // Payload (DTO)
+            const payload={
+                // Se agrega "usuario" porque el backend espera ese objeto (evita NPE)
+                usuario: {
+                    username: qs('username').value.trim(),
+                    password: qs('password').value,
+                    email: qs('email').value.trim(),
+                    tipoUsuario: tipoUsuario, // <-- enviar el tipo de usuario esperado por el backend (EMPRESA)
+                },
+                // NEW: enviar perfilUsuario para que el DTO no sea null en el servidor
+                perfilUsuario: {
+                    nombre: qs('repFirstName').value.trim(),
+                    apellido: qs('repLastName').value.trim(),
+                    documento: qs('repDocument').value.trim(),
+                    fechaNacimiento: qs('repBirthDate').value || null, // formato yyyy-MM-dd
+                    genero: qs('repGender').value || null,
+                    cargo: null,
+                    correoAlternativo: null
+                },
+                 responsable:{
+                     username: qs('username').value.trim(),
+                     password: qs('password').value,
+                     email: qs('email').value.trim(),
+                     nombreResponsable: qs('repFirstName').value.trim(),
+                     apellidoResponsable: qs('repLastName').value.trim(),
+                     documentoResponsable: qs('repDocument').value.trim(),
+                     aceptaPoliticaPriv: qs('terms').checked,
+                     aceptaTerminos: qs('terms').checked,
+                     fechaNacimientoResponsable: qs('repBirthDate').value,
+                     generoResponsable: qs('repGender').value,
+                     tipoUsuario,
+                     idioma: 'es',
+                     timezone: 'America/Argentina/Buenos_Aires',
+                     rol: 'ROLE_USUARIO'
+                 },
+                 perfilEmpresa:{
+                     razonSocial: qs('businessName').value.trim(),
+                     cuit: qs('cuit').value.trim().replace(/-/g,''),
+                     condicionIVA: qs('ivaCondition')?.value || 'RI',
+                     requiereFacturacion: qs('requiresBilling')?.checked || false,
+                     emailEmpresa: qs('companyEmail').value.trim() // <-- NEW: enviar email de la empresa
+                 },
+                 telefonosResponsable:[
+                     {
+                         numero: qs('repPhoneNumber').value.trim(),
+                         caracteristica: qs('repPhoneArea').value.trim(),
+                         activo: true,
+                         verificado: false,
+                         tipo: qs('repPhoneType').value
+                     }
+                 ],
+                 direccionesEmpresa:[
+                     {
+                         calle: qs('street').value.trim(),
+                         numero: qs('number').value.trim(),
+                         codigoPostal: qs('postalCode').value.trim(),
+                         paisId: 1, // <-- FIX: usar 'paisId' (nombre esperado por el DTO), no 'idPais'
+                         provinciaId: parseInt(qs('provinciaSelect').value)||null,
+                         departamentoId: parseInt(qs('departamentoSelect').value)||null,
+                         municipioId: parseInt(qs('municipioSelect').value)||null,
+                         localidadId: parseInt(qs('localidadSelect').value)||null,
+                         piso: qs('floor')?.value || null,
+                         departamentoInterno: qs('apartment')?.value || null,
+                         referencia: qs('reference')?.value || null,
+                         activa: true,
+                         tipo: 'FISCAL',
+                         esPrincipal: true
+                     }
+                 ],
+                 telefonosEmpresa:[
+                     {
+                         numero: qs('companyPhoneNumber').value.trim(),
+                         caracteristica: qs('companyPhoneArea').value.trim(),
+                         tipo: qs('companyPhoneType').value,
+                         activo: true,
+                         verificado: false
+                     }
+                 ]
+             };
+
+            try{
+                const res=await fetch('/api/gestionusuario/public/empresa/registro',{
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+                });
+                if(res.ok){
+                    alert('Cuenta de empresa creada correctamente. Verifica tu email.');
+                    qs('companyForm').reset();
+                    updatePasswordChecklist('');
+                    updatePasswordMatch();
+                    clearErrors();
+                }else{
+                    let text; try{ text=await res.text(); }catch{}
+                    showErrors([text || `HTTP ${res.status}`]);
+                }
+            }catch(err){
+                console.error(err);
+                showErrors(['Ocurrió un error al crear la cuenta. Intenta nuevamente.']);
+            }finally{
+                btn.disabled=false; btnText.textContent='Crear cuenta'; if(spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        // Init
+        function initBirthDateConstraints(){
+            const bd=qs('repBirthDate'); if(!bd) return;
+            const today=new Date(); bd.max=today.toISOString().split('T')[0]; bd.min='1900-01-01';
+        }
+
+        // DOM Ready
+        document.addEventListener('DOMContentLoaded', ()=>{
+            initBirthDateConstraints();
+            try{ if(typeof initLocationSelectors==='function') initLocationSelectors(); }catch(e){}
+            wireRealtimeValidation();
+            const cuitEl = qs('cuit');
+            if(cuitEl) cuitEl.addEventListener('input', formatCuitInput);
+            const form=document.getElementById('companyForm');
+            if(form) form.addEventListener('submit', handleSubmit);
+        });
+    </script>
+
+    <!-- Necesario para selects en cascada (usa mismas rutas que registro_usuario) -->
+    <script src="/js/ubicaciones.js"></script>
+</body>
+</html>

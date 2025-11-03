@@ -40,15 +40,6 @@ public class UsuarioValidatorUtil {
         }
         
         // Validaciones extra para los campos nuevos
-        if (dto.getNombreResponsable() == null || dto.getNombreResponsable().isBlank()) {
-            throw new IllegalArgumentException("El nombre del responsable no puede estar vacío");
-        }
-        if (dto.getApellidoResponsable() == null || dto.getApellidoResponsable().isBlank()) {
-            throw new IllegalArgumentException("El apellido del responsable no puede estar vacío");
-        }
-        if (dto.getDocumentoResponsable() == null || dto.getDocumentoResponsable().isBlank()) {
-            throw new IllegalArgumentException("El documento del responsable no puede estar vacío");
-        } 
         if (dto.getTipoUsuario() == null || dto.getTipoUsuario().isBlank()) {
             throw new IllegalArgumentException("El tipo de usuario es obligatorio");
         }

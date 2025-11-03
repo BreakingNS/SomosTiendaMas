@@ -1,3 +1,4 @@
+// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import jakarta.persistence.*;

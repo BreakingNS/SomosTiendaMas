@@ -1,0 +1,84 @@
+package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoCrearDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoActualizarDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResumenDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.PrecioProducto;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public final class PrecioProductoMapper {
+
+    private PrecioProductoMapper() {}
+
+    public static PrecioProductoResponseDTO toResponse(PrecioProducto p) {
+        if (p == null) return null;
+        return PrecioProductoResponseDTO.builder()
+                .id(p.getId())
+                .productoId(p.getProducto() != null ? p.getProducto().getId() : null)
+                .montoCentavos(p.getMontoCentavos())
+                .moneda(p.getMoneda())
+                .vigenciaDesde(p.getVigenciaDesde())
+                .vigenciaHasta(p.getVigenciaHasta())
+                .activo(p.getActivo())
+                .creadoPor(p.getCreadoPor())
+                .createdAt(p.getCreatedAt())
+                .updatedAt(p.getUpdatedAt())
+                .deletedAt(p.getDeletedAt())
+                .build();
+    }
+
+    public static PrecioProductoResumenDTO toResumen(PrecioProducto p) {
+        if (p == null) return null;
+        PrecioProductoResumenDTO r = new PrecioProductoResumenDTO();
+        r.setId(p.getId());
+        r.setProductoId(p.getProducto() != null ? p.getProducto().getId() : null);
+        r.setMontoCentavos(p.getMontoCentavos());
+        r.setMoneda(p.getMoneda());
+        r.setActivo(p.getActivo());
+        r.setVigenciaDesde(p.getVigenciaDesde());
+        return r;
+    }
+
+    public static List<PrecioProductoResponseDTO> toResponseList(List<PrecioProducto> list) {
+        if (list == null) return List.of();
+        return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
+    }
+
+    public static List<PrecioProductoResumenDTO> toResumenList(List<PrecioProducto> list) {
+        if (list == null) return List.of();
+        return list.stream().map(PrecioProductoMapper::toResumen).collect(Collectors.toList());
+    }
+
+    public static PrecioProducto fromCrear(PrecioProductoCrearDTO dto) {
+        if (dto == null) return null;
+        PrecioProducto p = new PrecioProducto();
+        p.setMontoCentavos(dto.getMontoCentavos());
+        p.setMoneda(dto.getMoneda());
+        p.setVigenciaDesde(dto.getVigenciaDesde());
+        p.setVigenciaHasta(dto.getVigenciaHasta());
+        p.setActivo(dto.getActivo() != null ? dto.getActivo() : Boolean.TRUE);
+        p.setCreadoPor(null); // asignar si se recibe info del usuario
+        // producto debe asignarse en el servicio usando dto.getProductoId()
+        return p;
+    }
+
+    public static PrecioProducto fromCrearWithProducto(PrecioProductoCrearDTO dto, Producto producto) {
+        PrecioProducto p = fromCrear(dto);
+        if (p != null) p.setProducto(producto);
+        return p;
+    }
+
+    public static void applyActualizar(PrecioProductoActualizarDTO dto, PrecioProducto entidad) {
+        if (dto == null || entidad == null) return;
+        if (dto.getMontoCentavos() != null) entidad.setMontoCentavos(dto.getMontoCentavos());
+        if (dto.getMoneda() != null) entidad.setMoneda(dto.getMoneda());
+        if (dto.getVigenciaDesde() != null) entidad.setVigenciaDesde(dto.getVigenciaDesde());
+        if (dto.getVigenciaHasta() != null) entidad.setVigenciaHasta(dto.getVigenciaHasta());
+        if (dto.getActivo() != null) entidad.setActivo(dto.getActivo());
+        if (dto.getCreadoPor() != null) entidad.setCreadoPor(dto.getCreadoPor());
+    }
+}

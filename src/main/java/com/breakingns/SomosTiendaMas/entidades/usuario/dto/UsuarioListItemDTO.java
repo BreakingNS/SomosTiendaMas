@@ -10,6 +10,4 @@ public class UsuarioListItemDTO {
     private String email;
     private Boolean activo;
     private String tipoUsuario;
-    private String nombreResponsable;
-    private String apellidoResponsable;
 }

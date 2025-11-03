@@ -5,6 +5,8 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.VisibilidadProduct
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 public class ProductoResponseDTO {
@@ -17,4 +19,14 @@ public class ProductoResponseDTO {
     private EstadoProducto estado;
     private VisibilidadProducto visibilidad;
     private String metadataJson;
+    private String atributosJson;
+    private String sku;
+
+    // auditoría / soft-delete
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+
+    // optimistic locking
+    private Long version;
 }

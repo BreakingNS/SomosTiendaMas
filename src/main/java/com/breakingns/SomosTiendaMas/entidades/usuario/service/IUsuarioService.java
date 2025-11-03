@@ -42,4 +42,8 @@ public interface IUsuarioService {
 
     void eliminarUsuario(Long id);
     
+    boolean existsByUsername(String username);
+    
+    boolean existsByEmail(String email);
+
 }

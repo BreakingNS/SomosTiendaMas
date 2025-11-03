@@ -1,14 +1,17 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.CategoriaMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.CategoriaRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.ICategoriaService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,87 +24,85 @@ public class CategoriaServiceImpl implements ICategoriaService {
     }
 
     @Override
-    public Categoria crear(Categoria categoria) {
-        // Si viene categoriaPadre solo con id, cargarla desde repo y asignar
-        if (categoria.getCategoriaPadre() != null && categoria.getCategoriaPadre().getId() != null) {
-            Long padreId = categoria.getCategoriaPadre().getId();
-            Categoria padre = categoriaRepository.findById(padreId)
-                    .orElseThrow(() -> new IllegalArgumentException("Categoría padre no encontrada: " + padreId));
-            // Para creación no hay id propio todavía, pero evitamos referencia circular directa
-            if (categoria.getId() != null && categoria.getId().equals(padre.getId())) {
-                throw new IllegalArgumentException("Una categoría no puede ser padre de sí misma");
-            }
-            categoria.setCategoriaPadre(padre);
-        }
-        return categoriaRepository.save(categoria);
-    }
-
-    @Override
-    public Categoria actualizar(Long id, Categoria cambios) {
-        Categoria c = categoriaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada: " + id));
-        if (cambios.getNombre() != null) c.setNombre(cambios.getNombre());
-        if (cambios.getSlug() != null) c.setSlug(cambios.getSlug());
-        if (cambios.getDescripcion() != null) c.setDescripcion(cambios.getDescripcion());
-
-        if (cambios.getCategoriaPadre() != null) {
-            Long nuevoPadreId = cambios.getCategoriaPadre().getId();
-            if (nuevoPadreId == null) {
-                // Si el DTO manda padre null-id, interpretamos como quitar padre
-                c.setCategoriaPadre(null);
-            } else {
-                Categoria nuevoPadre = categoriaRepository.findById(nuevoPadreId)
-                        .orElseThrow(() -> new IllegalArgumentException("Categoría padre no encontrada: " + nuevoPadreId));
-                // validar que no genera ciclos
-                validarSinCiclos(c, nuevoPadre);
-                c.setCategoriaPadre(nuevoPadre);
-            }
+    public CategoriaResponseDTO crear(CategoriaCrearDTO dto) {
+        if (dto == null) throw new IllegalArgumentException("dto es null");
+        // verificación slug único (activos)
+        if (dto.getSlug() != null && categoriaRepository.findBySlugAndDeletedAtIsNull(dto.getSlug()).isPresent()) {
+            throw new IllegalStateException("Slug de categoría ya existe");
         }
 
-        return categoriaRepository.save(c);
+        Categoria c = new Categoria();
+        c.setNombre(dto.getNombre());
+        c.setSlug(dto.getSlug());
+        c.setDescripcion(dto.getDescripcion());
+
+        if (dto.getCategoriaPadreId() != null) {
+            Categoria padre = categoriaRepository.findById(dto.getCategoriaPadreId())
+                    .orElseThrow(() -> new EntityNotFoundException("Categoria padre no encontrada"));
+            c.setCategoriaPadre(padre);
+        }
+
+        Categoria saved = categoriaRepository.save(c);
+        return CategoriaMapper.toResponse(saved);
+    }
+
+    @Override
+    public CategoriaResponseDTO actualizar(Long id, CategoriaActualizarDTO dto) {
+        Categoria existing = categoriaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada: " + id));
+
+        if (dto.getNombre() != null) existing.setNombre(dto.getNombre());
+        if (dto.getSlug() != null) {
+            categoriaRepository.findBySlugAndDeletedAtIsNull(dto.getSlug())
+                    .filter(other -> !other.getId().equals(id))
+                    .ifPresent(other -> { throw new IllegalStateException("Slug ya en uso"); });
+            existing.setSlug(dto.getSlug());
+        }
+        if (dto instanceof CategoriaActualizarDTO) { /* placeholder if hay más campos */ }
+
+        Categoria updated = categoriaRepository.save(existing);
+        return CategoriaMapper.toResponse(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Categoria> obtener(Long id) {
-        return categoriaRepository.findById(id).filter(c -> c.getDeletedAt() == null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Categoria> obtenerPorSlug(String slug) {
-        return categoriaRepository.findBySlug(slug).filter(c -> c.getDeletedAt() == null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Categoria> listar() {
-        return categoriaRepository.findAll().stream().filter(c -> c.getDeletedAt() == null).toList();
-    }
-
-    @Override
-    public void eliminarLogico(Long id, String usuario) {
+    public CategoriaResponseDTO obtenerPorId(Long id) {
         Categoria c = categoriaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada: " + id));
+        return CategoriaMapper.toResponse(c);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoriaResponseDTO obtenerPorSlug(String slug) {
+        Categoria c = categoriaRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada por slug: " + slug));
+        return CategoriaMapper.toResponse(c);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaResumenDTO> listarActivas() {
+        List<Categoria> list = categoriaRepository.findAllByDeletedAtIsNullOrderByNombreAsc();
+        return CategoriaMapper.toResumenList(list);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaArbolDTO> obtenerArbol() {
+        // obtener todas y tomar raíces (categoriaPadre == null), mapper construye recursivamente usando hijos
+        List<Categoria> all = categoriaRepository.findAllByDeletedAtIsNullOrderByNombreAsc();
+        List<Categoria> roots = all.stream()
+                .filter(c -> c.getCategoriaPadre() == null)
+                .collect(Collectors.toList());
+        return CategoriaMapper.toArbolList(roots);
+    }
+
+    @Override
+    public void eliminar(Long id) {
+        Categoria c = categoriaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada: " + id));
         c.setDeletedAt(LocalDateTime.now());
-        c.setUpdatedBy(usuario);
         categoriaRepository.save(c);
-    }
-
-    // Nuevo método: asciende por la cadena de padres desde 'nuevoPadre' y verifica que
-    // nunca se encuentre la categoría 'categoria' (evita ciclos).
-    private void validarSinCiclos(Categoria categoria, Categoria nuevoPadre) {
-        if (categoria == null || nuevoPadre == null) return;
-        // Si la categoria no tiene id (creación), solo evitamos self-reference directa
-        Long categoriaId = categoria.getId();
-        Categoria p = nuevoPadre;
-        while (p != null) {
-            Long pid = p.getId();
-            if (categoriaId != null && pid != null && pid.equals(categoriaId)) {
-                throw new IllegalArgumentException("Ciclo detectado: el padre pertenece al subárbol de la categoría");
-            }
-            // subir al padre del candidato
-            p = p.getCategoriaPadre();
-        }
     }
 }

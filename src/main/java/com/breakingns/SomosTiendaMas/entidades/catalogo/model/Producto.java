@@ -1,3 +1,4 @@
+// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.EstadoProducto;
@@ -38,6 +39,13 @@ public class Producto extends BaseEntidadAuditada {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private VisibilidadProducto visibilidad = VisibilidadProducto.PUBLICO;
+
+    @Column(name = "sku", length = 80)
+    private String sku; // opcional, no único por ahora (deshabilitado/soft)
+
+    // Atributos libres (JSON por categoría)
+    @Column(name = "atributos_json", columnDefinition = "TEXT")
+    private String atributosJson;
 
     // Atributos libres (JSON como TEXT por ahora)
     @Column(name = "metadata_json", columnDefinition = "TEXT")

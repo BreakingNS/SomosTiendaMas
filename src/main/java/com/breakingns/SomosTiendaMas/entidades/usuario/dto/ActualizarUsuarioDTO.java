@@ -1,9 +1,5 @@
 package com.breakingns.SomosTiendaMas.entidades.usuario.dto;
 
-import java.time.LocalDate;
-
-import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario.Genero;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -21,12 +17,6 @@ public class ActualizarUsuarioDTO {
     @Email(message = "Email inválido")
     private String email;
 
-    private String documentoResponsable;
-    private String nombreResponsable;
-    private String apellidoResponsable;
-    private Genero generoResponsable;
-    private LocalDate fechaNacimientoResponsable;
-    
     private String idioma;
     private String timezone;
 
@@ -41,18 +31,6 @@ public class ActualizarUsuarioDTO {
 
     public void setEmail(String email) {
         this.email = email == null ? null : email.trim();
-    }
-
-    public void setDocumentoResponsable(String documentoResponsable) {
-        this.documentoResponsable = documentoResponsable == null ? null : documentoResponsable.trim();
-    }
-
-    public void setNombreResponsable(String nombreResponsable) {
-        this.nombreResponsable = nombreResponsable == null ? null : nombreResponsable.trim();
-    }
-
-    public void setApellidoResponsable(String apellidoResponsable) {
-        this.apellidoResponsable = apellidoResponsable == null ? null : apellidoResponsable.trim();
     }
 
     public void setIdioma(String idioma) {

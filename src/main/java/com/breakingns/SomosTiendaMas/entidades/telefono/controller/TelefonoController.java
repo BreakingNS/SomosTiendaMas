@@ -1,57 +1,62 @@
 package com.breakingns.SomosTiendaMas.entidades.telefono.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
-import com.breakingns.SomosTiendaMas.entidades.telefono.dto.ActualizarTelefonoDTO;
-import com.breakingns.SomosTiendaMas.entidades.telefono.dto.TelefonoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.telefono.dto.*;
 import com.breakingns.SomosTiendaMas.entidades.telefono.service.ITelefonoService;
 
 import jakarta.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
-import org.springframework.http.MediaType;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/telefono")
 public class TelefonoController {
 
-    @Autowired
-    private ITelefonoService telefonoService;
+    private final ITelefonoService telefonoService;
 
-    @PostMapping(path = "/public",
-                 consumes = MediaType.APPLICATION_JSON_VALUE,
-                 produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TelefonoResponseDTO> registrarTelefono(@RequestBody @Valid RegistroTelefonoDTO dto) {
-        TelefonoResponseDTO response = telefonoService.registrarTelefono(dto);
-        return ResponseEntity.ok(response);
+    public TelefonoController(ITelefonoService telefonoService) {
+        this.telefonoService = telefonoService;
     }
 
-    @PutMapping("/private/{id}")
-    public ResponseEntity<TelefonoResponseDTO> actualizarTelefono(@PathVariable Long id, @RequestBody ActualizarTelefonoDTO dto) {
-        TelefonoResponseDTO response = telefonoService.actualizarTelefono(id, dto);
-        return ResponseEntity.ok(response);
+    @PostMapping(path = "/public/registrar",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TelefonoResponseDTO> registrar(@RequestBody @Valid RegistroTelefonoDTO dto) {
+        return ResponseEntity.ok(telefonoService.registrarTelefono(dto));
     }
 
-    @GetMapping("/private/{id}")
-    public ResponseEntity<TelefonoResponseDTO> obtenerTelefono(@PathVariable Long id) {
-        TelefonoResponseDTO response = telefonoService.obtenerTelefono(id);
-        return ResponseEntity.ok(response);
+    @PostMapping(path = "/public/registrar-multiple",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<TelefonoResponseDTO>> registrarMultiple(@RequestBody List<@Valid RegistroTelefonoDTO> dtos) {
+        List<TelefonoResponseDTO> res = dtos.stream()
+                .map(telefonoService::registrarTelefono)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/private/usuario/{idUsuario}")
-    public ResponseEntity<List<TelefonoResponseDTO>> listarTelefonosPorUsuario(@PathVariable Long idUsuario) {
-        List<TelefonoResponseDTO> response = telefonoService.listarTelefonosPorUsuario(idUsuario);
-        return ResponseEntity.ok(response);
+    @PutMapping(path = "/private/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TelefonoResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid ActualizarTelefonoDTO dto) {
+        return ResponseEntity.ok(telefonoService.actualizarTelefono(id, dto));
     }
 
-    @GetMapping("/private/empresa/{idPerfilEmpresa}")
-    public ResponseEntity<List<TelefonoResponseDTO>> listarTelefonosPorPerfilEmpresa(@PathVariable Long idPerfilEmpresa) {
-        List<TelefonoResponseDTO> response = telefonoService.listarTelefonosPorPerfilEmpresa(idPerfilEmpresa);
-        return ResponseEntity.ok(response);
+    @GetMapping(path = "/private/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TelefonoResponseDTO> obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(telefonoService.obtenerTelefono(id));
     }
 
-    // Puedes agregar más endpoints según la lógica de negocio
+    @GetMapping(path = "/private/usuario/{perfilUsuarioId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<TelefonoResponseDTO>> listarPorUsuario(@PathVariable Long perfilUsuarioId) {
+        return ResponseEntity.ok(telefonoService.listarTelefonosPorUsuario(perfilUsuarioId));
+    }
+
+    @GetMapping(path = "/private/empresa/{perfilEmpresaId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<TelefonoResponseDTO>> listarPorEmpresa(@PathVariable Long perfilEmpresaId) {
+        return ResponseEntity.ok(telefonoService.listarTelefonosPorPerfilEmpresa(perfilEmpresaId));
+    }
 }

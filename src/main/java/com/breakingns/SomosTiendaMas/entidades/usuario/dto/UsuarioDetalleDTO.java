@@ -11,9 +11,6 @@ public class UsuarioDetalleDTO {
     private Boolean activo;
     private Boolean emailVerificado;
     private String tipoUsuario;
-    private String responsableNombre;
-    private String responsableApellido;
-    private String responsableDocumento;
     private String telefonoPrincipal;
     private String direccionPrincipal;
     private String idioma;

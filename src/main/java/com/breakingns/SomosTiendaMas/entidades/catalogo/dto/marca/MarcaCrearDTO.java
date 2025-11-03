@@ -18,4 +18,8 @@ public class MarcaCrearDTO {
     private String slug;
 
     private String descripcion;
+
+    // Opcional: si la marca se crea desde la UI por un vendedor/usuario
+    private Boolean creadaPorUsuario;
+    private Long creadaPorVendedorId;
 }

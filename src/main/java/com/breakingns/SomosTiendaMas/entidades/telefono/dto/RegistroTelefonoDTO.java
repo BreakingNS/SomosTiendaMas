@@ -1,30 +1,35 @@
 package com.breakingns.SomosTiendaMas.entidades.telefono.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
 public class RegistroTelefonoDTO {
+    // Uno de estos debe venir informado
+    private Long perfilUsuarioId;
+    private Long perfilEmpresaId;
 
-    private Long idUsuario;
-    private Long idPerfilEmpresa;
+    @NotBlank
+    private String tipo; // PRINCIPAL | SECUNDARIO | WHATSAPP (usuario) | EMPRESA (empresa)
 
-    @NotBlank(message = "El tipo de teléfono es obligatorio")
-    private String tipo;
-
-    @NotBlank(message = "El número de teléfono es obligatorio")
-    @Pattern(regexp = "^[0-9]{6,15}$", message = "Número inválido (solo dígitos, 6-15)")
+    @NotBlank
     private String numero;
 
-    @NotBlank(message = "La característica es obligatoria")
-    @Pattern(regexp = "^[0-9]{1,4}$", message = "Característica inválida (solo dígitos)")
-    private String caracteristica;
-
-    private Boolean activo;
+    @NotBlank
+    private String caracteristica; // Debe existir en tabla codigos_area
+    
+    private Boolean activo;      // default true
+    private Boolean favorito;    // solo aplica a usuario (default false)
     private Boolean verificado;
+
+    // Constructor con valores por defecto
+    public RegistroTelefonoDTO() {
+        this.activo = true;
+        this.favorito = false;
+        this.verificado = false;
+    }
 
     // Normalizar entradas antes de la validación y persistencia.
     // Al definir setters personalizados, Lombok no generará los setters para esos campos,

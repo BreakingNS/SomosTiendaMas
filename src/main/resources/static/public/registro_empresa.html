@@ -31,13 +31,34 @@
             .mobile-stack { display: flex; flex-direction: column; }
             .mobile-stack > * { width: 100%; }
         }
+
+        /* ==== NUEVO: clases reutilizables para el H1 de marca ==== */
+        .site-brand-title {
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #1f2937; /* color base (equivalente text-gray-800) */
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            /* tamaño responsive similar a text-2xl sm:text-3xl */
+            font-size: 1.25rem; /* 20px = text-2xl fallback */
+            line-height: 1.1;
+        }
+        @media (min-width: 640px) {
+            .site-brand-title { font-size: 1.875rem; /* 30px ≈ text-3xl */ }
+        }
+        .site-brand-accent-orange { color: var(--primary); }
+        .site-brand-accent-blue   { color: var(--primary-blue); }
+        /* ==== fin nuevo ==== */
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 sm:p-4 md:p-6">
     <main class="w-full max-w-6xl bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 lg:p-10">
+        <!-- Header: puedes copiar este H1 en cualquier parte para que respete todos los estilos -->
         <header class="mb-6 md:mb-8 text-center">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
-                <span class="text-orange-500">Tienda</span><span class="text-blue-600">Mas</span>
+            <h1 class="site-brand-title">
+                <span class="site-brand-accent-orange">Tienda</span><span class="site-brand-accent-blue">Mas</span>
             </h1>
             <p class="text-gray-600 text-xs sm:text-sm mt-2">Completa todos los campos para crear tu cuenta empresarial.</p>
         </header>
@@ -46,218 +67,144 @@
         <form id="companyForm" novalidate class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8" aria-describedby="formHelp">
             <p id="formHelp" class="lg:col-span-2 text-xs sm:text-sm text-gray-500 mb-2">Todos los campos marcados con <span class="req">*</span> son obligatorios.</p>
 
+            <!-- Cuadro de errores global -->
+            <div class="lg:col-span-2">
+                <div id="errorBox" class="hidden border border-red-300 bg-red-50 text-red-800 rounded-lg p-4 text-sm" role="alert" aria-live="assertive">
+                    <div class="font-semibold mb-1">No se pudo completar el registro:</div>
+                    <ul id="errorList" class="list-disc pl-5 space-y-1"></ul>
+                </div>
+            </div>
+
             <!-- Columna Izquierda -->
             <div class="space-y-4 md:space-y-6">
-                <!-- Datos de Cuenta -->
+                <!-- A.1 Datos de Usuario -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos de Cuenta</h2>
-                    <div class="space-y-3 sm:space-y-4">
-                        <div>
-                            <label for="username" class="block text-xs sm:text-sm font-medium">Usuario <span class="req">*</span></label>
-                            <input id="username" name="username" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="ej: miempresa2025" aria-describedby="usernameError" aria-invalid="false" autocomplete="username" />
-                            <p id="usernameError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                        <div>
-                            <label for="email" class="block text-xs sm:text-sm font-medium">Email <span class="req">*</span></label>
-                            <input id="email" name="email" type="email" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="empresa@correo.com" aria-describedby="emailError" aria-invalid="false" autocomplete="email" />
-                            <p id="emailError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                        <div>
-                            <label for="password" class="block text-xs sm:text-sm font-medium">Contraseña <span class="req">*</span></label>
-                            <div class="relative">
-                                <input id="password" name="password" type="password" class="w-full border rounded-lg px-3 sm:px-4 py-2 pr-10 input-focus text-sm sm:text-base" placeholder="Mínimo 6 caracteres" aria-describedby="passwordError" aria-invalid="false" autocomplete="new-password" />
-                                <button type="button" aria-label="Mostrar contraseña" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500" onclick="togglePassword('password', this)">
-                                    <i class="fas fa-eye text-sm sm:text-base"></i>
-                                </button>
-                            </div>
-                            <p id="passwordError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                        <div>
-                            <label for="confirmPassword" class="block text-xs sm:text-sm font-medium">Confirmar Contraseña <span class="req">*</span></label>
-                            <div class="relative">
-                                <input id="confirmPassword" name="confirmPassword" type="password" class="w-full border rounded-lg px-3 sm:px-4 py-2 pr-10 input-focus text-sm sm:text-base" placeholder="Repite la contraseña" aria-describedby="confirmPasswordError" aria-invalid="false" autocomplete="new-password" />
-                                <button type="button" aria-label="Mostrar confirmar contraseña" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500" onclick="togglePassword('confirmPassword', this)">
-                                    <i class="fas fa-eye text-sm sm:text-base"></i>
-                                </button>
-                            </div>
-                            <p id="confirmPasswordError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                        <div>
-                            <label for="tipoUsuario" class="block text-xs sm:text-sm font-medium">Tipo de Usuario <span class="req">*</span></label>
-                            <select id="tipoUsuario" name="tipoUsuario" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="tipoUsuarioError" aria-invalid="false">
-                                <option value="">Seleccionar</option>
-                                <option value="PERSONA_FISICA">Persona Física</option>
-                                <option value="PERSONA_JURIDICA">Persona Jurídica</option>
-                            </select>
-                            <p id="tipoUsuarioError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos de Usuario</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label for="idioma" class="block text-xs sm:text-sm font-medium">Idioma <span class="req">*</span></label>
-                                <select id="idioma" name="idioma" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="idiomaError" aria-invalid="false">
-                                    <option value="">Seleccionar</option>
-                                    <option value="es">Español</option>
-                                    <option value="en">Inglés</option>
-                                    <option value="pt">Portugués</option>
-                                </select>
-                                <p id="idiomaError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <label for="username" class="block text-sm font-medium text-gray-700">Usuario <span class="text-red-500">*</span></label>
+                                <input type="text" id="username" name="username" required minlength="6" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Elige un nombre de usuario" autocomplete="username">
+                                <div id="usernameStatus" class="text-sm mt-1 h-5" aria-live="polite"></div>
                             </div>
                             <div>
-                                <label for="timezone" class="block text-xs sm:text-sm font-medium">Zona Horaria <span class="req">*</span></label>
-                                <select id="timezone" name="timezone" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="timezoneError" aria-invalid="false">
-                                    <option value="">Seleccionar</option>
-                                    <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
-                                    <option value="America/Argentina/Cordoba">Córdoba (GMT-3)</option>
-                                    <option value="America/Argentina/Salta">Salta (GMT-3)</option>
-                                    <option value="America/Argentina/Mendoza">Mendoza (GMT-3)</option>
-                                </select>
-                                <p id="timezoneError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" name="email" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="empresa@correo.com" autocomplete="email">
+                                <div id="emailStatus" class="text-sm mt-1 h-5" aria-live="polite"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="password" name="password" required minlength="8" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Repetir contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Repite la contraseña" autocomplete="new-password">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <ul id="passwordChecklist" class="mt-2 space-y-1 text-sm" aria-live="polite">
+                                    <li id="title" class="flex items-center"><i class="fa-solid"></i> La contraseña debe contener:</li>
+                                    <li id="pwc-length" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Mínimo 8 caracteres</li>
+                                    <li id="pwc-upper" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 mayúscula</li>
+                                    <li id="pwc-number" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 número</li>
+                                    <li id="pwc-special" class="flex items-center text-red-600"><i class="fa-solid fa-circle-xmark mr-2"></i> Al menos 1 caracter especial</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <div id="passwordMatch" class="text-sm mt-1 h-5" aria-live="polite"></div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Representante -->
+                <!-- A.2 Datos del Responsable -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Representante Legal</h2>
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos del Responsable</h2>
                     <div class="space-y-3 sm:space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label for="repFirstName" class="block text-xs sm:text-sm font-medium">Nombre <span class="req">*</span></label>
-                                <input id="repFirstName" name="repFirstName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repFirstNameError" aria-invalid="false" />
-                                <p id="repFirstNameError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <input id="repFirstName" name="repFirstName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                             </div>
                             <div>
                                 <label for="repLastName" class="block text-xs sm:text-sm font-medium">Apellido <span class="req">*</span></label>
-                                <input id="repLastName" name="repLastName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repLastNameError" aria-invalid="false" />
-                                <p id="repLastNameError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <input id="repLastName" name="repLastName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label for="repGender" class="block text-xs sm:text-sm font-medium">Género <span class="req">*</span></label>
-                                <select id="repGender" name="repGender" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repGenderError" aria-invalid="false">
+                                <select id="repGender" name="repGender" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                                     <option value="">Seleccionar</option>
                                     <option value="FEMENINO">Femenino</option>
                                     <option value="MASCULINO">Masculino</option>
                                     <option value="NO_BINARIO">No binario</option>
                                     <option value="PREFIERO_NO_DECIRLO">Prefiero no decirlo</option>
                                 </select>
-                                <p id="repGenderError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
                             </div>
                             <div>
                                 <label for="repDocument" class="block text-xs sm:text-sm font-medium">Documento (DNI/CUIL) <span class="req">*</span></label>
-                                <input id="repDocument" name="repDocument" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repDocumentError" aria-invalid="false" placeholder="Sólo números" />
-                                <p id="repDocumentError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <input id="repDocument" name="repDocument" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="Sólo números">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label for="repBirthDate" class="block text-xs sm:text-sm font-medium">Fecha de Nacimiento <span class="req">*</span></label>
-                                <input id="repBirthDate" name="repBirthDate" type="date" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repBirthDateError" aria-invalid="false" />
-                                <p id="repBirthDateError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                            <div>
-                                <label for="repEmail" class="block text-xs sm:text-sm font-medium">Email <span class="req">*</span></label>
-                                <input id="repEmail" name="repEmail" type="email" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repEmailError" aria-invalid="false" placeholder="representante@correo.com" />
-                                <p id="repEmailError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <input id="repBirthDate" name="repBirthDate" type="date" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Dirección del Responsable -->
-                <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Dirección del Responsable</h2>
-                    <div class="space-y-3 sm:space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <div class="sm:col-span-2">
-                                <label for="repStreet" class="block text-xs sm:text-sm font-medium">Calle <span class="req">*</span></label>
-                                <input id="repStreet" name="repStreet" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repStreetError" aria-invalid="false" />
-                                <p id="repStreetError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                            <div>
-                                <label for="repStreetNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
-                                <input id="repStreetNumber" name="repStreetNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repStreetNumberError" aria-invalid="false" />
-                                <p id="repStreetNumberError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <div>
-                                <label for="repPostalCode" class="block text-xs sm:text-sm font-medium">Código Postal <span class="req">*</span></label>
-                                <input id="repPostalCode" name="repPostalCode" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repPostalCodeError" aria-invalid="false" />
-                                <p id="repPostalCodeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                            <div>
-                                <label for="repCity" class="block text-xs sm:text-sm font-medium">Ciudad <span class="req">*</span></label>
-                                <input id="repCity" name="repCity" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repCityError" aria-invalid="false" />
-                                <p id="repCityError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                            <div>
-                                <label for="repProvince" class="block text-xs sm:text-sm font-medium">Provincia <span class="req">*</span></label>
-                                <input id="repProvince" name="repProvince" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repProvinceError" aria-invalid="false" />
-                                <p id="repProvinceError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="repAddressType" class="block text-xs sm:text-sm font-medium">Tipo de Dirección <span class="req">*</span></label>
-                            <select id="repAddressType" name="repAddressType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repAddressTypeError" aria-invalid="false">
-                                <option value="">Seleccionar</option>
-                                <option value="PERSONAL">Personal</option>
-                                <option value="LABORAL">Laboral</option>
-                            </select>
-                            <p id="repAddressTypeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Teléfono del Responsable -->
+                <!-- A.3 Teléfono del Responsable -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Teléfono del Responsable</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div>
                             <label for="repPhoneArea" class="block text-xs sm:text-sm font-medium">Característica <span class="req">*</span></label>
-                            <input id="repPhoneArea" name="repPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repPhoneAreaError" aria-invalid="false" placeholder="011">
-                            <p id="repPhoneAreaError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="repPhoneArea" name="repPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="011">
                         </div>
                         <div class="sm:col-span-2">
                             <label for="repPhoneNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
-                            <input id="repPhoneNumber" name="repPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repPhoneNumberError" aria-invalid="false" placeholder="15XXXXYYYY">
-                            <p id="repPhoneNumberError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="repPhoneNumber" name="repPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="15XXXXYYYY">
                         </div>
                     </div>
                     <div class="mt-3">
                         <label for="repPhoneType" class="block text-xs sm:text-sm font-medium">Tipo de Teléfono <span class="req">*</span></label>
-                        <select id="repPhoneType" name="repPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="repPhoneTypeError" aria-invalid="false">
+                        <select id="repPhoneType" name="repPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                             <option value="">Seleccionar</option>
                             <option value="PRINCIPAL">Principal</option>
                             <option value="SECUNDARIO">Secundario</option>
                             <option value="LABORAL">Laboral</option>
                         </select>
-                        <p id="repPhoneTypeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
                     </div>
                 </section>
             </div>
 
             <!-- Columna Derecha -->
             <div class="space-y-4 md:space-y-6">
-                <!-- Empresa -->
+                <!-- B.1 Datos de la Empresa -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Datos de la Empresa</h2>
                     <div class="space-y-3 sm:space-y-4">
                         <div>
                             <label for="businessName" class="block text-xs sm:text-sm font-medium">Razón Social <span class="req">*</span></label>
-                            <input id="businessName" name="businessName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="businessNameError" aria-invalid="false" />
-                            <p id="businessNameError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="businessName" name="businessName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                         </div>
                         <div>
+                            <label for="commercialName" class="block text-xs sm:text-sm font-medium">Nombre Comercial</label>
+                            <input id="commercialName" name="commercialName" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
+                        </div>  
+                        <div>
                             <label for="cuit" class="block text-xs sm:text-sm font-medium">CUIT <span class="req">*</span></label>
-                            <input id="cuit" name="cuit" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="cuitError" aria-invalid="false" placeholder="XX-XXXXXXXX-X o 11 dígitos" />
-                            <p id="cuitError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="cuit" name="cuit" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="XX-XXXXXXXX-X o 11 dígitos">
                         </div>
                         <div>
                             <label for="ivaCondition" class="block text-xs sm:text-sm font-medium">Condición ante IVA <span class="req">*</span></label>
-                            <select id="ivaCondition" name="ivaCondition" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="ivaConditionError" aria-invalid="false">
+                            <select id="ivaCondition" name="ivaCondition" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                                 <option value="">Seleccionar condición</option>
                                 <option value="RI">Responsable Inscripto</option>
                                 <option value="MONOTRIBUTO">Monotributo</option>
@@ -265,12 +212,10 @@
                                 <option value="CONSUMIDOR_FINAL">Consumidor Final</option>
                                 <option value="OTRO">Otro</option>
                             </select>
-                            <p id="ivaConditionError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
                         </div>
                         <div>
                             <label for="companyEmail" class="block text-xs sm:text-sm font-medium">Email de la Empresa <span class="req">*</span></label>
-                            <input id="companyEmail" name="companyEmail" type="email" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyEmailError" aria-invalid="false" placeholder="empresa@correo.com" />
-                            <p id="companyEmailError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="companyEmail" name="companyEmail" type="email" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="empresa@correo.com">
                         </div>
                         <div class="flex items-center">
                             <input id="requiresBilling" name="requiresBilling" type="checkbox" class="mr-2 w-4 h-4" />
@@ -279,81 +224,94 @@
                     </div>
                 </section>
 
-                <!-- Dirección de la Empresa -->
+                <!-- B.2 Dirección Empresa (con selects en cascada como registro_usuario) -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Dirección de la Empresa</h2>
-                    <div class="space-y-3 sm:space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <div class="sm:col-span-2">
-                                <label for="companyStreet" class="block text-xs sm:text-sm font-medium">Calle <span class="req">*</span></label>
-                                <input id="companyStreet" name="companyStreet" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyStreetError" aria-invalid="false" />
-                                <p id="companyStreetError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Dirección Empresa</h2>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Cascading selects para ubicación -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="provinciaSelect" class="block text-sm font-medium text-gray-700">Provincia <span class="text-red-500">*</span></label>
+                                <select id="provinciaSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg"></select>
                             </div>
                             <div>
-                                <label for="companyStreetNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
-                                <input id="companyStreetNumber" name="companyStreetNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyStreetNumberError" aria-invalid="false" />
-                                <p id="companyStreetNumberError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <label for="departamentoSelect" class="block text-sm font-medium text-gray-700">Departamento (jurisdicción) <span class="text-red-500">*</span></label>
+                                <select id="departamentoSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label for="companyPostalCode" class="block text-xs sm:text-sm font-medium">Código Postal <span class="req">*</span></label>
-                                <input id="companyPostalCode" name="companyPostalCode" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyPostalCodeError" aria-invalid="false" />
-                                <p id="companyPostalCodeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <label for="municipioSelect" class="block text-sm font-medium text-gray-700">Municipio <span class="text-red-500">*</span></label>
+                                <select id="municipioSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
                             </div>
                             <div>
-                                <label for="companyCity" class="block text-xs sm:text-sm font-medium">Ciudad <span class="req">*</span></label>
-                                <input id="companyCity" name="companyCity" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyCityError" aria-invalid="false" />
-                                <p id="companyCityError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
-                            </div>
-                            <div>
-                                <label for="companyProvince" class="block text-xs sm:text-sm font-medium">Provincia <span class="req">*</span></label>
-                                <input id="companyProvince" name="companyProvince" type="text" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyProvinceError" aria-invalid="false" />
-                                <p id="companyProvinceError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                                <label for="localidadSelect" class="block text-sm font-medium text-gray-700">Localidad <span class="text-red-500">*</span></label>
+                                <select id="localidadSelect" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" disabled></select>
                             </div>
                         </div>
+
+                        <!-- Calle, numero, piso, departamento interno, cp y referencia -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="street" class="block text-sm font-medium text-gray-700">Calle <span class="text-red-500">*</span></label>
+                                <input type="text" id="street" name="street" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: San Martín">
+                            </div>
+                            <div>
+                                <label for="number" class="block text-sm font-medium text-gray-700">Número <span class="text-red-500">*</span></label>
+                                <input type="text" id="number" name="number" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 1234">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label for="floor" class="block text-sm font-medium text-gray-700">Piso</label>
+                                <input type="text" id="floor" name="floor" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 2">
+                            </div>
+                            <div>
+                                <label for="apartment" class="block text-sm font-medium text-gray-700">Departamento (interno)</label>
+                                <input type="text" id="apartment" name="apartment" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: A">
+                            </div>
+                            <div>
+                                <label for="postalCode" class="block text-sm font-medium text-gray-700">Código Postal <span class="text-red-500">*</span></label>
+                                <input type="text" id="postalCode" name="postalCode" required class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: 1000">
+                            </div>
+                        </div>
+
                         <div>
-                            <label for="companyAddressType" class="block text-xs sm:text-sm font-medium">Tipo de Dirección <span class="req">*</span></label>
-                            <select id="companyAddressType" name="companyAddressType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyAddressTypeError" aria-invalid="false">
-                                <option value="">Seleccionar</option>
-                                <option value="FISCAL">Fiscal</option>
-                                <option value="COMERCIAL">Comercial</option>
-                                <option value="SUCURSAL">Sucursal</option>
-                            </select>
-                            <p id="companyAddressTypeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <label for="reference" class="block text-sm font-medium text-gray-700">Referencia</label>
+                            <textarea id="reference" name="reference" class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg" placeholder="Ej: Frente a la plaza"></textarea>
                         </div>
                     </div>
                 </section>
 
-                <!-- Teléfono de la Empresa -->
+                <!-- B.3 Teléfono de la Empresa -->
                 <section class="bg-gray-50 p-4 sm:p-5 rounded-lg sm:rounded-xl border">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 section-title">Teléfono de la Empresa</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div>
                             <label for="companyPhoneArea" class="block text-xs sm:text-sm font-medium">Característica <span class="req">*</span></label>
-                            <input id="companyPhoneArea" name="companyPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyPhoneAreaError" aria-invalid="false" placeholder="011">
-                            <p id="companyPhoneAreaError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="companyPhoneArea" name="companyPhoneArea" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="011">
                         </div>
                         <div class="sm:col-span-2">
                             <label for="companyPhoneNumber" class="block text-xs sm:text-sm font-medium">Número <span class="req">*</span></label>
-                            <input id="companyPhoneNumber" name="companyPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyPhoneNumberError" aria-invalid="false" placeholder="15XXXXYYYY">
-                            <p id="companyPhoneNumberError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
+                            <input id="companyPhoneNumber" name="companyPhoneNumber" type="text" inputmode="numeric" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" placeholder="15XXXXYYYY">
                         </div>
                     </div>
                     <div class="mt-3">
                         <label for="companyPhoneType" class="block text-xs sm:text-sm font-medium">Tipo de Teléfono <span class="req">*</span></label>
-                        <select id="companyPhoneType" name="companyPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base" aria-describedby="companyPhoneTypeError" aria-invalid="false">
+                        <select id="companyPhoneType" name="companyPhoneType" class="w-full border rounded-lg px-3 sm:px-4 py-2 input-focus text-sm sm:text-base">
                             <option value="">Seleccionar</option>
                             <option value="PRINCIPAL">Principal</option>
                             <option value="SECUNDARIO">Secundario</option>
                             <option value="FAX">Fax</option>
                         </select>
-                        <p id="companyPhoneTypeError" class="text-xs sm:text-sm field-error mt-1 hidden" role="alert"></p>
                     </div>
                 </section>
             </div>
 
-            <!-- Full width: Terms -->
+            <!-- Terms + botón -->
             <div class="lg:col-span-2 space-y-4 md:space-y-6">
                 <!-- Terms -->
                 <div class="flex items-start gap-3">
@@ -364,7 +322,7 @@
 
                 <!-- Botón -->
                 <div class="flex justify-center sm:justify-end">
-                    <button id="submitBtn" type="submit" disabled class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-400 disabled:opacity-60 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg shadow-lg inline-flex items-center justify-center transition">
+                    <button id="submitBtn" type="submit" class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-400 disabled:opacity-60 text-white font-semibold px-6 sm:px-8 py-3 rounded-lg shadow-lg inline-flex items-center justify-center transition">
                         <span id="btnText" class="text-sm sm:text-base">Crear cuenta</span>
                         <svg id="spinner" class="ml-3 hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
                     </button>
@@ -373,732 +331,353 @@
         </form>
     </main>
 
-    <!-- JS: Validaciones (email, contraseña, teléfono) -->
     <script>
-        // --- Helpers ---
+        // Constantes de API para comprobaciones en tiempo real
+        const ORIGIN = window.location.origin || 'https://localhost:8443';
+        const ACCOUNT_API = {
+        CHECK_USERNAME: `${ORIGIN}/api/usuario/public/check-username`,
+        CHECK_EMAIL:    `${ORIGIN}/api/usuario/public/check-email`
+        };
+
+        // Utils
         const qs = id => document.getElementById(id);
-        const showError = (fieldId, message) => {
-            const err = qs(fieldId + 'Error');
-            if (!err) return;
-            err.textContent = message;
-            err.classList.remove('hidden');
-            const field = qs(fieldId);
-            if (field) field.setAttribute('aria-invalid', 'true');
-        };
-        const hideError = (fieldId) => {
-            const err = qs(fieldId + 'Error');
-            if (!err) return;
-            err.textContent = '';
-            err.classList.add('hidden');
-            const field = qs(fieldId);
-            if (field) field.setAttribute('aria-invalid', 'false');
-        };
-
-        // Regex / reglas
-        const usernameRe = /^[A-Za-z0-9._-]{6,16}$/;
-        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // razonable para cliente
-        const passwordRe = /^[A-Za-z0-9!@#$%^&*()_+\-=\{\}\[\]:;,.?\/]{6,16}$/;
-        const phoneAreaRe = /^\d{2,4}$/; // e.g. 11, 381, 0299
-        const phoneNumberRe = /^\d{6,15}$/; // teléfono principal
-        const digitsOnly = /^\d+$/;
-        const cuitRe = /^[0-9]{11}$/; // CUIT sin guiones
-
-        // Toggle password visibility
-        function togglePassword(fieldId, btn) {
-            const field = qs(fieldId);
-            if (!field) return;
-            const icon = btn.querySelector('i');
-            if (field.type === 'password') {
-                field.type = 'text';
-                if (icon) {
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                }
-            } else {
-                field.type = 'password';
-                if (icon) {
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-            }
-            field.focus();
+        function safeFetch(url, options) {
+            return fetch(url, options).then(r => {
+                if (!r.ok) return Promise.reject(r);
+                const ct = r.headers.get('content-type') || '';
+                return ct.includes('application/json') ? r.json() : r.text();
+            });
         }
-
-        // Validadores individuales
-        function validateUsername() {
-            const v = (qs('username').value || '').trim();
-            if (!v) {
-                showError('username', 'Usuario requerido');
-                return false;
-            }
-            if (!usernameRe.test(v)) {
-                showError('username', '6-16 caracteres. Letras, números, . _ - permitidos.');
-                return false;
-            }
-            hideError('username');
-            return true;
-        }
-
-        function validateEmail() {
-            const v = (qs('email').value || '').trim();
-            if (!v) {
-                showError('email', 'Email requerido');
-                return false;
-            }
-            if (!emailRe.test(v)) {
-                showError('email', 'Formato de email inválido');
-                return false;
-            }
-            hideError('email');
-            return true;
-        }
-
-        function validatePassword() {
-            const v = (qs('password').value || '');
-            if (!v) {
-                showError('password','Contraseña requerida');
-                return false;
-            }
-            if (!passwordRe.test(v)) {
-                showError('password','6-16 caracteres. Solo los símbolos permitidos.');
-                return false;
-            }
-            hideError('password');
-            return true;
-        }
-
-        function validateConfirmPassword() {
-            const p = (qs('password').value || '');
-            const v = (qs('confirmPassword').value || '');
-            if (!v) {
-                showError('confirmPassword','Confirmar contraseña requerida');
-                return false;
-            }
-            if (p !== v) {
-                showError('confirmPassword','Las contraseñas no coinciden');
-                return false;
-            }
-            hideError('confirmPassword');
-            return true;
-        }
-
-        function validateTipoUsuario() {
-            const v = (qs('tipoUsuario').value || '').trim();
-            if (!v) {
-                showError('tipoUsuario','Tipo de usuario requerido');
-                return false;
-            }
-            hideError('tipoUsuario');
-            return true;
-        }
-
-        function validateIdioma() {
-            const v = (qs('idioma').value || '').trim();
-            if (!v) {
-                showError('idioma','Idioma requerido');
-                return false;
-            }
-            hideError('idioma');
-            return true;
-        }
-
-        function validateTimezone() {
-            const v = (qs('timezone').value || '').trim();
-            if (!v) {
-                showError('timezone','Zona horaria requerida');
-                return false;
-            }
-            hideError('timezone');
-            return true;
-        }
-
-        function validateRepFirstName() {
-            const v = (qs('repFirstName').value || '').trim();
-            if (!v) {
-                showError('repFirstName','Nombre del representante requerido');
-                return false;
-            }
-            hideError('repFirstName');
-            return true;
-        }
-
-        function validateRepLastName() {
-            const v = (qs('repLastName').value || '').trim();
-            if (!v) {
-                showError('repLastName','Apellido del representante requerido');
-                return false;
-            }
-            hideError('repLastName');
-            return true;
-        }
-
-        function validateRepGender() {
-            const v = (qs('repGender').value || '').trim();
-            if (!v) {
-                showError('repGender','Género requerido');
-                return false;
-            }
-            hideError('repGender');
-            return true;
-        }
-
-        function validateRepDocument() {
-            const v = (qs('repDocument').value || '').trim();
-            if (!v) {
-                showError('repDocument','Documento requerido');
-                return false;
-            }
-            if (!digitsOnly.test(v)) {
-                showError('repDocument','Solo se permiten números');
-                return false;
-            }
-            hideError('repDocument');
-            return true;
-        }
-
-        function validateRepBirthDate() {
-            const v = (qs('repBirthDate').value || '').trim();
-            if (!v) {
-                showError('repBirthDate','Fecha de nacimiento requerida');
-                return false;
-            }
-            // Validar que sea una fecha válida y que la persona sea mayor de 18 años
-            const birthDate = new Date(v);
-            const today = new Date();
-            const age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            
-            if (age < 18) {
-                showError('repBirthDate','Debes ser mayor de 18 años');
-                return false;
-            }
-            
-            hideError('repBirthDate');
-            return true;
-        }
-
-        function validateRepEmail() {
-            const v = (qs('repEmail').value || '').trim();
-            if (!v) {
-                showError('repEmail','Email del representante requerido');
-                return false;
-            }
-            if (!emailRe.test(v)) {
-                showError('repEmail','Formato de email inválido');
-                return false;
-            }
-            hideError('repEmail');
-            return true;
-        }
-
-        function validateRepStreet() {
-            const v = (qs('repStreet').value || '').trim();
-            if (!v) {
-                showError('repStreet','Calle del representante requerida');
-                return false;
-            }
-            hideError('repStreet');
-            return true;
-        }
-
-        function validateRepStreetNumber() {
-            const v = (qs('repStreetNumber').value || '').trim();
-            if (!v) {
-                showError('repStreetNumber','Número de calle del representante requerido');
-                return false;
-            }
-            hideError('repStreetNumber');
-            return true;
-        }
-
-        function validateRepPostalCode() {
-            const v = (qs('repPostalCode').value || '').trim();
-            if (!v) {
-                showError('repPostalCode','Código postal del representante requerido');
-                return false;
-            }
-            hideError('repPostalCode');
-            return true;
-        }
-
-        function validateRepCity() {
-            const v = (qs('repCity').value || '').trim();
-            if (!v) {
-                showError('repCity','Ciudad del representante requerida');
-                return false;
-            }
-            hideError('repCity');
-            return true;
-        }
-
-        function validateRepProvince() {
-            const v = (qs('repProvince').value || '').trim();
-            if (!v) {
-                showError('repProvince','Provincia del representante requerida');
-                return false;
-            }
-            hideError('repProvince');
-            return true;
-        }
-
-        function validateRepAddressType() {
-            const v = (qs('repAddressType').value || '').trim();
-            if (!v) {
-                showError('repAddressType','Tipo de dirección del representante requerido');
-                return false;
-            }
-            hideError('repAddressType');
-            return true;
-        }
-
-        function validateRepPhoneArea() {
-            const v = (qs('repPhoneArea').value || '').trim();
-            if (!v) {
-                showError('repPhoneArea','Característica del teléfono del representante requerida');
-                return false;
-            }
-            if (!phoneAreaRe.test(v)) {
-                showError('repPhoneArea','Formato inválido (ej: 011, 381)');
-                return false;
-            }
-            hideError('repPhoneArea');
-            return true;
-        }
-
-        function validateRepPhoneNumber() {
-            const v = (qs('repPhoneNumber').value || '').trim();
-            if (!v) {
-                showError('repPhoneNumber','Número de teléfono del representante requerido');
-                return false;
-            }
-            if (!phoneNumberRe.test(v)) {
-                showError('repPhoneNumber','Número inválido. 6-15 dígitos.');
-                return false;
-            }
-            hideError('repPhoneNumber');
-            return true;
-        }
-
-        function validateRepPhoneType() {
-            const v = (qs('repPhoneType').value || '').trim();
-            if (!v) {
-                showError('repPhoneType','Tipo de teléfono del representante requerido');
-                return false;
-            }
-            hideError('repPhoneType');
-            return true;
-        }
-
-        function validateBusinessName() {
-            const v = (qs('businessName').value || '').trim();
-            if (!v) {
-                showError('businessName','Razón social requerida');
-                return false;
-            }
-            hideError('businessName');
-            return true;
-        }
-
-        function validateCuit() {
-            const v = (qs('cuit').value || '').trim().replace(/-/g, '');
-            if (!v) {
-                showError('cuit','CUIT requerido');
-                return false;
-            }
-            if (!cuitRe.test(v)) {
-                showError('cuit','CUIT inválido. Debe tener 11 dígitos.');
-                return false;
-            }
-            hideError('cuit');
-            return true;
-        }
-
-        function validateIvaCondition() {
-            const v = (qs('ivaCondition').value || '').trim();
-            if (!v) {
-                showError('ivaCondition','Condición ante IVA requerida');
-                return false;
-            }
-            hideError('ivaCondition');
-            return true;
-        }
-
-        function validateCompanyEmail() {
-            const v = (qs('companyEmail').value || '').trim();
-            if (!v) {
-                showError('companyEmail','Email de la empresa requerido');
-                return false;
-            }
-            if (!emailRe.test(v)) {
-                showError('companyEmail','Formato de email inválido');
-                return false;
-            }
-            hideError('companyEmail');
-            return true;
-        }
-
-        function validateCompanyStreet() {
-            const v = (qs('companyStreet').value || '').trim();
-            if (!v) {
-                showError('companyStreet','Calle de la empresa requerida');
-                return false;
-            }
-            hideError('companyStreet');
-            return true;
-        }
-
-        function validateCompanyStreetNumber() {
-            const v = (qs('companyStreetNumber').value || '').trim();
-            if (!v) {
-                showError('companyStreetNumber','Número de calle de la empresa requerido');
-                return false;
-            }
-            hideError('companyStreetNumber');
-            return true;
-        }
-
-        function validateCompanyPostalCode() {
-            const v = (qs('companyPostalCode').value || '').trim();
-            if (!v) {
-                showError('companyPostalCode','Código postal de la empresa requerido');
-                return false;
-            }
-            hideError('companyPostalCode');
-            return true;
-        }
-
-        function validateCompanyCity() {
-            const v = (qs('companyCity').value || '').trim();
-            if (!v) {
-                showError('companyCity','Ciudad de la empresa requerida');
-                return false;
-            }
-            hideError('companyCity');
-            return true;
-        }
-
-        function validateCompanyProvince() {
-            const v = (qs('companyProvince').value || '').trim();
-            if (!v) {
-                showError('companyProvince','Provincia de la empresa requerida');
-                return false;
-            }
-            hideError('companyProvince');
-            return true;
-        }
-
-        function validateCompanyAddressType() {
-            const v = (qs('companyAddressType').value || '').trim();
-            if (!v) {
-                showError('companyAddressType','Tipo de dirección de la empresa requerido');
-                return false;
-            }
-            hideError('companyAddressType');
-            return true;
-        }
-
-        function validateCompanyPhoneArea() {
-            const v = (qs('companyPhoneArea').value || '').trim();
-            if (!v) {
-                showError('companyPhoneArea','Característica del teléfono de la empresa requerida');
-                return false;
-            }
-            if (!phoneAreaRe.test(v)) {
-                showError('companyPhoneArea','Formato inválido (ej: 011, 381)');
-                return false;
-            }
-            hideError('companyPhoneArea');
-            return true;
-        }
-
-        function validateCompanyPhoneNumber() {
-            const v = (qs('companyPhoneNumber').value || '').trim();
-            if (!v) {
-                showError('companyPhoneNumber','Número de teléfono de la empresa requerido');
-                return false;
-            }
-            if (!phoneNumberRe.test(v)) {
-                showError('companyPhoneNumber','Número inválido. 6-15 dígitos.');
-                return false;
-            }
-            hideError('companyPhoneNumber');
-            return true;
-        }
-
-        function validateCompanyPhoneType() {
-            const v = (qs('companyPhoneType').value || '').trim();
-            if (!v) {
-                showError('companyPhoneType','Tipo de teléfono de la empresa requerido');
-                return false;
-            }
-            hideError('companyPhoneType');
-            return true;
-        }
-
-        function validateTerms() {
-            const v = qs('terms').checked;
-            if (!v) {
-                showError('terms','Debes aceptar los términos y políticas.');
-                return false;
-            }
-            hideError('terms');
-            return true;
-        }
-
-        // Estado del botón (habilitar solo cuando todos los campos sean válidos)
-        function updateSubmitState() {
-            const allValid = 
-                validateUsername() && 
-                validateEmail() && 
-                validatePassword() && 
-                validateConfirmPassword() &&
-                validateTipoUsuario() &&
-                validateIdioma() &&
-                validateTimezone() &&
-                validateRepFirstName() &&
-                validateRepLastName() &&
-                validateRepGender() &&
-                validateRepDocument() &&
-                validateRepBirthDate() &&
-                validateRepEmail() &&
-                validateRepStreet() &&
-                validateRepStreetNumber() &&
-                validateRepPostalCode() &&
-                validateRepCity() &&
-                validateRepProvince() &&
-                validateRepAddressType() &&
-                validateRepPhoneArea() &&
-                validateRepPhoneNumber() &&
-                validateRepPhoneType() &&
-                validateBusinessName() &&
-                validateCuit() &&
-                validateIvaCondition() &&
-                validateCompanyEmail() &&
-                validateCompanyStreet() &&
-                validateCompanyStreetNumber() &&
-                validateCompanyPostalCode() &&
-                validateCompanyCity() &&
-                validateCompanyProvince() &&
-                validateCompanyAddressType() &&
-                validateCompanyPhoneArea() &&
-                validateCompanyPhoneNumber() &&
-                validateCompanyPhoneType() &&
-                validateTerms();
-                
-            qs('submitBtn').disabled = !allValid;
-            return allValid;
-        }
-
-        // Eventos en tiempo real (debounce ligero para email)
-        const debounce = (fn, wait=300) => {
-            let t;
-            return (...args) => {
-                clearTimeout(t);
-                t = setTimeout(()=>fn(...args), wait);
+        function debounce(fn, wait=600){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),wait); }; }
+        function setInlineStatus(el, state, message) {
+            if (!el) return;
+            const states = {
+                checking: { cls: 'text-gray-600', icon: '<i class="fa-solid fa-spinner fa-spin mr-2"></i>' },
+                ok:       { cls: 'text-green-600', icon: '<i class="fa-solid fa-circle-check mr-2"></i>' },
+                error:    { cls: 'text-red-600',   icon: '<i class="fa-solid fa-circle-xmark mr-2"></i>' },
+                idle:     { cls: 'text-gray-600',  icon: '' }
             };
-        };
-
-        // Agregar event listeners a todos los campos
-        const fields = [
-            'username', 'email', 'password', 'confirmPassword', 'tipoUsuario', 'idioma', 'timezone',
-            'repFirstName', 'repLastName', 'repGender', 'repDocument', 'repBirthDate', 'repEmail',
-            'repStreet', 'repStreetNumber', 'repPostalCode', 'repCity', 'repProvince', 'repAddressType',
-            'repPhoneArea', 'repPhoneNumber', 'repPhoneType', 'businessName', 'cuit', 'ivaCondition',
-            'companyEmail', 'companyStreet', 'companyStreetNumber', 'companyPostalCode', 'companyCity',
-            'companyProvince', 'companyAddressType', 'companyPhoneArea', 'companyPhoneNumber', 'companyPhoneType'
-        ];
-
-        fields.forEach(field => {
-            const element = qs(field);
-            if (element) {
-                element.addEventListener('input', debounce(() => {
-                    // Llamar a la función de validación correspondiente
-                    const validatorName = 'validate' + field.charAt(0).toUpperCase() + field.slice(1);
-                    if (typeof window[validatorName] === 'function') {
-                        window[validatorName]();
-                    }
-                    updateSubmitState();
-                }, 250));
+            const s = states[state] || states.idle;
+            el.className = `text-sm mt-1 h-5 ${s.cls}`;
+            el.innerHTML = message ? `${s.icon}${message}` : '';
+        }
+        function availableFromResponse(data) {
+            if (typeof data === 'boolean') return data;
+            if (data && typeof data === 'object') {
+                if ('available' in data) return !!data.available;
+                if ('disponible' in data) return !!data.disponible;
+                if ('exists' in data) return !data.exists;
+                if ('taken' in data) return !data.taken;
             }
-        });
+            if (typeof data === 'string') {
+                const s = data.toLowerCase();
+                if (s.includes('disponible') || s.includes('available')) return true;
+                if (s.includes('no disponible') || s.includes('existe') || s.includes('taken')) return false;
+            }
+            return null;
+        }
 
-        // Evento para el checkbox de términos
-        qs('terms')?.addEventListener('change', () => {
-            validateTerms();
-            updateSubmitState();
+        // ErrorBox
+        function clearErrors(){ const box=qs('errorBox'); const list=qs('errorList'); if(list) list.innerHTML=''; if(box) box.classList.add('hidden'); }
+        function showErrors(errors){
+            const box=qs('errorBox'); const list=qs('errorList'); if(!box||!list) return;
+            list.innerHTML=''; errors.forEach(m=>{ const li=document.createElement('li'); li.textContent=m; list.appendChild(li); });
+            box.classList.remove('hidden'); box.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+
+        // Checklist contraseña
+        (function initPasswordChecklistLabels(){
+            ['pwc-length','pwc-upper','pwc-number','pwc-special'].forEach(id=>{
+                const li=document.getElementById(id); if(!li) return;
+                if(!li.dataset.label){ li.dataset.label = li.textContent.replace(/^[\u25CF\u25CB\u25A0\u25A1\uf000-\uf8ff\s]+/,'').trim() || li.textContent.trim(); }
+            });
+        })();
+        function updatePasswordChecklist(pass){
+            const setItem=(id,ok)=>{
+                const li=document.getElementById(id); if(!li) return;
+                const iconOk='<i class="fa-solid fa-circle-check mr-2"></i>';
+                const iconKo='<i class="fa-solid fa-circle-xmark mr-2"></i>';
+                const label=li.dataset.label||li.textContent.trim();
+                li.classList.toggle('text-green-600',!!ok);
+                li.classList.toggle('text-red-600',!ok);
+                li.innerHTML=(ok?iconOk:iconKo)+' '+label;
+            };
+            setItem('pwc-length', pass.length>=8);
+            setItem('pwc-upper', /[A-Z]/.test(pass));
+            setItem('pwc-number', /[0-9]/.test(pass));
+            setItem('pwc-special', /[^A-Za-z0-9]/.test(pass));
+        }
+        function updatePasswordMatch(){
+            const pass=qs('password')?.value||'';
+            const pass2=qs('confirmPassword')?.value||'';
+            const el=qs('passwordMatch');
+            if(!el || (!pass && !pass2)){ if(el) setInlineStatus(el,'idle',''); return; }
+            setInlineStatus(el, pass && pass2 && pass===pass2 ? 'ok' : 'error', pass===pass2 ? 'Las contraseñas coinciden.' : 'Las contraseñas no coinciden.');
+        }
+
+        // Realtime username/email
+        async function checkUsernameAvailability(u){ try{ const d=await safeFetch(`${ACCOUNT_API.CHECK_USERNAME}?username=${encodeURIComponent(u)}`); return availableFromResponse(d);}catch{return null;} }
+        async function checkEmailAvailability(e){ try{ const d=await safeFetch(`${ACCOUNT_API.CHECK_EMAIL}?email=${encodeURIComponent(e)}`); return availableFromResponse(d);}catch{return null;} }
+        function wireRealtimeValidation(){
+            const u=qs('username'), uS=qs('usernameStatus');
+            const e=qs('email'), eS=qs('emailStatus');
+            const p=qs('password'), p2=qs('confirmPassword');
+            if(u && uS){
+                const doCheck=debounce(async()=>{
+                    const v=(u.value||'').trim(); if(!v || v.length<6){ setInlineStatus(uS,'idle',''); return; }
+                    setInlineStatus(uS,'checking','Comprobando disponibilidad...');
+                    const ok=await checkUsernameAvailability(v);
+                    if(ok===true) setInlineStatus(uS,'ok','Usuario disponible.');
+                    else if(ok===false) setInlineStatus(uS,'error','Usuario no disponible.');
+                    else setInlineStatus(uS,'idle','No se pudo verificar ahora.');
+                },700);
+                u.addEventListener('input',doCheck); u.addEventListener('blur',()=>doCheck());
+            }
+            if(e && eS){
+                const doCheck=debounce(async()=>{
+                    const v=(e.value||'').trim(); if(!v){ setInlineStatus(eS,'idle',''); return; }
+                    if(e.validity?.typeMismatch){ setInlineStatus(eS,'error','Formato de correo inválido.'); return; }
+                    setInlineStatus(eS,'checking','Comprobando disponibilidad...');
+                    const ok=await checkEmailAvailability(v);
+                    if(ok===true) setInlineStatus(eS,'ok','Correo disponible.');
+                    else if(ok===false) setInlineStatus(eS,'error','Correo ya registrado.');
+                    else setInlineStatus(eS,'idle','No se pudo verificar ahora.');
+                },700);
+                e.addEventListener('input',doCheck); e.addEventListener('blur',()=>doCheck());
+            }
+            if(p){ updatePasswordChecklist(p.value||''); p.addEventListener('input',()=>{ updatePasswordChecklist(p.value||''); updatePasswordMatch(); }); }
+            if(p2){ p2.addEventListener('input', updatePasswordMatch); }
+        }
+
+        // Validación central (adaptada: se QUITAN las validaciones solicitadas y se actualiza CUIT)
+        function validateForm(){
+            const errors=[]; const val=id=>(qs(id)?.value||'').trim(); const onlyDigits=v=>/^\d+$/.test(v);
+            // Usuario
+            const username=val('username'); if(!username) errors.push('El campo Usuario no puede estar vacío.');
+            else if(username.length<6 || username.length>16) errors.push('El Usuario debe tener entre 6 y 16 caracteres.');
+            const email=val('email'); if(!email) errors.push('El campo Correo electrónico es obligatorio.');
+            else if(qs('email')?.validity?.typeMismatch) errors.push('El Correo electrónico no es válido.');
+            // Password
+            const pass=val('password'), pass2=val('confirmPassword');
+            if(!pass) errors.push('El campo Contraseña es obligatorio.');
+            if(!pass2) errors.push('El campo Repetir contraseña es obligatorio.');
+            if(pass && pass.length<8) errors.push('La Contraseña debe tener al menos 8 caracteres.');
+            if(pass && !/[A-Z]/.test(pass)) errors.push('La Contraseña debe incluir al menos una letra mayúscula.');
+            if(pass && !/[0-9]/.test(pass)) errors.push('La Contraseña debe incluir al menos un número.');
+            if(pass && !/[^A-Za-z0-9]/.test(pass)) errors.push('La Contraseña debe incluir al menos un caracter especial.');
+            if(pass && pass2 && pass!==pass2) errors.push('El campo Contraseña y Repetir contraseña no coinciden.');
+
+            // Responsable (solo campos personales básicos; se QUITAN validaciones de dirección y de email del responsable)
+            if(!val('repFirstName')) errors.push('El Nombre del responsable es obligatorio.');
+            if(!val('repLastName')) errors.push('El Apellido del responsable es obligatorio.');
+            if(!val('repGender')) errors.push('Debes seleccionar un Género del responsable.');
+            if(!val('repDocument')) errors.push('El Documento del responsable es obligatorio.');
+            else if(!onlyDigits(val('repDocument'))) errors.push('El Documento del responsable debe contener solo números.');
+            if(!val('repBirthDate')) errors.push('La Fecha de nacimiento del responsable es obligatoria.');
+            // Nota: se QUITAN las comprobaciones de repEmail, repStreet, repStreetNumber, repPostalCode, repCity, repProvince, repAddressType
+
+            // Teléfono Responsable
+            if(!val('repPhoneArea')) errors.push('La Característica del responsable es obligatoria.');
+            else if(!onlyDigits(val('repPhoneArea'))) errors.push('La Característica del responsable debe ser numérica.');
+            if(!val('repPhoneNumber')) errors.push('El Número de teléfono del responsable es obligatorio.');
+            else if(!onlyDigits(val('repPhoneNumber'))) errors.push('El Número de teléfono del responsable debe ser numérico.');
+            if(!val('repPhoneType')) errors.push('El Tipo de teléfono del responsable es obligatorio.');
+
+            // Empresa (ajustada: se QUITA la obligación de email de empresa si no existe en el HTML)
+            if(!val('businessName') && !val('razonSocial')) errors.push('La Razón social es obligatoria.');
+            // validar CUIT: admitir con o sin guiones pero exigir 11 dígitos numéricos
+            const rawCuit = (val('cuit') || '').replace(/\D/g,'');
+            if(!rawCuit) errors.push('El CUIT es obligatorio.');
+            else if(!/^\d{11}$/.test(rawCuit)) errors.push('El CUIT debe tener formato XX-XXXXXXXX-X (11 dígitos).');
+
+            // NEW: validar email de la empresa (el backend lo requiere)
+            const companyEmail = val('companyEmail');
+            if(!companyEmail) errors.push('El Email de la empresa es obligatorio.');
+            else if(qs('companyEmail')?.validity?.typeMismatch) errors.push('El Email de la empresa no es válido.');
+
+            // Dirección Empresa (selects en cascada)
+            if(!val('provinciaSelect')) errors.push('Debes seleccionar una Provincia de la empresa.');
+            if(!val('departamentoSelect')) errors.push('Debes seleccionar un Departamento de la empresa.');
+            if(!val('municipioSelect')) errors.push('Debes seleccionar un Municipio de la empresa.');
+            if(!val('localidadSelect')) errors.push('Debes seleccionar una Localidad de la empresa.');
+            if(!val('street')) errors.push('La Calle de la empresa es obligatoria.');
+            if(!val('number')) errors.push('El Número de la empresa es obligatorio.');
+            else if(!onlyDigits(val('number'))) errors.push('El Número de la empresa debe ser numérico.');
+            if(!val('postalCode')) errors.push('El Código Postal de la empresa es obligatorio.');
+
+            // Teléfono Empresa
+            if(!val('companyPhoneArea')) errors.push('La Característica de la empresa es obligatoria.');
+            else if(!onlyDigits(val('companyPhoneArea'))) errors.push('La Característica de la empresa debe ser numérica.');
+            if(!val('companyPhoneNumber')) errors.push('El Número de teléfono de la empresa es obligatorio.');
+            else if(!onlyDigits(val('companyPhoneNumber'))) errors.push('El Número de teléfono de la empresa debe ser numérico.');
+            if(!val('companyPhoneType')) errors.push('El Tipo de teléfono de la empresa es obligatorio.');
+
+            // Términos
+            if(!qs('terms')?.checked) errors.push('Debes aceptar los Términos y Condiciones y la Política de Privacidad.');
+            return errors;
+        }
+
+        // -------------------------
+        // Formateo automático de CUIT (inserta guiones tras 2 y tras 10 dígitos)
+        // -------------------------
+        function formatCuitInput(e){
+            const input = e.target;
+            let digits = (input.value || '').replace(/\D/g,'').slice(0,11); // máximo 11 dígitos
+            if(digits.length <= 2){
+                input.value = digits;
+                return;
+            }
+            if(digits.length <= 10){
+                input.value = digits.slice(0,2) + '-' + digits.slice(2);
+                return;
+            }
+            // 11 dígitos: 2-8-1
+            input.value = digits.slice(0,2) + '-' + digits.slice(2,10) + '-' + digits.slice(10);
+        }
+
+        // DOM Ready: vincular listener de formateo CUIT
+        document.addEventListener('DOMContentLoaded', ()=>{
+            try{ if(typeof initLocationSelectors==='function') initLocationSelectors(); }catch(e){}
+            wireRealtimeValidation();
+            const cuitEl = qs('cuit');
+            if(cuitEl) cuitEl.addEventListener('input', formatCuitInput);
+            const form=document.getElementById('companyForm');
+            if(form) form.addEventListener('submit', handleSubmit);
         });
 
         // Submit
-        qs('companyForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Revalidar todo
-            const ok = updateSubmitState();
-            if (!ok) {
-                // focus al primer campo inválido
-                const firstErr = document.querySelector('.field-error:not(.hidden)');
-                if (firstErr) {
-                    const relatedId = firstErr.id.replace('Error','');
-                    const fld = qs(relatedId);
-                    if (fld) fld.focus();
-                }
-                return;
-            }
+        async function handleSubmit(evt){
+            evt.preventDefault();
+            clearErrors();
+            const errs=validateForm();
+            if(errs.length){ showErrors(errs); return; }
 
-            // Map tipoUsuario para coincidir con el DTO (PERSONA_JURIDICA -> EMPRESA)
-            const tipoUsuarioRaw = (qs('tipoUsuario').value || '').trim();
-            const tipoUsuario = tipoUsuarioRaw === 'PERSONA_JURIDICA' ? 'EMPRESA' : tipoUsuarioRaw;
+            const btn=qs('submitBtn'); const spinner=qs('spinner'); const btnText=qs('btnText');
+            btn.disabled=true; btnText.textContent='Creando cuenta...'; if(spinner) spinner.classList.remove('hidden');
 
-            // Construir objeto JSON según la estructura requerida
-            const formData = {
-                responsable: {
+            // Map tipo usuario responsable
+            const tipoUsuario='EMPRESA'; // registro de empresa
+
+            // Payload (DTO)
+            const payload={
+                // Se agrega "usuario" porque el backend espera ese objeto (evita NPE)
+                usuario: {
                     username: qs('username').value.trim(),
                     password: qs('password').value,
                     email: qs('email').value.trim(),
-                    nombreResponsable: qs('repFirstName').value.trim(),
-                    apellidoResponsable: qs('repLastName').value.trim(),
-                    documentoResponsable: qs('repDocument').value.trim(),
-                    aceptaPoliticaPriv: qs('terms').checked,
-                    aceptaTerminos: qs('terms').checked,
-                    fechaNacimientoResponsable: qs('repBirthDate').value,
-                    generoResponsable: qs('repGender').value,
-                    tipoUsuario: tipoUsuario,
-                    idioma: qs('idioma').value,
-                    timezone: qs('timezone').value,
-                    rol: "ROLE_USUARIO"
+                    tipoUsuario: tipoUsuario, // <-- enviar el tipo de usuario esperado por el backend (EMPRESA)
                 },
-                perfilEmpresa: {
-                    razonSocial: qs('businessName').value.trim(),
-                    cuit: qs('cuit').value.trim().replace(/-/g, ''),
-                    condicionIVA: qs('ivaCondition').value,
-                    emailEmpresa: qs('companyEmail').value.trim(),
-                    requiereFacturacion: qs('requiresBilling').checked
+                // NEW: enviar perfilUsuario para que el DTO no sea null en el servidor
+                perfilUsuario: {
+                    nombre: qs('repFirstName').value.trim(),
+                    apellido: qs('repLastName').value.trim(),
+                    documento: qs('repDocument').value.trim(),
+                    fechaNacimiento: qs('repBirthDate').value || null, // formato yyyy-MM-dd
+                    genero: qs('repGender').value || null,
+                    cargo: null,
+                    correoAlternativo: null
                 },
-                direccionesResponsable: [
-                    {
-                        calle: qs('repStreet').value.trim(),
-                        numero: qs('repStreetNumber').value.trim(),
-                        codigoPostal: qs('repPostalCode').value.trim(),
-                        idPais: 1,
-                        idProvincia: 14,
-                        idDepartamento: 397,
-                        idLocalidad: 6462,
-                        idMunicipio: 1244,
-                        activa: true,
-                        esPrincipal: true,
-                        tipo: qs('repAddressType').value
-                    }
-                ],
-                telefonosResponsable: [
-                    {
-                        numero: qs('repPhoneNumber').value.trim(),
-                        caracteristica: qs('repPhoneArea').value.trim(),
-                        activo: true,
-                        verificado: false,
-                        tipo: qs('repPhoneType').value
-                    }
-                ],
-                direccionesEmpresa: [
-                    {
-                        calle: qs('companyStreet').value.trim(),
-                        numero: qs('companyStreetNumber').value.trim(),
-                        codigoPostal: qs('companyPostalCode').value.trim(),
-                        idPais: 1,
-                        idProvincia: 14,
-                        idDepartamento: 400,
-                        idLocalidad: 6465,
-                        idMunicipio: 1250,
-                        activa: true,
-                        tipo: qs('companyAddressType').value,
-                        esPrincipal: true
-                    }
-                ],
-                telefonosEmpresa: [
-                    {
-                        numero: qs('companyPhoneNumber').value.trim(),
-                        caracteristica: qs('companyPhoneArea').value.trim(),
-                        tipo: qs('companyPhoneType').value,
-                        activo: true,
-                        verificado: false
-                    }
-                ]
-            };
+                 responsable:{
+                     username: qs('username').value.trim(),
+                     password: qs('password').value,
+                     email: qs('email').value.trim(),
+                     nombreResponsable: qs('repFirstName').value.trim(),
+                     apellidoResponsable: qs('repLastName').value.trim(),
+                     documentoResponsable: qs('repDocument').value.trim(),
+                     aceptaPoliticaPriv: qs('terms').checked,
+                     aceptaTerminos: qs('terms').checked,
+                     fechaNacimientoResponsable: qs('repBirthDate').value,
+                     generoResponsable: qs('repGender').value,
+                     tipoUsuario,
+                     idioma: 'es',
+                     timezone: 'America/Argentina/Buenos_Aires',
+                     rol: 'ROLE_USUARIO'
+                 },
+                 perfilEmpresa:{
+                     razonSocial: qs('businessName').value.trim(),
+                     cuit: qs('cuit').value.trim().replace(/-/g,''),
+                     condicionIVA: qs('ivaCondition')?.value || 'RI',
+                     requiereFacturacion: qs('requiresBilling')?.checked || false,
+                     emailEmpresa: qs('companyEmail').value.trim() // <-- NEW: enviar email de la empresa
+                 },
+                 telefonosResponsable:[
+                     {
+                         numero: qs('repPhoneNumber').value.trim(),
+                         caracteristica: qs('repPhoneArea').value.trim(),
+                         activo: true,
+                         verificado: false,
+                         tipo: qs('repPhoneType').value
+                     }
+                 ],
+                 direccionesEmpresa:[
+                     {
+                         calle: qs('street').value.trim(),
+                         numero: qs('number').value.trim(),
+                         codigoPostal: qs('postalCode').value.trim(),
+                         paisId: 1, // <-- FIX: usar 'paisId' (nombre esperado por el DTO), no 'idPais'
+                         provinciaId: parseInt(qs('provinciaSelect').value)||null,
+                         departamentoId: parseInt(qs('departamentoSelect').value)||null,
+                         municipioId: parseInt(qs('municipioSelect').value)||null,
+                         localidadId: parseInt(qs('localidadSelect').value)||null,
+                         piso: qs('floor')?.value || null,
+                         departamentoInterno: qs('apartment')?.value || null,
+                         referencia: qs('reference')?.value || null,
+                         activa: true,
+                         tipo: 'FISCAL',
+                         esPrincipal: true
+                     }
+                 ],
+                 telefonosEmpresa:[
+                     {
+                         numero: qs('companyPhoneNumber').value.trim(),
+                         caracteristica: qs('companyPhoneArea').value.trim(),
+                         tipo: qs('companyPhoneType').value,
+                         activo: true,
+                         verificado: false
+                     }
+                 ]
+             };
 
-            // Simular UI mientras se realiza la llamada
-            qs('submitBtn').disabled = true;
-            qs('btnText').textContent = 'Creando cuenta...';
-            qs('spinner').classList.remove('hidden');
-
-            try {
-                const res = await fetch('/api/gestionusuario/public/empresa/registro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+            try{
+                const res=await fetch('/api/gestionusuario/public/empresa/registro',{
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
                 });
-
-                if (res.ok) {
-                    // Éxito
-                    alert('Cuenta de empresa creada correctamente. Verifica tu email.');
-                    qs('companyForm').reset();
-                    // limpiar errores
-                    document.querySelectorAll('[id$="Error"]').forEach(el => {
-                        el.textContent='';
-                        el.classList.add('hidden');
-                    });
-                } else {
-                    // Intentar parsear respuesta
-                    let payload;
-                    try { payload = await res.json(); } catch (err) { payload = await res.text(); }
-
-                    // Si el backend devuelve errores por campo en un objeto { field: message }
-                    if (payload && typeof payload === 'object') {
-                        // limpiar errores previos
-                        document.querySelectorAll('[id$="Error"]').forEach(el => {
-                            el.textContent='';
-                            el.classList.add('hidden');
-                        });
-                        // Mostrar errores mapeando claves a campos si es posible
-                        for (const [k, v] of Object.entries(payload)) {
-                            // intentar usar el id directo o sufijo 'Error'
-                            const fieldId = k.replace('usuario.', '').replace('responsable.', '').replace('perfilEmpresa.', '');
-                            showError(fieldId, Array.isArray(v) ? v.join(', ') : String(v));
-                        }
-                        alert('El servidor devolvió errores. Revisa el formulario.');
-                    } else {
-                        alert('Error al crear la cuenta: ' + (payload || res.statusText));
-                    }
+                if(res.ok){
+                    // Redirigir a la página que indica que se envió el correo de verificación
+                    // uso replace para no dejar la página de registro en el historial
+                    window.location.replace('/public/correoEnviado(verificarCorreo).html');
+                    return;
+                }else{
+                    let text; try{ text=await res.text(); }catch{}
+                    showErrors([text || `HTTP ${res.status}`]);
                 }
-            } catch (err) {
+            }catch(err){
                 console.error(err);
-                alert('Ocurrió un error al crear la cuenta. Intenta nuevamente.');
-            } finally {
-                qs('btnText').textContent = 'Crear cuenta';
-                qs('spinner').classList.add('hidden');
-                qs('submitBtn').disabled = true; // dejar deshabilitado hasta que vuelva a validar
+                showErrors(['Ocurrió un error al crear la cuenta. Intenta nuevamente.']);
+            }finally{
+                btn.disabled=false; btnText.textContent='Crear cuenta'; if(spinner) spinner.classList.add('hidden');
             }
-        });
+        }
 
-        // Inicializar (por si vuelve a cargar)
-        document.addEventListener('DOMContentLoaded', () => {
-            // ocultar errores por defecto
-            document.querySelectorAll('[id$="Error"]').forEach(el => el.classList.add('hidden'));
-            qs('submitBtn').disabled = true;
-            
-            // Establecer valores por defecto para algunos campos
-            qs('tipoUsuario').value = 'PERSONA_FISICA';
-            qs('idioma').value = 'es';
-            qs('timezone').value = 'America/Argentina/Buenos_Aires';
-            qs('repGender').value = 'MASCULINO';
-            qs('ivaCondition').value = 'RI';
-            qs('repAddressType').value = 'PERSONAL';
-            qs('repPhoneType').value = 'PRINCIPAL';
-            qs('companyAddressType').value = 'FISCAL';
-            qs('companyPhoneType').value = 'PRINCIPAL';
+        // Init
+        function initBirthDateConstraints(){
+            const bd=qs('repBirthDate'); if(!bd) return;
+            const today=new Date(); bd.max=today.toISOString().split('T')[0]; bd.min='1900-01-01';
+        }
+
+        // DOM Ready
+        document.addEventListener('DOMContentLoaded', ()=>{
+            initBirthDateConstraints();
+            try{ if(typeof initLocationSelectors==='function') initLocationSelectors(); }catch(e){}
+            wireRealtimeValidation();
+            const cuitEl = qs('cuit');
+            if(cuitEl) cuitEl.addEventListener('input', formatCuitInput);
+            const form=document.getElementById('companyForm');
+            if(form) form.addEventListener('submit', handleSubmit);
         });
     </script>
+
+    <!-- Necesario para selects en cascada (usa mismas rutas que registro_usuario) -->
+    <script src="/js/ubicaciones.js"></script>
 </body>
 </html>

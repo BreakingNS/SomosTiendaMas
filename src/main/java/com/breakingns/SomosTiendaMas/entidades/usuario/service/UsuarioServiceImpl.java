@@ -164,14 +164,9 @@ public class UsuarioServiceImpl implements IUsuarioService{
             usuario.setPassword(dto.getPassword()); // Asegurate que después se encripta
             usuario.setEmail(dto.getEmail());
             usuario.setRol(rol);
-            usuario.setNombreResponsable(dto.getNombreResponsable());
-            usuario.setApellidoResponsable(dto.getApellidoResponsable());
-            usuario.setDocumentoResponsable(dto.getDocumentoResponsable());
             usuario.setTipoUsuario(Usuario.TipoUsuario.valueOf(dto.getTipoUsuario()));
             usuario.setAceptaPoliticaPriv(dto.getAceptaPoliticaPriv());
             usuario.setAceptaTerminos(dto.getAceptaTerminos());
-            usuario.setFechaNacimientoResponsable(dto.getFechaNacimientoResponsable());
-            usuario.setGeneroResponsable(dto.getGeneroResponsable() != null ? Usuario.Genero.valueOf(dto.getGeneroResponsable()) : null);
             usuario.setIdioma(dto.getIdioma());
             usuario.setTimezone(dto.getTimezone());
             usuario.setActivo(true);
@@ -281,11 +276,6 @@ public class UsuarioServiceImpl implements IUsuarioService{
         // Actualiza los campos básicos
         if (usuarioDTO.getUsername() != null) usuario.setUsername(usuarioDTO.getUsername());
         if (usuarioDTO.getEmail() != null) usuario.setEmail(usuarioDTO.getEmail());
-        if (usuarioDTO.getNombreResponsable() != null) usuario.setNombreResponsable(usuarioDTO.getNombreResponsable());
-        if (usuarioDTO.getApellidoResponsable() != null) usuario.setApellidoResponsable(usuarioDTO.getApellidoResponsable());
-        if (usuarioDTO.getDocumentoResponsable() != null) usuario.setDocumentoResponsable(usuarioDTO.getDocumentoResponsable());
-        if (usuarioDTO.getFechaNacimientoResponsable() != null) usuario.setFechaNacimientoResponsable(usuarioDTO.getFechaNacimientoResponsable());
-        if (usuarioDTO.getGeneroResponsable() != null) usuario.setGeneroResponsable(usuarioDTO.getGeneroResponsable());
         if (usuarioDTO.getIdioma() != null) usuario.setIdioma(usuarioDTO.getIdioma());
         if (usuarioDTO.getTimezone() != null) usuario.setTimezone(usuarioDTO.getTimezone());
         usuario.setFechaUltimaModificacion(java.time.LocalDateTime.now());
@@ -306,9 +296,6 @@ public class UsuarioServiceImpl implements IUsuarioService{
         dto.setIdUsuario(usuario.getIdUsuario());
         dto.setUsername(usuario.getUsername());
         dto.setEmail(usuario.getEmail());
-        dto.setNombreResponsable(usuario.getNombreResponsable());
-        dto.setApellidoResponsable(usuario.getApellidoResponsable());
-        dto.setDocumentoResponsable(usuario.getDocumentoResponsable());
         dto.setTipoUsuario(usuario.getTipoUsuario() != null ? usuario.getTipoUsuario().name() : null);
         dto.setIdioma(usuario.getIdioma());
         dto.setTimezone(usuario.getTimezone());
@@ -368,9 +355,6 @@ public class UsuarioServiceImpl implements IUsuarioService{
             dto.setIdUsuario(u.getIdUsuario());
             dto.setUsername(u.getUsername());
             dto.setEmail(u.getEmail());
-            dto.setNombreResponsable(u.getNombreResponsable());
-            dto.setApellidoResponsable(u.getApellidoResponsable());
-            dto.setDocumentoResponsable(u.getDocumentoResponsable());
             dto.setTipoUsuario(u.getTipoUsuario() != null ? u.getTipoUsuario().name() : null);
             dto.setIdioma(u.getIdioma());
             dto.setTimezone(u.getTimezone());
@@ -390,11 +374,6 @@ public class UsuarioServiceImpl implements IUsuarioService{
         // aplicar solo campos no nulos
         if (dto.getUsername() != null) usuario.setUsername(dto.getUsername());
         if (dto.getEmail() != null) usuario.setEmail(dto.getEmail());
-        if (dto.getNombreResponsable() != null) usuario.setNombreResponsable(dto.getNombreResponsable());
-        if (dto.getApellidoResponsable() != null) usuario.setApellidoResponsable(dto.getApellidoResponsable());
-        if (dto.getDocumentoResponsable() != null) usuario.setDocumentoResponsable(dto.getDocumentoResponsable());
-        if (dto.getFechaNacimientoResponsable() != null) usuario.setFechaNacimientoResponsable(dto.getFechaNacimientoResponsable());
-        if (dto.getGeneroResponsable() != null) usuario.setGeneroResponsable(dto.getGeneroResponsable());
         if (dto.getIdioma() != null) usuario.setIdioma(dto.getIdioma());
         if (dto.getTimezone() != null) usuario.setTimezone(dto.getTimezone());
         // Si se envía nueva contraseña, encriptarla
@@ -408,5 +387,17 @@ public class UsuarioServiceImpl implements IUsuarioService{
 
         // devolver DTO actualizado (reutiliza consultarUsuario para consistencia)
         return consultarUsuario(usuario.getIdUsuario());
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        if (username == null) return false;
+        return usuarioRepository.existsByUsername(username.trim().toLowerCase());
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        if (email == null) return false;
+        return usuarioRepository.existsByEmail(email.trim().toLowerCase());
     }
 }

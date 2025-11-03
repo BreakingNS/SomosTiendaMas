@@ -10,5 +10,5 @@ public class ActualizarTelefonoDTO {
     private String caracteristica;
     private Boolean activo;
     private Boolean verificado;
-    private Long esCopiaDe;
+    private Boolean favorito; // solo usuario
 }

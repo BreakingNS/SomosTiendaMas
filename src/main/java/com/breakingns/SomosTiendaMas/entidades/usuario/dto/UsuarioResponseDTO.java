@@ -11,9 +11,6 @@ public class UsuarioResponseDTO {
     private Boolean activo;
     private Boolean emailVerificado;
     private String tipoUsuario;
-    private String nombreResponsable;
-    private String apellidoResponsable;
-    private String documentoResponsable;
     private String telefonoPrincipal;
     private String direccionPrincipal;
     private String idioma;

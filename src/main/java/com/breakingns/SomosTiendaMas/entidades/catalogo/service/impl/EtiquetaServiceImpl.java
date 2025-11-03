@@ -1,14 +1,17 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.etiqueta.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.EtiquetaMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Etiqueta;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.EtiquetaRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IEtiquetaService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,46 +24,57 @@ public class EtiquetaServiceImpl implements IEtiquetaService {
     }
 
     @Override
-    public Etiqueta crear(Etiqueta etiqueta) {
-        // simple check: evitar crear slug duplicado activo
-        if (etiqueta.getSlug() != null && repo.findBySlugAndDeletedAtIsNull(etiqueta.getSlug()).isPresent()) {
-            throw new IllegalArgumentException("Slug de etiqueta ya existe: " + etiqueta.getSlug());
+    public EtiquetaResponseDTO crear(EtiquetaCrearDTO dto) {
+        if (dto == null) throw new IllegalArgumentException("dto es null");
+        if (dto.getSlug() != null && repo.findBySlugAndDeletedAtIsNull(dto.getSlug()).isPresent()) {
+            throw new IllegalStateException("Slug de etiqueta ya existe");
         }
-        return repo.save(etiqueta);
+        Etiqueta entidad = EtiquetaMapper.fromCrear(dto);
+        Etiqueta saved = repo.save(entidad);
+        return EtiquetaMapper.toResponse(saved);
+    }
+
+    @Override
+    public EtiquetaResponseDTO actualizar(Long id, EtiquetaActualizarDTO dto) {
+        Etiqueta e = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Etiqueta no encontrada: " + id));
+        // slug único si se modifica
+        if (dto.getSlug() != null) {
+            repo.findBySlugAndDeletedAtIsNull(dto.getSlug())
+                    .filter(other -> !other.getId().equals(id))
+                    .ifPresent(other -> { throw new IllegalStateException("Slug ya en uso"); });
+        }
+        EtiquetaMapper.applyActualizar(dto, e);
+        Etiqueta updated = repo.save(e);
+        return EtiquetaMapper.toResponse(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Etiqueta> listar() {
-        return repo.findAll().stream().filter(e -> e.getDeletedAt() == null).toList();
+    public EtiquetaResponseDTO obtenerPorId(Long id) {
+        Etiqueta e = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Etiqueta no encontrada: " + id));
+        return EtiquetaMapper.toResponse(e);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Etiqueta> obtener(Long id) {
-        return repo.findById(id).filter(e -> e.getDeletedAt() == null);
+    public EtiquetaResponseDTO obtenerPorSlug(String slug) {
+        Etiqueta e = repo.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new EntityNotFoundException("Etiqueta no encontrada por slug: " + slug));
+        return EtiquetaMapper.toResponse(e);
     }
 
     @Override
-    public Etiqueta actualizar(Long id, Etiqueta cambios) {
-        Etiqueta e = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Etiqueta no encontrada: " + id));
-        if (cambios.getNombre() != null) e.setNombre(cambios.getNombre());
-        if (cambios.getSlug() != null) e.setSlug(cambios.getSlug());
-        
-        return repo.save(e);
+    @Transactional(readOnly = true)
+    public List<EtiquetaResumenDTO> listarActivas() {
+        return repo.findAllByDeletedAtIsNull().stream()
+                .map(EtiquetaMapper::toResumen)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void eliminarLogico(Long id, String usuario) {
-        Etiqueta e = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Etiqueta no encontrada: " + id));
+    public void eliminar(Long id) {
+        Etiqueta e = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Etiqueta no encontrada: " + id));
         e.setDeletedAt(LocalDateTime.now());
-        e.setUpdatedBy(usuario);
         repo.save(e);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<Etiqueta> findBySlug(String slug) {
-        return repo.findBySlugAndDeletedAtIsNull(slug);
     }
 }

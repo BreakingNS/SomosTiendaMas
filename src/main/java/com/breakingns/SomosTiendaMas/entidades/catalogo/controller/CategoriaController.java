@@ -1,72 +1,66 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.CategoriaActualizarDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.CategoriaCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.CategoriaResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.CategoriaMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.CategoriaRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.ICategoriaService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/catalogo/categorias")
+@RequestMapping("/api/categorias")
+@RequiredArgsConstructor
 public class CategoriaController {
 
     private final ICategoriaService categoriaService;
-    private final CategoriaRepository categoriaRepository;
-
-    public CategoriaController(ICategoriaService categoriaService, CategoriaRepository categoriaRepository) {
-        this.categoriaService = categoriaService;
-        this.categoriaRepository = categoriaRepository;
-    }
 
     @PostMapping
-    public ResponseEntity<CategoriaResponseDTO> crear(@RequestBody @Valid CategoriaCrearDTO dto) {
-        Categoria c = new Categoria();
-        c.setNombre(dto.getNombre());
-        c.setSlug(dto.getSlug());
-        c.setDescripcion(dto.getDescripcion());
-        if (dto.getCategoriaPadreId() != null) {
-            categoriaRepository.findById(dto.getCategoriaPadreId()).ifPresent(c::setCategoriaPadre);
-        }
-        Categoria creado = categoriaService.crear(c);
-        return ResponseEntity.ok(CategoriaMapper.toResponse(creado));
+    public ResponseEntity<CategoriaResponseDTO> crear(@Valid @RequestBody CategoriaCrearDTO dto) {
+        CategoriaResponseDTO created = categoriaService.crear(dto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid CategoriaActualizarDTO dto) {
-        Categoria cambios = new Categoria();
-        cambios.setNombre(dto.getNombre());
-        cambios.setSlug(dto.getSlug());
-        cambios.setDescripcion(dto.getDescripcion());
-        if (dto.getCategoriaPadreId() != null) {
-            categoriaRepository.findById(dto.getCategoriaPadreId()).ifPresent(cambios::setCategoriaPadre);
-        }
-        Categoria actualizado = categoriaService.actualizar(id, cambios);
-        return ResponseEntity.ok(CategoriaMapper.toResponse(actualizado));
+    public ResponseEntity<CategoriaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaActualizarDTO dto) {
+        CategoriaResponseDTO updated = categoriaService.actualizar(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> obtener(@PathVariable Long id) {
-        Categoria c = categoriaService.obtener(id).orElseThrow();
-        return ResponseEntity.ok(CategoriaMapper.toResponse(c));
+    public ResponseEntity<CategoriaResponseDTO> obtenerPorId(@PathVariable Long id) {
+        CategoriaResponseDTO resp = categoriaService.obtenerPorId(id);
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<CategoriaResponseDTO> obtenerPorSlug(@PathVariable String slug) {
+        CategoriaResponseDTO resp = categoriaService.obtenerPorSlug(slug);
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoriaResponseDTO>> listar() {
-        List<CategoriaResponseDTO> list = categoriaService.listar().stream()
-                .map(CategoriaMapper::toResponse).toList();
+    public ResponseEntity<List<CategoriaResumenDTO>> listarActivas() {
+        List<CategoriaResumenDTO> list = categoriaService.listarActivas();
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/arbol")
+    public ResponseEntity<List<CategoriaArbolDTO>> obtenerArbol() {
+        List<CategoriaArbolDTO> tree = categoriaService.obtenerArbol();
+        return ResponseEntity.ok(tree);
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id, @RequestParam String usuario) {
-        categoriaService.eliminarLogico(id, usuario);
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        categoriaService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }

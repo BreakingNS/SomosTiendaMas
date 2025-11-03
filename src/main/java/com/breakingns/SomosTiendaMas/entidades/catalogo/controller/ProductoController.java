@@ -1,82 +1,66 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoActualizarDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.CategoriaRepository;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.MarcaRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/catalogo/productos")
+@RequestMapping("/api/productos")
 public class ProductoController {
 
-    private final IProductoService productoService;
-    private final MarcaRepository marcaRepository;
-    private final CategoriaRepository categoriaRepository;
+    private final IProductoService service;
 
-    public ProductoController(IProductoService productoService,
-                              MarcaRepository marcaRepository,
-                              CategoriaRepository categoriaRepository) {
-        this.productoService = productoService;
-        this.marcaRepository = marcaRepository;
-        this.categoriaRepository = categoriaRepository;
+    public ProductoController(IProductoService service) {
+        this.service = service;
     }
 
     @PostMapping
-    public ResponseEntity<ProductoResponseDTO> crear(@RequestBody @Valid ProductoCrearDTO dto) {
-        Marca marca = dto.getMarcaId() != null ? marcaRepository.findById(dto.getMarcaId()).orElse(null) : null;
-        Categoria categoria = dto.getCategoriaId() != null ? categoriaRepository.findById(dto.getCategoriaId()).orElse(null) : null;
-        Producto p = ProductoMapper.toEntity(dto, marca, categoria);
-        Producto creado = productoService.crear(p);
-        return ResponseEntity.ok(ProductoMapper.toResponse(creado));
+    public ResponseEntity<ProductoResponseDTO> crear(@Valid @RequestBody ProductoCrearDTO dto, UriComponentsBuilder uriBuilder) {
+        ProductoResponseDTO created = service.crear(dto);
+        URI location = uriBuilder.path("/api/productos/{id}").buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid ProductoActualizarDTO dto) {
-        Producto cambios = new Producto();
-        cambios.setNombre(dto.getNombre());
-        cambios.setSlug(dto.getSlug());
-        cambios.setDescripcion(dto.getDescripcion());
-        if (dto.getMarcaId() != null) {
-            Marca marca = marcaRepository.findById(dto.getMarcaId()).orElse(null);
-            cambios.setMarca(marca);
-        }
-        if (dto.getCategoriaId() != null) {
-            Categoria categoria = categoriaRepository.findById(dto.getCategoriaId()).orElse(null);
-            cambios.setCategoria(categoria);
-        }
-        cambios.setMetadataJson(dto.getMetadataJson());
-
-        Producto actualizado = productoService.actualizar(id, cambios);
-        return ResponseEntity.ok(ProductoMapper.toResponse(actualizado));
+    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoActualizarDTO dto) {
+        ProductoResponseDTO updated = service.actualizar(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> obtener(@PathVariable Long id) {
-        Producto p = productoService.obtener(id).orElseThrow();
-        return ResponseEntity.ok(ProductoMapper.toResponse(p));
+    public ResponseEntity<ProductoResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.obtenerPorId(id));
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ProductoResponseDTO> obtenerPorSlug(@PathVariable String slug) {
+        return ResponseEntity.ok(service.obtenerPorSlug(slug));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> listar() {
-        List<ProductoResponseDTO> list = productoService.listar().stream()
-                .map(ProductoMapper::toResponse).toList();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<List<ProductoResponseDTO>> listarActivas() {
+        return ResponseEntity.ok(service.listarActivas());
+    }
+
+    @GetMapping("/categoria/{categoriaId}")
+    public ResponseEntity<List<ProductoResponseDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
+        return ResponseEntity.ok(service.listarPorCategoriaId(categoriaId));
+    }
+
+    @GetMapping("/marca/{marcaId}")
+    public ResponseEntity<List<ProductoResponseDTO>> listarPorMarca(@PathVariable Long marcaId) {
+        return ResponseEntity.ok(service.listarPorMarcaId(marcaId));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id, @RequestParam String usuario) {
-        productoService.eliminarLogico(id, usuario);
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }

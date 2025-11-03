@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto;
 
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
-import com.breakingns.SomosTiendaMas.entidades.empresa.dto.ActualizarPerfilEmpresaDTO;
+import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.dto.ActualizarPerfilEmpresaDTO;
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.ActualizarDireccionDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.ActualizarTelefonoDTO;
 import lombok.Getter;

@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto;
 
 import com.breakingns.SomosTiendaMas.entidades.direccion.dto.RegistroDireccionDTO;
+import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.registrarDTO.PerfilUsuarioCreateDTO;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.RegistroTelefonoDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
 
@@ -13,6 +14,8 @@ import java.util.List;
 public class RegistroUsuarioCompletoDTO {
     @Valid
     private RegistroUsuarioDTO usuario;
+    @Valid
+    private PerfilUsuarioCreateDTO perfilUsuario;
     @Valid
     private List<RegistroDireccionDTO> direcciones;
     @Valid

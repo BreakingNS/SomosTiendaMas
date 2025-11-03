@@ -1,15 +1,14 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
-
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.*;
 import java.util.List;
-import java.util.Optional;
 
 public interface ICategoriaService {
-    Categoria crear(Categoria categoria);
-    Categoria actualizar(Long id, Categoria cambios);
-    Optional<Categoria> obtener(Long id);
-    Optional<Categoria> obtenerPorSlug(String slug);
-    List<Categoria> listar();
-    void eliminarLogico(Long id, String usuario);
+    CategoriaResponseDTO crear(CategoriaCrearDTO dto);
+    CategoriaResponseDTO actualizar(Long id, CategoriaActualizarDTO dto);
+    CategoriaResponseDTO obtenerPorId(Long id);
+    CategoriaResponseDTO obtenerPorSlug(String slug);
+    List<CategoriaResumenDTO> listarActivas();
+    List<CategoriaArbolDTO> obtenerArbol();
+    void eliminar(Long id); // soft-delete
 }

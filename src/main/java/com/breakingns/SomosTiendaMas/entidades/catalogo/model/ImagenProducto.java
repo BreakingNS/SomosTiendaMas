@@ -1,3 +1,4 @@
+// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import jakarta.persistence.*;
@@ -6,8 +7,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "imagen_producto", indexes = {
-        @Index(name = "ix_img_producto", columnList = "producto_id"),
-        @Index(name = "ix_img_variante", columnList = "variante_id")
+        @Index(name = "ix_img_producto", columnList = "producto_id")
 })
 @Getter
 @Setter
@@ -16,10 +16,6 @@ public class ImagenProducto extends BaseEntidadAuditada {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id")
     private Producto producto;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "variante_id")
-    private VarianteProducto variante;
 
     @Column(nullable = false, length = 500)
     private String url;

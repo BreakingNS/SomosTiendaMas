@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class ReservaStockRequestDTO {
     @NotNull
-    private Long varianteId;
+    private Long productoId;
 
     @Min(1)
     private long cantidad;

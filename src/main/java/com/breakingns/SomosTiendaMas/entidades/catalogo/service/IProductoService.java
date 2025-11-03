@@ -1,15 +1,15 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
-
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
 import java.util.List;
-import java.util.Optional;
 
 public interface IProductoService {
-    Producto crear(Producto producto);
-    Producto actualizar(Long id, Producto cambios);
-    Optional<Producto> obtener(Long id);
-    Optional<Producto> obtenerPorSlug(String slug);
-    List<Producto> listar();
-    void eliminarLogico(Long id, String usuario);
+    ProductoResponseDTO crear(ProductoCrearDTO dto);
+    ProductoResponseDTO actualizar(Long id, ProductoActualizarDTO dto);
+    ProductoResponseDTO obtenerPorId(Long id);
+    ProductoResponseDTO obtenerPorSlug(String slug);
+    List<ProductoResponseDTO> listarActivas();
+    List<ProductoResponseDTO> listarPorCategoriaId(Long categoriaId);
+    List<ProductoResponseDTO> listarPorMarcaId(Long marcaId);
+    void eliminar(Long id); // soft-delete
 }

@@ -2,7 +2,7 @@ package com.breakingns.SomosTiendaMas.entidades.usuario.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.UsuarioResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.dto.ActualizarUsuarioDTO;
-import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
+import com.breakingns.SomosTiendaMas.entidades.usuario.service.IUsuarioService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -10,16 +10,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/usuario")
 public class UsuarioController {
 
-    @Autowired 
-    private UsuarioServiceImpl usuarioService;
+    private final IUsuarioService usuarioService; // usar interfaz
+
+    public UsuarioController(IUsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
 
     // READ: obtener por id (cualquier usuario autenticado o admin según política)
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USUARIO')")
@@ -53,4 +56,18 @@ public class UsuarioController {
     }
 
     // NOTA: la creación (registro) puede delegarse al RegistroController centralizado.
+
+    // Comprobar disponibilidad de username (true = disponible)
+    @GetMapping(path = "/public/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam("username") String username) {
+        boolean exists = usuarioService.existsByUsername(username);
+        return ResponseEntity.ok(Map.of("available", !exists));
+    }
+
+    // Comprobar disponibilidad de email (true = disponible)
+    @GetMapping(path = "/public/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam("email") String email) {
+        boolean exists = usuarioService.existsByEmail(email);
+        return ResponseEntity.ok(Map.of("available", !exists));
+    }
 }

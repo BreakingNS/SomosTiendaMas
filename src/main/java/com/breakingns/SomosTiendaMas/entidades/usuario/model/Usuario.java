@@ -5,9 +5,8 @@ import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
-import com.breakingns.SomosTiendaMas.entidades.direccion.model.Direccion;
-import com.breakingns.SomosTiendaMas.entidades.empresa.model.PerfilEmpresa;
-import com.breakingns.SomosTiendaMas.entidades.telefono.model.Telefono;
+import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
+import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
 import com.breakingns.SomosTiendaMas.model.Carrito;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -24,10 +23,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,13 +37,13 @@ import lombok.Setter;
 @Getter @Setter
 @Table(name = "usuario", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"username"}),
-    @UniqueConstraint(columnNames = {"email"}),
-    @UniqueConstraint(columnNames = {"responsable_documento"})
+    @UniqueConstraint(columnNames = {"email"})
 })
 public class Usuario {
      
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_seq")
+    @SequenceGenerator(name = "usuario_seq", sequenceName = "usuario_id_seq", allocationSize = 1)
     private Long idUsuario;
 
     @Column(length = 50, nullable = false, unique = true)
@@ -57,53 +56,38 @@ public class Usuario {
     private String password;
     
     @Column(nullable = false)
-    private Boolean activo;
+    private Boolean activo = true;
 
     @Column(nullable = false)
-    private Boolean emailVerificado;
+    private Boolean emailVerificado = false;
 
     @Column(nullable = false)
-    private LocalDateTime fechaRegistro;
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 
     @Column(nullable = false)
-    private Integer intentosFallidosLogin;
+    private Integer intentosFallidosLogin = 0;
 
     @Column(nullable = false)
-    private Boolean cuentaBloqueada;
+    private Boolean cuentaBloqueada = false;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipoUsuario;
     
-    @Column(length = 100, nullable = false)
-    private String nombreResponsable;
-
-    @Column(length = 100, nullable = false)
-    private String apellidoResponsable;
-
-    @Column(length = 20, nullable = false, unique = true)
-    private String documentoResponsable;
-    
     @Column(nullable = false)
-    private Boolean aceptaTerminos;
+    private Boolean aceptaTerminos = false;
 
     @Column(nullable = false)
-    private Boolean aceptaPoliticaPriv;
-    //---
-    // Campos importantes
+    private Boolean aceptaPoliticaPriv = false;
+
+    // Timestamps / metadata
     private LocalDateTime fechaVerificacionEmail;
     private LocalDateTime fechaUltimoAcceso;
 
     @Column(nullable = false)
-    private LocalDateTime fechaUltimaModificacion;
+    private LocalDateTime fechaUltimaModificacion = LocalDateTime.now();
 
-    @Column(nullable = false)
-    private LocalDate fechaNacimientoResponsable;
-
-    @Enumerated(EnumType.STRING)
-    private Genero generoResponsable;
-
-    // Campos opcionales
+    // Preferencias / flags
     private Boolean recibirPromociones;
     private Boolean recibirNewsletters;
     private Boolean notificacionesEmail;
@@ -125,19 +109,16 @@ public class Usuario {
 
     @JsonIgnore
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Carrito carrito;        
+    private Carrito carrito;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Telefono> telefonos;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Direccion> direcciones = new ArrayList<>();
-
+    // Empresas que administra este usuario (relación existente)
     @JsonIgnore
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PerfilEmpresa> empresas;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private PerfilUsuario perfilUsuario;
     
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EmailVerificacion> emailVerificaciones;
@@ -159,7 +140,7 @@ public class Usuario {
     }
 
     public enum TipoUsuario {
-        PERSONA_FISICA, EMPRESA
+        PERSONA_FISICA, EMPRESA, ADMINISTRADOR
     }
 
     public enum Genero {
@@ -178,4 +159,5 @@ public class Usuario {
         this.rol = rol;
     }
 }
+//---------------------------------------------------------------
 //---------------------------------------------------------------

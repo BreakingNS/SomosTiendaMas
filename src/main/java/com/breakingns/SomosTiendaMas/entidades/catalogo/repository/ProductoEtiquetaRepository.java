@@ -11,5 +11,9 @@ import java.util.Optional;
 public interface ProductoEtiquetaRepository extends JpaRepository<ProductoEtiqueta, Long> {
     List<ProductoEtiqueta> findByProducto(Producto producto);
     List<ProductoEtiqueta> findByEtiqueta(Etiqueta etiqueta);
+
+    // === Nuevos métodos ===
+    List<ProductoEtiqueta> findByProductoId(Long productoId);
+    List<ProductoEtiqueta> findByEtiquetaId(Long etiquetaId);
     Optional<ProductoEtiqueta> findByProductoIdAndEtiquetaIdAndDeletedAtIsNull(Long productoId, Long etiquetaId);
 }

@@ -8,7 +8,8 @@ import com.breakingns.SomosTiendaMas.auth.service.AuthService;
 import com.breakingns.SomosTiendaMas.auth.service.PasswordResetService;
 import com.breakingns.SomosTiendaMas.utils.RequestUtil;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
-
+import com.breakingns.SomosTiendaMas.entidades.usuario.dto.RegistroUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -26,20 +27,26 @@ public class RegistroController {
     
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final UsuarioServiceImpl usuarioService;
 
     public RegistroController(AuthService authService, 
-                                PasswordResetService passwordResetService) {
+                              PasswordResetService passwordResetService,
+                              UsuarioServiceImpl usuarioService) {
         this.authService = authService;
         this.passwordResetService = passwordResetService;
+        this.usuarioService = usuarioService;
     }
-    /*
+    
     @PostMapping("/public/usuario")
-    public ResponseEntity<String> registerUser(@RequestBody @Valid RegistroUsuarioDTO registroDTO,
-                                               HttpServletRequest request) {
+    public ResponseEntity<?> registerUser(@RequestBody @Valid RegistroUsuarioDTO registroDTO,
+                                          HttpServletRequest request) {
         String ip = RequestUtil.obtenerIpCliente(request);
-        usuarioService.registrarConRolDesdeDTO(registroDTO, ip);
-        return ResponseEntity.ok("Usuario registrado correctamente.");
-    }*/
+        Long id = usuarioService.registrarConRolDesdeDTO(registroDTO, ip);
+        return ResponseEntity.ok(Map.of(
+            "message", "Usuario registrado correctamente.",
+            "idUsuario", id
+        ));
+    }
 
     @PostMapping("/public/olvide-password")
     public ResponseEntity<?> olvidePassword(@RequestBody @Valid EmailRequest emailRequest, HttpServletRequest request) {

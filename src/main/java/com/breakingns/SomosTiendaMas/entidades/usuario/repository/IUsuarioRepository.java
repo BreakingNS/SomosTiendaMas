@@ -25,9 +25,17 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long>{
 
     List<Usuario> findByRolNombre(RolNombre rolNombre);
     
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.direcciones WHERE u.username = :username")
+    @Query("SELECT DISTINCT u FROM Usuario u " +
+           "LEFT JOIN FETCH u.perfilUsuario p " +
+           "LEFT JOIN FETCH p.direcciones " +
+           "LEFT JOIN FETCH p.telefonos " +
+           "WHERE u.username = :username")
     Optional<Usuario> findByUsernameWithDirecciones(@Param("username") String username);
 
-    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.direcciones LEFT JOIN FETCH u.telefonos WHERE u.idUsuario = :id")
+    @Query("SELECT DISTINCT u FROM Usuario u " +
+           "LEFT JOIN FETCH u.perfilUsuario p " +
+           "LEFT JOIN FETCH p.direcciones " +
+           "LEFT JOIN FETCH p.telefonos " +
+           "WHERE u.idUsuario = :id")
     Optional<Usuario> findByIdWithDireccionesYTelefonos(@Param("id") Long id);
 }

@@ -1,61 +1,65 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.marca.MarcaActualizarDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.marca.MarcaCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.marca.MarcaResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.MarcaMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.marca.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IMarcaService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/catalogo/marcas")
+@RequestMapping("/api/marcas")
+@RequiredArgsConstructor
 public class MarcaController {
 
     private final IMarcaService marcaService;
 
-    public MarcaController(IMarcaService marcaService) {
-        this.marcaService = marcaService;
-    }
-
     @PostMapping
-    public ResponseEntity<MarcaResponseDTO> crear(@RequestBody @Valid MarcaCrearDTO dto) {
-        Marca m = new Marca();
-        m.setNombre(dto.getNombre());
-        m.setSlug(dto.getSlug());
-        m.setDescripcion(dto.getDescripcion());
-        Marca creado = marcaService.crear(m);
-        return ResponseEntity.ok(MarcaMapper.toResponse(creado));
+    public ResponseEntity<MarcaResponseDTO> crear(@Valid @RequestBody MarcaCrearDTO dto) {
+        MarcaResponseDTO created = marcaService.crear(dto);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MarcaResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid MarcaActualizarDTO dto) {
-        Marca cambios = new Marca();
-        cambios.setNombre(dto.getNombre());
-        cambios.setSlug(dto.getSlug());
-        cambios.setDescripcion(dto.getDescripcion());
-        Marca actualizado = marcaService.actualizar(id, cambios);
-        return ResponseEntity.ok(MarcaMapper.toResponse(actualizado));
+    public ResponseEntity<MarcaResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody MarcaActualizarDTO dto) {
+        MarcaResponseDTO updated = marcaService.actualizar(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MarcaResponseDTO> obtener(@PathVariable Long id) {
-        Marca m = marcaService.obtener(id).orElseThrow();
-        return ResponseEntity.ok(MarcaMapper.toResponse(m));
+    public ResponseEntity<MarcaResponseDTO> obtenerPorId(@PathVariable Long id) {
+        MarcaResponseDTO resp = marcaService.obtenerPorId(id);
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<MarcaResponseDTO> obtenerPorSlug(@PathVariable String slug) {
+        MarcaResponseDTO resp = marcaService.obtenerPorSlug(slug);
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping
-    public ResponseEntity<List<MarcaResponseDTO>> listar() {
-        List<MarcaResponseDTO> list = marcaService.listar().stream().map(MarcaMapper::toResponse).toList();
+    public ResponseEntity<List<MarcaResumenDTO>> listarActivas() {
+        List<MarcaResumenDTO> list = marcaService.listarActivas();
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/categoria/{categoriaId}")
+    public ResponseEntity<List<MarcaResumenDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
+        List<MarcaResumenDTO> list = marcaService.listarPorCategoria(categoriaId);
         return ResponseEntity.ok(list);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id, @RequestParam String usuario) {
+    public ResponseEntity<Void> eliminarLogico(@PathVariable Long id, @RequestParam(required = false) String usuario) {
         marcaService.eliminarLogico(id, usuario);
         return ResponseEntity.noContent().build();
     }

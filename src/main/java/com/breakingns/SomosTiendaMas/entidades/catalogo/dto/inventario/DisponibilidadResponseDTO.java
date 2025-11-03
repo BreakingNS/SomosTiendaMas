@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DisponibilidadResponseDTO {
-    private Long varianteId;
+    private Long productoId;
     private long disponible;
 }

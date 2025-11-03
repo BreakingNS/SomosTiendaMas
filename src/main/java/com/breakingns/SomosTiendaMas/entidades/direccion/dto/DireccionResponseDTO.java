@@ -1,25 +1,33 @@
 package com.breakingns.SomosTiendaMas.entidades.direccion.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class DireccionResponseDTO {
-    private Long idDireccion;
+    private Long id;
+    // "USUARIO" o "EMPRESA"
+    private String ownerType;
+    private Long ownerId;
+
     private String tipo;
+
+    private Long paisId;
+    private Long provinciaId;
+    private Long departamentoId;
+    private Long localidadId;
+    private Long municipioId;
+
     private String calle;
     private String numero;
     private String piso;
+    private String departamentoInterno;
+    private String codigoPostal;
     private String referencia;
+
     private Boolean activa;
     private Boolean esPrincipal;
-    private String codigoPostal;
-    //private Boolean usarComoEnvio;
-
-    // Agrega estos campos y sus setters/getters
-    private Long idPais;
-    private Long idProvincia;
-    private Long idDepartamento;
-    private Long idLocalidad;
-    private Long idMunicipio;
 }

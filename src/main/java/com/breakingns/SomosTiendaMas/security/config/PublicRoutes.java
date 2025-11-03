@@ -23,9 +23,13 @@ public class PublicRoutes {
         "/api/sesiones/public/**",
         "/api/sesiones/public/verificar-email/**",
         "/api/test/public/**",
+        "/api/perfilUsuario/public/**",
+        "/api/perfilEmpresa/public/**",
+        "/api/usuario/public/**",
 
         // Rutas públicas para archivos estáticos
         
+        "/images/productos/**",
         "/consultaRegistros.html",
         "/registro_usuario.html",
         "/registro_empresa.html",

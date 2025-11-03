@@ -1,15 +1,14 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
-
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.marca.*;
 import java.util.List;
-import java.util.Optional;
 
 public interface IMarcaService {
-    Marca crear(Marca marca);
-    Marca actualizar(Long id, Marca cambios);
-    Optional<Marca> obtener(Long id);
-    Optional<Marca> obtenerPorSlug(String slug);
-    List<Marca> listar();
+    MarcaResponseDTO crear(MarcaCrearDTO dto);
+    MarcaResponseDTO actualizar(Long id, MarcaActualizarDTO dto);
+    MarcaResponseDTO obtenerPorId(Long id);
+    MarcaResponseDTO obtenerPorSlug(String slug);
+    List<MarcaResumenDTO> listarActivas();
+    List<MarcaResumenDTO> listarPorCategoria(Long categoriaId);
     void eliminarLogico(Long id, String usuario);
 }

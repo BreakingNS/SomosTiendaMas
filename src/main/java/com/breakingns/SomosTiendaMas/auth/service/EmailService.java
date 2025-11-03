@@ -21,7 +21,6 @@ public class EmailService {
         "correoempresa2@noenviar.com"
     );
 
-
     private final JavaMailSender mailSender;
 
     public EmailService(JavaMailSender mailSender) {
