@@ -3,12 +3,15 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.OpcionMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.OpcionValorMapper;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoOpcionMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.OpcionValor;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoOpcion;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.OpcionRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.OpcionValorRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoOpcionRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -25,28 +28,25 @@ public class OpcionServiceImpl implements IOpcionService {
     private final ProductoRepository productoRepo;
     private final OpcionRepository opcionRepo;
     private final OpcionValorRepository valorRepo;
+    private final ProductoOpcionRepository productoOpcionRepo;
 
     public OpcionServiceImpl(ProductoRepository productoRepo,
                                      OpcionRepository opcionRepo,
-                                     OpcionValorRepository valorRepo) {
+                                     OpcionValorRepository valorRepo,
+                                     ProductoOpcionRepository productoOpcionRepo) {
         this.productoRepo = productoRepo;
         this.opcionRepo = opcionRepo;
         this.valorRepo = valorRepo;
+        this.productoOpcionRepo = productoOpcionRepo;
     }
 
     @Override
     public OpcionResponseDTO crearOpcion(OpcionCrearDTO dto) {
         if (dto == null) throw new IllegalArgumentException("dto es null");
         Opcion entidad = OpcionMapper.fromCrear(dto);
-        if (dto.getProductoId() != null) {
-            Producto p = productoRepo.findById(dto.getProductoId())
-                    .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + dto.getProductoId()));
-            entidad.setProducto(p);
-        }
-        // calcular orden si no viene
+        // crear como plantilla (producto_id NULL). Para asignar a un producto usar asignarOpcionAProducto.
         if (entidad.getOrden() == null) {
-            List<Opcion> actuales = opcionRepo.findByProductoIdOrderByOrdenAsc(dto.getProductoId());
-            int next = actuales.isEmpty() ? 0 : (actuales.get(actuales.size()-1).getOrden() + 1);
+            Integer next = opcionRepo.findMaxOrden().orElse(-1) + 1;
             entidad.setOrden(next);
         }
         Opcion saved = opcionRepo.save(entidad);
@@ -73,8 +73,8 @@ public class OpcionServiceImpl implements IOpcionService {
     @Override
     @Transactional(readOnly = true)
     public List<OpcionResumenDTO> listarOpcionesPorProductoId(Long productoId) {
-        List<Opcion> list = opcionRepo.findByProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
-        return list.stream().map(OpcionMapper::toResumen).collect(Collectors.toList());
+        List<ProductoOpcion> rels = productoOpcionRepo.findByProducto_IdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        return rels.stream().map(ProductoOpcionMapper::toResumenFromRelacion).collect(Collectors.toList());
     }
 
     @Override
@@ -139,4 +139,41 @@ public class OpcionServiceImpl implements IOpcionService {
         v.setDeletedAt(LocalDateTime.now());
         valorRepo.save(v);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OpcionResumenDTO> listarPlantillas() {
+        List<Opcion> list = opcionRepo.findByDeletedAtIsNullOrderByOrdenAsc();
+        return list.stream().map(OpcionMapper::toResumen).collect(Collectors.toList());
+    }
+
+    @Override
+    public OpcionResponseDTO asignarOpcionAProducto(Long productoId, Long opcionId) {
+        Producto p = productoRepo.findById(productoId)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + productoId));
+        Opcion o = opcionRepo.findById(opcionId)
+                .orElseThrow(() -> new EntityNotFoundException("Opción no encontrada: " + opcionId));
+
+        // evitar duplicados
+        if (productoOpcionRepo.existsByProducto_IdAndOpcion_IdAndDeletedAtIsNull(productoId, opcionId)) {
+            throw new IllegalStateException("Opción ya asignada al producto");
+        }
+
+        Integer next = productoOpcionRepo.findMaxOrdenByProductoId(productoId).orElse(-1) + 1;
+        ProductoOpcion po = new ProductoOpcion();
+        po.setProducto(p);
+        po.setOpcion(o);
+        po.setOrden(next);
+        ProductoOpcion saved = productoOpcionRepo.save(po);
+        return ProductoOpcionMapper.toResponseFromRelacion(saved);
+    }
+
+    @Override
+    public void desasignarOpcionDeProducto(Long productoId, Long opcionId) {
+        ProductoOpcion rel = productoOpcionRepo.findByProducto_IdAndOpcion_IdAndDeletedAtIsNull(productoId, opcionId)
+                .orElseThrow(() -> new EntityNotFoundException("Relación no encontrada"));
+        rel.setDeletedAt(LocalDateTime.now());
+        productoOpcionRepo.save(rel);
+    }
+
 }

@@ -14,7 +14,7 @@ public final class OpcionMapper {
         if (o == null) return null;
         return OpcionResponseDTO.builder()
                 .id(o.getId())
-                .productoId(o.getProducto() != null ? o.getProducto().getId() : null)
+                .productoId(null)
                 .nombre(o.getNombre())
                 .orden(o.getOrden())
                 .tipo(o.getTipo())

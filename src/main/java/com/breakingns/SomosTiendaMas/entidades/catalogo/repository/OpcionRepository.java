@@ -1,20 +1,16 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.repository;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface OpcionRepository extends JpaRepository<Opcion, Long> {
-    List<Opcion> findByProducto(Producto producto);
 
-    List<Opcion> findByProductoIdOrderByOrdenAsc(Long productoId);
-    List<Opcion> findByProductoIdAndDeletedAtIsNullOrderByOrdenAsc(Long productoId);
-
-    // opciones que pertenecen a una plantilla (producto IS NULL)
-    List<Opcion> findByProductoIsNullOrderByOrdenAsc();
+    // listar plantillas (opciones globales, sin producto directo)
+    List<Opcion> findByDeletedAtIsNullOrderByOrdenAsc();
 
     List<Opcion> findAllByDeletedAtIsNullOrderByOrdenAsc();
     Optional<Opcion> findByIdAndDeletedAtIsNull(Long id);
@@ -22,5 +18,7 @@ public interface OpcionRepository extends JpaRepository<Opcion, Long> {
     List<Opcion> findByNombreContainingIgnoreCase(String nombre);
     List<Opcion> findByTipo(String tipo);
 
-    void deleteByProductoId(Long productoId);
+    // obtener máximo orden para calcular el siguiente
+    @Query("select max(o.orden) from Opcion o where o.deletedAt is null")
+    Optional<Integer> findMaxOrden();
 }

@@ -7,6 +7,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "producto", indexes = {
         @Index(name = "ux_producto_slug", columnList = "slug", unique = true)
@@ -42,6 +45,9 @@ public class Producto extends BaseEntidadAuditada {
 
     @Column(name = "sku", length = 80)
     private String sku; // opcional, no único por ahora (deshabilitado/soft)
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductoOpcion> opciones = new ArrayList<>();
 
     // Atributos libres (JSON por categoría)
     @Column(name = "atributos_json", columnDefinition = "TEXT")

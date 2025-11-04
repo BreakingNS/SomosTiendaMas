@@ -230,3 +230,5 @@ beta 0.1.7.3: Modulo 2 repository y service test en proceso.
 beta 0.1.7.4: Modulo 2 tests casi listos, falta centralizado y registro empresa.
 
 beta 0.1.7.5: Modulo 3 previo a agregar OpcionProducto (tabla intermedia).
+
+beta 0.1.7.6: Modulo 3 implementado OpcionProducto CRUD completo.

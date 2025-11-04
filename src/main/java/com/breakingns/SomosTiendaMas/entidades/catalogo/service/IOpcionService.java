@@ -15,4 +15,9 @@ public interface IOpcionService {
     OpcionValorResponseDTO obtenerValorPorId(Long valorId);
     List<OpcionValorResponseDTO> listarValoresPorOpcionId(Long opcionId);
     void eliminarValor(Long valorId);
+
+    // nuevas operaciones para la relación Producto <-> Opción
+    List<OpcionResumenDTO> listarPlantillas();
+    OpcionResponseDTO asignarOpcionAProducto(Long productoId, Long opcionId);
+    void desasignarOpcionDeProducto(Long productoId, Long opcionId);
 }
