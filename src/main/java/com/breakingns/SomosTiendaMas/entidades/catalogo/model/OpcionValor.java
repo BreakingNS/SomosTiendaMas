@@ -6,10 +6,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "valor_opcion_producto", uniqueConstraints = {
+@Table(name = "opcion_valor", uniqueConstraints = {
         @UniqueConstraint(name = "ux_valor_por_opcion", columnNames = {"opcion_id", "valor"})
 }, indexes = {
-        @Index(name = "ix_valor_opcion_opcion", columnList = "opcion_id")
+        @Index(name = "ix_opcion_valor_opcion", columnList = "opcion_id")
 })
 @Getter
 @Setter

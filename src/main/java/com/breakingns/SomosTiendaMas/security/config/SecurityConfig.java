@@ -138,7 +138,19 @@ public class SecurityConfig {
                 .accessDeniedHandler(customAccessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
+                // rutas públicas definidas por la aplicación
                 .requestMatchers(PublicRoutes.RUTAS_PUBLICAS).permitAll()
+                // rutas estáticas / uploads / imágenes que queremos exponer públicamente
+                .requestMatchers(
+                    "/productos/**",
+                    "/uploads/**",
+                    "/img/**",
+                    "/public/**",
+                    "/favicon.ico",
+                    "/test-imagenes",
+                    "/test-imagenes.html"
+                ).permitAll()
+                // resto requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

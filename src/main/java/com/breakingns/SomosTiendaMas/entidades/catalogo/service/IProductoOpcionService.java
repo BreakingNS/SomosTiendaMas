@@ -13,4 +13,9 @@ public interface IProductoOpcionService {
     List<ProductoConOpcionesDTO> obtenerTodosConOpciones();
 
     void modificarOpciones(Long productoId, ProductoOpcionesAsignarDTO dto, String usuario);
+    // devuelve por producto las opciones con sus valores (producto_valor si existen, sino valores plantilla)
+    com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO obtenerProductoConOpcionesConValores(Long productoId);
+
+    // idem para todos los productos
+    java.util.List<com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO> obtenerTodosConOpcionesConValores();
 }

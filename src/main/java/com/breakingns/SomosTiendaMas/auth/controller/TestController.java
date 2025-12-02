@@ -1,5 +1,5 @@
 package com.breakingns.SomosTiendaMas.auth.controller;
-
+/*
 import com.breakingns.SomosTiendaMas.auth.dto.request.OlvidePasswordRequest;
 import com.breakingns.SomosTiendaMas.auth.model.LoginAttempt;
 import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
@@ -68,3 +68,4 @@ public class TestController {
         return ResponseEntity.ok("Registro insertado con id: " + attempt.getId());
     }
 }
+ */

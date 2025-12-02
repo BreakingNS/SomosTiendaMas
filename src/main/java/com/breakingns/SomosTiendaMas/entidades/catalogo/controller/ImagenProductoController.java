@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

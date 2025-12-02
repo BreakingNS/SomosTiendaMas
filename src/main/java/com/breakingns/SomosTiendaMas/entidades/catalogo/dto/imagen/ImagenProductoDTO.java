@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
+package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

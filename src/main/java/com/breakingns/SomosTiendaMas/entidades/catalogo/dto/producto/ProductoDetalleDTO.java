@@ -5,6 +5,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
+
 @Data
 public class ProductoDetalleDTO {
     private Long id;
@@ -23,6 +25,13 @@ public class ProductoDetalleDTO {
     private Long precioActualCentavos;
     private Boolean precioActivo;
     private long disponible; // desde InventarioProducto
+
+    // texto mostrable en la ficha
+    private String garantia;
+    private String politicaDevoluciones;
+
+    // nuevo
+    private CondicionProducto condicion;
 
     // auditoría
     private LocalDateTime createdAt;

@@ -34,8 +34,9 @@ public class ImportProvinciasService {
         Workbook workbook = new XSSFWorkbook(fis);
         Sheet sheet = workbook.getSheetAt(0);
 
-        Pais pais = paisRepository.findByNombre("Argentina");
-        if (pais == null) pais = paisRepository.save(new Pais("Argentina"));
+        // usar búsqueda case-insensitive; crear país en mayúsculas si no existe
+        Pais pais = paisRepository.findByNombreIgnoreCase("Argentina");
+        if (pais == null) pais = paisRepository.save(new Pais("ARGENTINA"));
 
         Set<String> provinciasImportadas = new HashSet<>();
 

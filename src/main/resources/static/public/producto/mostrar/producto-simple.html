@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title id="page-title">Cargando producto...</title>
+  <style>
+    /* ...existing code... */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      box-sizing: border-box;
+      background: #f5f5f5;
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 16px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+    header {
+      margin-bottom: 16px;
+    }
+    .breadcrumb {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 4px 0;
+    }
+    .estado {
+      font-size: 12px;
+      color: #0a8a0a;
+    }
+    .contenido {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .galeria {
+      flex: 1 1 250px;
+      min-width: 250px;
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .galeria img {
+      width: 100%;
+      height: auto;          /* por defecto se escala proporcional */
+      object-fit: contain;   /* evita recortes, mantiene proporción */
+      border: 1px solid #ccc;
+      display: block;
+    }
+    /* imagen principal: permitimos alto controlado por JS */
+    .galeria #imagen-principal {
+      width: 100%;
+      height: auto; /* JS puede sobrescribir height para forzar proporción */
+      object-fit: contain;
+      max-width: 100%;
+    }
+    .miniaturas {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .miniaturas img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .video {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #555;
+    }
+    .panel-derecho {
+      flex: 1 1 250px;
+      min-width: 250px;
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .precio-actual {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .precio-anterior {
+      font-size: 12px;
+      color: #999;
+      text-decoration: line-through;
+    }
+    .descuento {
+      font-size: 12px;
+      color: #d32f2f;
+      margin-left: 4px;
+    }
+    .precio-sin-iva {
+      font-size: 12px;
+      color: #555;
+      margin-top: 4px;
+    }
+    .stock {
+      font-size: 12px;
+      color: #0a8a0a;
+      margin-top: 8px;
+    }
+    .acciones {
+      margin-top: 12px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #ff6f00;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background: #e65f00;
+    }
+    .metodos-pago,
+    .envios {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #555;
+    }
+    .detalles {
+      margin-top: 24px;
+      font-size: 14px;
+    }
+    .detalles h2 {
+      font-size: 16px;
+      margin: 12px 0 4px;
+    }
+    .detalles p,
+    .detalles ul {
+      margin: 4px 0;
+    }
+    .api-log {
+      margin-top: 24px;
+      padding: 10px;
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: visible;
+      max-height: none;
+    }
+    .api-log .api-raw {
+      color: #b30000;                /* rojo */
+      text-decoration: line-through; /* tachado */
+      background: rgba(179,0,0,0.03);
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .api-log .api-raw h4 { margin: 0 0 6px 0; color:#8b0000; font-size:13px; }
+    .api-log .api-raw pre { margin:0; white-space: pre-wrap; font-size:12px; }
+
+    .api-log .api-reduced {
+      color: #064e3b; /* verde oscuro */
+      background: rgba(6,78,59,0.03);
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .api-log .api-reduced h4 { margin: 0 0 6px 0; color:#065f46; font-size:13px; }
+    .api-log .api-reduced pre { margin:0; white-space: pre-wrap; font-size:12px; color:#0f172a; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="breadcrumb">
+        <span id="breadcrumb-padre">Categoria</span> &gt;
+        <span id="breadcrumb-hija">Subcategoria</span> &gt;
+        <span id="breadcrumb-producto">Nombre del Producto</span>
+      </div>
+      <h1 id="titulo-producto">Nombre del Producto</h1>
+      <div class="estado" id="estado-producto">BORRADOR</div>
+    </header>
+
+    <section class="contenido">
+      <!-- Galería -->
+      <div class="galeria">
+        <img id="imagen-principal"
+             src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='24' text-anchor='middle' dominant-baseline='middle' fill='%23999'>Foto Principal</text></svg>"
+             alt="Foto principal">
+        <div class="miniaturas">
+          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='%23999'>1</text></svg>"
+               alt="Miniatura 1" onclick="cambiarImagen(this.src)">
+          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='%23999'>2</text></svg>"
+               alt="Miniatura 2" onclick="cambiarImagen(this.src)">
+          <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100%' height='100%' fill='%23f0f0f0'/><text x='50%' y='50%' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='%23999'>3</text></svg>"
+               alt="Miniatura 3" onclick="cambiarImagen(this.src)">
+        </div>
+        <div class="video">
+          Video opcional: <span id="video-info">sin video cargado</span>
+        </div>
+      </div>
+
+      <!-- Panel derecho -->
+      <aside class="panel-derecho">
+        <div class="precio-actual" id="precio-actual">$ 000.000</div>
+        <div>
+          <span class="precio-anterior" id="precio-anterior">$ 0.000.000</span>
+          <span class="descuento" id="descuento">-0%</span>
+        </div>
+        <div class="precio-sin-iva" id="precio-sin-iva">Precio sin IVA: $ 000.000</div>
+        <div class="stock" id="stock">Aqui va el stock si esta disponible</div>
+
+        <div class="acciones">
+          <button class="btn">Comprar / Agregar al carrito</button>
+        </div>
+
+        <div class="metodos-pago" id="metodos-pago">
+          Métodos de pago: tarjetas, transferencia, efectivo.
+        </div>
+        <div class="envios" id="envios">
+          Envíos a todo el país en 3 a 5 días hábiles.
+        </div>
+      </aside>
+    </section>
+
+    <!-- Descripción y detalles -->
+    <section class="detalles">
+
+      <h2>Descripción</h2>
+      <p id="descripcion-extensa">
+        descripcion del producto
+      </p>
+
+      <h2>Características técnicas</h2>
+      <ul id="caracteristicas-tecnicas">
+        <li>caracteristica 1: valor caracteristica</li>
+        <li>caracteristica 2: valor caracteristica</li>
+        <li>caracteristica 3: valor caracteristica</li>
+        <li>caracteristica 4: valor caracteristica</li>
+      </ul>
+
+      <h2>Garantía</h2>
+      <p id="garantia">
+        garantia del producto
+      </p>
+
+      <h2>Política de devoluciones</h2>
+      <p id="politica-devoluciones">
+        politica de devoluciones del producto
+      </p>
+    </section>
+
+    <!-- Log de prueba de API -->
+    <section class="api-log" id="api-log">
+      Cargando datos desde la API...
+    </section>
+  </div>
+
+  <script>
+    // Cambia la imagen principal al hacer clic en una miniatura
+    function cambiarImagen(src) {
+      document.getElementById('imagen-principal').src = src;
+    }
+
+    // ======= PRUEBA SIMPLE DE API (usa ?id=123 o ?slug=mi-producto) =======
+    function getQueryParam() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('id')) return { type: 'id', value: params.get('id') };
+      if (params.has('slug')) return { type: 'slug', value: params.get('slug') };
+      return null;
+    }
+    
+    function buildApiUrl() {
+      const q = getQueryParam();
+      if (!q) {
+        // fallback a ejemplo público si no hay params (cambiar si lo deseas)
+        return 'https://api.ejemplo.com/productos/iphone-12';
+      }
+      if (q.type === 'id') {
+        // usar endpoint centralizado que devuelve producto + imagenes + precio + stock + opciones
+        return '/api/productos/' + encodeURIComponent(q.value) + '/detalle';
+      }
+      return '/api/productos/slug/' + encodeURIComponent(q.value) + '/detalle';
+    }
+    
+    // Cargar y renderizar las imágenes del producto (versión robusta: busca en varios endpoints y usa la primera imagen)
+    async function cargarImagenes(productId) {
+      try {
+        const mainEl = document.getElementById('imagen-principal');
+        const miniContainer = document.querySelector('.miniaturas');
+        if (!productId) return;
+        if (miniContainer) miniContainer.innerHTML = '';
+
+        const endpoints = [
+          '/api/productos/' + encodeURIComponent(productId) + '/imagenes',
+          '/api/productos/' + encodeURIComponent(productId) + '/imagenes/primera'
+        ];
+
+        const logEl = document.getElementById('api-log');
+        let imgs = null;
+        for (const url of endpoints) {
+          try {
+            const resp = await fetch(url);
+            if (!resp.ok) {
+              if (logEl) logEl.textContent = (logEl.textContent || '') + `\n${url} -> HTTP ${resp.status}`;
+              continue;
+            }
+            const data = await resp.json();
+            if (Array.isArray(data) && data.length > 0) {
+              imgs = data;
+            } else if (data && typeof data === 'object') {
+              imgs = [data];
+            } else if (typeof data === 'string' && data.trim()) {
+              imgs = [data.trim()];
+            }
+            if (imgs) break;
+          } catch (e) {
+            if (logEl) logEl.textContent = (logEl.textContent || '') + `\nError fetch ${url}: ${e.message}`;
+            continue;
+          }
+        }
+
+        if (!imgs || imgs.length === 0) {
+          if (logEl) logEl.textContent = 'Sin imágenes para este producto.';
+          return;
+        }
+
+        // ordenar por "orden" si existe
+        imgs.sort((a, b) => {
+          const ao = (a && a.orden) ?? 0;
+          const bo = (b && b.orden) ?? 0;
+          return ao - bo;
+        });
+
+        // normalizador de URL (acepta objetos con url/ruta/path/nombreArchivo o strings)
+        const normalize = (item) => {
+          if (!item) return null;
+          let u = (typeof item === 'string') ? item : (item.url ?? item.ruta ?? item.path ?? item.nombreArchivo ?? item.nombre);
+          if (!u) return null;
+          if (!/^https?:\/\//i.test(u)) {
+            if (!u.startsWith('/')) u = '/' + u;
+            return window.location.origin + u;
+          }
+          return u;
+        };
+
+        // establecer principal = primera imagen válida
+        const firstUrl = normalize(imgs[0]);
+        if (firstUrl && mainEl) mainEl.src = firstUrl;
+
+        // crear miniaturas para todas las imágenes
+        for (const it of imgs) {
+          const url = normalize(it);
+          if (!url) continue;
+          const im = document.createElement('img');
+          im.src = url;
+          im.alt = (typeof it === 'object' && it.alt) ? it.alt : '';
+          im.loading = 'lazy';
+          im.style.width = '50px';
+          im.style.height = '50px';
+          im.style.objectFit = 'cover';
+          im.style.cursor = 'pointer';
+          im.onclick = () => { if (mainEl) mainEl.src = url; };
+          miniContainer.appendChild(im);
+        }
+
+        if (logEl) logEl.textContent = (logEl.textContent || '') + `\nImágenes cargadas: ${imgs.length}`;
+      } catch (e) {
+        const logEl = document.getElementById('api-log');
+        if (logEl) logEl.textContent = 'Error cargando imágenes: ' + e;
+        console.warn('Error cargarImagenes:', e);
+      }
+    }
+  
+    async function cargarProductoDesdeAPI() {
+      const logEl = document.getElementById('api-log');
+      const API_URL = buildApiUrl();
+      try {
+        logEl.textContent = 'Llamando a: ' + API_URL + ' ...';
+        const resp = await fetch(API_URL);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        const prod = data.producto ? data.producto : data; // soporta ambas formas
+        // Título / H1 / Breadcrumb producto
+        if (prod && prod.nombre) {
+          document.getElementById('titulo-producto').textContent = prod.nombre;
+          document.title = prod.nombre;
+          const bcProd = document.getElementById('breadcrumb-producto');
+          if (bcProd) bcProd.textContent = prod.nombre;
+        }
+
+        // Breadcrumb padre > hija (prioridad: campos enviados por el backend)
+        (function() {
+          const bp = document.getElementById('breadcrumb-padre');
+          const bh = document.getElementById('breadcrumb-hija');
+
+          // Prioridad: nombreCategoriaPadre / nombreCategoriaHija (usar prod)
+          const nombrePadre = prod?.nombreCategoriaPadre ?? prod?.categoriaPadreNombre ?? null;
+          const nombreHija = prod?.nombreCategoriaHija ?? prod?.categoriaNombre ?? null;
+ 
+          // Formatear: si viene en mayúsculas devolver con primera letra mayúscula
+          function fmt(s) {
+            if (!s) return null;
+            s = String(s).trim();
+            if (s === '') return null;
+            return s.length === 0 ? s : (s[0].toUpperCase() + s.slice(1));
+          }
+
+          if (bp) bp.textContent = fmt(nombrePadre) ?? 'Categoria';
+          if (bh) bh.textContent = fmt(nombreHija) ?? 'Subcategoria';
+
+          // Fallbacks adicionales (si backend no envía nombres pero sí estructura)
+          if ((!nombrePadre || !nombreHija)) {
+            if (!nombreHija) {
+              if (prod?.categoria && prod.categoria.nombre) {
+                if (bh) bh.textContent = fmt(prod.categoria.nombre);
+              } else if (Array.isArray(prod?.categorias) && prod.categorias.length > 0) {
+                const last = prod.categorias[prod.categorias.length - 1];
+                if (bh) bh.textContent = fmt(typeof last === 'string' ? last : (last?.nombre ?? 'Subcategoria'));
+              }
+            }
+            if (!nombrePadre) {
+              if (prod?.categoria && prod.categoria.padre && prod.categoria.padre.nombre) {
+                if (bp) bp.textContent = fmt(prod.categoria.padre.nombre);
+              } else if (Array.isArray(prod?.categorias) && prod.categorias.length >= 2) {
+                const first = prod.categorias[0];
+                if (bp) bp.textContent = fmt(typeof first === 'string' ? first : (first?.nombre ?? 'Categoria'));
+              }
+            }
+          }
+        })();
+
+        // Estado: mostrar solo la palabra legible a partir de "condicion" o "estado"
+        (function() {
+          const estadoEl = document.getElementById('estado-producto');
+          const raw = prod?.condicion ?? prod?.estado;
+          if (!raw) return;
+          const key = String(raw).trim().toLowerCase();
+          const map = {
+            'nuevo': 'Nuevo',
+            'nuevO': 'Nuevo',
+            'nueva': 'Nuevo',
+            'usado': 'Usado',
+            'reacondicionado': 'Reacondicionado',
+            'refurbished': 'Reacondicionado',
+            'borrador': 'Borrador',
+            'publico': 'Público'
+          };
+          estadoEl.textContent = map[key] ?? (raw.charAt(0).toUpperCase() + String(raw).slice(1).toLowerCase());
+        })();
+
+        // Resto de campos y debug
+        console.log('API producto detalle:', data);
+        if (logEl) logEl.textContent = (logEl.textContent || '') + '\nProducto JSON keys: ' + Object.keys(prod ?? data).join(', ');
+ 
+        // Si la respuesta centralizada trae precio/imágenes/opciones/stock, usarlas; si no, continuar con llamadas individuales
+        const imagenesPayload = data.imagenes ?? null;
+        const precioPayload = data.precio ?? null;
+        const opcionesPayload = data.opciones ?? null;
+        const stockPayload = data.stock ?? null;
+
+        // renderizar usando payloads (si vienen) o seguir con las funciones que hacen fetch por separado
+        if (imagenesPayload) {
+          renderImagenesFromArray(imagenesPayload);
+        } else if (prod?.id) {
+          await cargarImagenes(prod.id);
+        }
+
+        if (precioPayload) {
+          renderPrecioFromObj(precioPayload);
+        } else if (prod?.id) {
+          await cargarPrecio(prod.id);
+        }
+
+        if (opcionesPayload) {
+          renderOpcionesFromArray(opcionesPayload);
+        } else if (prod?.id) {
+          await cargarOpciones(prod.id);
+        }
+
+        if (stockPayload) {
+          renderStockFromObj(stockPayload);
+        } else if (prod?.id) {
+          await cargarStock(prod.id);
+        }
+
+        // mostrar debug resumido sin romper el contenido ya renderizado
+        showApiDebug(prod, imagenesPayload, opcionesPayload, precioPayload, stockPayload);
+
+        
+        if (data.stockTexto) document.getElementById('stock').textContent = data.stockTexto;
+        if (data.metodosPago) document.getElementById('metodos-pago').textContent = 'Métodos de pago: ' + data.metodosPago;
+        if (data.envios) document.getElementById('envios').textContent = 'Envíos: ' + data.envios;
+        if (data.descripcionCorta) document.getElementById('descripcion-corta').textContent = data.descripcionCorta;
+        (function() {
+          const el = document.getElementById('descripcion-extensa');
+          if (!el) return;
+          // posibles campos que puede devolver la API (prioridad: prod, luego top-level data)
+          const htmlField = prod?.descripcionHtml ?? prod?.descripcion_html ?? prod?.descripcionHtmlLarga
+                            ?? data.descripcionHtml ?? data.descripcion_html ?? data.descripcionHtmlLarga;
+          const textField = prod?.descripcionLarga ?? prod?.descripcionExtensa ?? prod?.descripcion
+                            ?? prod?.longDescription ?? prod?.description ?? prod?.descripcionCorta
+                            ?? data.descripcionLarga ?? data.descripcionExtensa ?? data.descripcion
+                            ?? data.longDescription ?? data.description ?? data.descripcionCorta;
+ 
+          if (htmlField) {
+            // si viene HTML seguro del backend
+            el.innerHTML = String(htmlField);
+          } else if (textField) {
+            // texto plano: evitar interpretar HTML
+            el.textContent = String(textField);
+          } else {
+            el.textContent = 'Descripción no disponible';
+          }
+        })();
+        (function renderGarantiaYDevoluciones() {
+          const garEl = document.getElementById('garantia');
+          const polEl = document.getElementById('politica-devoluciones');
+          if (!garEl && !polEl) return;
+
+          const escapeHtml = (s) => String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+          const render = (el, value, allowHtmlFlagNames = []) => {
+            if (!el) return;
+            if (!value) { el.textContent = ''; return; }
+            // Si el backend indica que el campo viene en HTML seguro (ej. data.garantiaHtml = true), lo renderizamos como HTML.
+            const allowHtml = allowHtmlFlagNames.some(n => !!data[n]);
+            if (allowHtml) {
+              el.innerHTML = String(value);
+            } else {
+              // texto plano: escapar HTML y convertir saltos de línea a <br>
+              el.innerHTML = escapeHtml(String(value)).replace(/\r?\n/g, '<br>');
+            }
+          };
+
+          // Priorizar prod.* y si no existe usar data.* (compatibilidad con API antigua)
+          render(garEl, prod?.garantia ?? data.garantia, ['garantiaHtml', 'garantia_html', 'garantiaEsHtml']);
+          render(polEl, prod?.politicaDevoluciones ?? data.politicaDevoluciones,
+                 ['politicaDevolucionesHtml', 'politica_devoluciones_html', 'politicaEsHtml']);
+
+
+        })();
+          // ya procesamos imagenes/precio/opciones/stock desde el payload central (o mediante las funciones llamadas arriba)
+      } catch (err) {
+        logEl.textContent = 'Error llamando a la API:\n' + err;
+      }
+    }
+
+    // --- RENDERS A PARTIR DEL PAYLOAD CENTRALIZADO (no realizan fetch) ---
+    function renderImagenesFromArray(imgs) {
+      try {
+        if (!Array.isArray(imgs) || imgs.length === 0) return;
+        // reutiliza la lógica de normalización y render de miniaturas de cargarImagenes
+        imgs.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+        const normalize = (item) => {
+          if (!item) return null;
+          let u = (typeof item === 'string') ? item : (item.url ?? item.ruta ?? item.path ?? item.nombreArchivo ?? item.nombre);
+          if (!u) return null;
+          if (!/^https?:\/\//i.test(u)) {
+            if (!u.startsWith('/')) u = '/' + u;
+            return window.location.origin + u;
+          }
+          return u;
+        };
+        const mainEl = document.getElementById('imagen-principal');
+        const miniContainer = document.querySelector('.miniaturas');
+        if (miniContainer) miniContainer.innerHTML = '';
+        const firstUrl = normalize(imgs[0]);
+        if (firstUrl && mainEl) mainEl.src = firstUrl;
+        imgs.forEach(it => {
+          const url = normalize(it);
+          if (!url) return;
+          const im = document.createElement('img');
+          im.src = url;
+          im.alt = (typeof it === 'object' && it.alt) ? it.alt : '';
+          im.loading = 'lazy';
+          im.style.width = '50px';
+          im.style.height = '50px';
+          im.style.objectFit = 'cover';
+          im.style.cursor = 'pointer';
+          im.onclick = () => { if (mainEl) mainEl.src = url; };
+          if (miniContainer) miniContainer.appendChild(im);
+        });
+        const logEl = document.getElementById('api-log');
+        if (logEl) logEl.textContent = (logEl.textContent || '') + `\nImágenes cargadas (central): ${imgs.length}`;
+      } catch (e) { console.warn('renderImagenesFromArray:', e); }
+    }
+
+    function renderPrecioFromObj(p) {
+      try {
+        if (!p) return;
+        const elActual = document.getElementById('precio-actual');
+        const elAnterior = document.getElementById('precio-anterior');
+        const elDescuento = document.getElementById('descuento');
+        const elSinIva = document.getElementById('precio-sin-iva');
+        const formato = cents => (cents == null ? '0' : Math.round(cents/100).toLocaleString('es-AR'));
+        if (elActual && p.montoCentavos != null) elActual.textContent = '$ ' + formato(p.montoCentavos);
+        if (elAnterior) elAnterior.textContent = (p.precioAnteriorCentavos ? ('$ ' + formato(p.precioAnteriorCentavos)) : '$ 0.000.000');
+        let descuento = p.descuentoPorcentaje;
+        if (descuento == null && p.precioAnteriorCentavos && p.montoCentavos) {
+          descuento = Number(((1 - (p.montoCentavos / p.precioAnteriorCentavos)) * 100).toFixed(2));
+        }
+        if (elDescuento) elDescuento.textContent = (descuento != null && !isNaN(descuento)) ? `-${descuento}%` : '-0%';
+        if (elSinIva) {
+          const sinIva = p.precioSinIvaCentavos != null ? p.precioSinIvaCentavos
+                         : (p.montoCentavos != null ? Math.round(p.montoCentavos / (1 + ((p.ivaPorcentaje ?? 21) / 100))) : null);
+          elSinIva.textContent = 'Precio sin IVA: $ ' + (sinIva != null ? formato(sinIva) : '0');
+        }
+      } catch (e) { console.warn('renderPrecioFromObj:', e); }
+    }
+
+    function renderOpcionesFromArray(opciones) {
+      try {
+        const ul = document.getElementById('caracteristicas-tecnicas');
+        if (!ul) return;
+        ul.innerHTML = '';
+        const lista = Array.isArray(opciones) ? opciones.slice().sort((a,b)=> (a.orden??0)-(b.orden??0)) : [];
+        lista.forEach(op => {
+          const li = document.createElement('li');
+          li.textContent = op.nombre ?? ('Opción ' + (op.id ?? ''));
+          ul.appendChild(li);
+        });
+        if (lista.length === 0) {
+          ul.innerHTML = `<li>caracteristica 1: valor caracteristica</li><li>caracteristica 2: valor caracteristica</li>`;
+        }
+      } catch (e) { console.warn('renderOpcionesFromArray:', e); }
+    }
+
+    function renderStockFromObj(stock) {
+      try {
+        const el = document.getElementById('stock');
+        if (!el) return;
+        if (stock && (stock.disponible != null)) {
+          const disponible = Number(stock.disponible);
+          el.textContent = disponible > 0 ? `Stock disponible: ${disponible}` : 'Sin stock';
+        } else {
+          el.textContent = 'Stock no disponible';
+        }
+      } catch (e) { console.warn('renderStockFromObj:', e); }
+    }
+    // --- fin renders centralizados ---
+
+    async function cargarPrecio(productId) {
+      try {
+        const url1 = '/api/productos/' + encodeURIComponent(productId) + '/precios/vigente';
+        const url2 = '/api/precios?productoId=' + encodeURIComponent(productId);
+        let resp = await fetch(url1);
+        if (!resp.ok) {
+          // fallback a listado si el endpoint vigente no existe
+          resp = await fetch(url2);
+          if (!resp.ok) return;
+        }
+        const data = await resp.json();
+        const p = Array.isArray(data) ? (data[0] || null) : data;
+        if (!p) return;
+
+        const elActual = document.getElementById('precio-actual');
+        const elAnterior = document.getElementById('precio-anterior');
+        const elDescuento = document.getElementById('descuento');
+        const elSinIva = document.getElementById('precio-sin-iva');
+
+        const formato = cents => (cents == null ? '0' : Math.round(cents/100).toLocaleString('es-AR'));
+
+        if (elActual) elActual.textContent = '$ ' + formato(p.montoCentavos);
+        if (elAnterior) elAnterior.textContent = (p.precioAnteriorCentavos ? ('$ ' + formato(p.precioAnteriorCentavos)) : '');
+        // descuento: si viene, usarlo; si no calcular desde montos
+        let descuento = p.descuentoPorcentaje;
+        if (descuento == null && p.precioAnteriorCentavos && p.montoCentavos) {
+          descuento = Number(((1 - (p.montoCentavos / p.precioAnteriorCentavos)) * 100).toFixed(2));
+        }
+        if (elDescuento) elDescuento.textContent = (descuento != null && !isNaN(descuento)) ? `-${descuento}%` : '-0%';
+        if (elSinIva) {
+          const sinIva = p.precioSinIvaCentavos != null ? p.precioSinIvaCentavos
+                         : (p.montoCentavos != null ? Math.round(p.montoCentavos / (1 + ((p.ivaPorcentaje ?? 21) / 100))) : null);
+          elSinIva.textContent = 'Precio sin IVA: $ ' + (sinIva != null ? formato(sinIva) : '0');
+        }
+      } catch (e) {
+        console.warn('Error cargarPrecio:', e);
+      }
+    }
+
+    async function cargarOpciones(productId) {
+      try {
+        const resp = await fetch('/api/productos/' + encodeURIComponent(productId) + '/con-opciones-valores');
+        if (!resp.ok) return;
+        const body = await resp.json();
+        const ul = document.getElementById('caracteristicas-tecnicas');
+        if (!ul) return;
+        // limpiar contenido previo
+        ul.innerHTML = '';
+
+        const opciones = Array.isArray(body.opciones) ? body.opciones : [];
+        // ordenar por "orden" si existe
+        opciones.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+
+        opciones.forEach(op => {
+          // obtener valores y ordenarlos
+          const vals = Array.isArray(op.valores) ? op.valores.slice().sort((x,y) => (x.orden ?? 0) - (y.orden ?? 0)) : [];
+          const valoresTexto = vals.map(v => v.valor).filter(v => v != null).join(', ');
+          const li = document.createElement('li');
+          li.textContent = (op.nombre ?? ('Opción ' + op.opcionId)) + (valoresTexto ? ': ' + valoresTexto : '');
+          ul.appendChild(li);
+        });
+
+        // si no hay opciones mostrar texto por defecto
+        if (opciones.length === 0) {
+          ul.innerHTML = `
+            <li>caracteristica 1: valor caracteristica</li>
+            <li>caracteristica 2: valor caracteristica</li>
+            <li>caracteristica 3: valor caracteristica</li>
+            <li>caracteristica 4: valor caracteristica</li>`;
+        }
+      } catch (e) {
+        console.warn('Error cargarOpciones:', e);
+      }
+    }
+
+    // NUEVA FUNCION: cargar stock desde el servicio de inventario
+    async function cargarStock(productId) {
+      try {
+        if (!productId) return;
+        console.debug('cargarStock -> productoId:', productId);
+        const resp = await fetch('/api/inventario/producto/' + encodeURIComponent(productId) + '/disponibilidad');
+        console.debug('cargarStock -> status', resp.status);
+        if (!resp.ok) {
+          console.warn('No se pudo obtener disponibilidad, status:', resp.status);
+          return;
+        }
+        const body = await resp.json();
+        console.debug('cargarStock -> body', body);
+        const el = document.getElementById('stock');
+        if (!el) return;
+        if (body && (body.disponible != null)) {
+          const disponible = Number(body.disponible);
+          el.textContent = disponible > 0 ? `Stock disponible: ${disponible}` : 'Sin stock';
+        }
+      } catch (e) {
+        console.warn('Error cargarStock:', e);
+      }
+    }
+
+    /* .api-log .api-raw { color:#b30000; text-decoration:line-through; background:rgba(179,0,0,0.03); padding:8px; border-radius:4px; margin-bottom:8px; } */
+    /* .api-log .api-reduced { color:#064e3b; background:rgba(6,78,59,0.03); padding:8px; border-radius:4px; } */
+
+    function showApiDebug(productJson, imagesJson, opcionesJson, priceJson, stockJson) {
+      try {
+        const logEl = document.getElementById('api-log');
+        if (!logEl) return;
+
+        const pick = (src, keys) => {
+          if (!src) return null;
+          const out = {};
+          keys.forEach(k => { if (src[k] !== undefined) out[k] = src[k]; });
+          return out;
+        };
+
+        const productoReducido = pick(productJson, [
+          'id','nombre','slug','descripcion',
+          'categoriaId','idCategoriaPadre','idCategoriaHija',
+          'nombreCategoriaPadre','nombreCategoriaHija',
+          'condicion','garantia','politicaDevoluciones'
+        ]);
+
+        const imagenesReducidas = Array.isArray(imagesJson) ? imagesJson.map(i => ({
+          url: i?.url ?? i?.path ?? i ?? '',
+          alt: i?.alt ?? '',
+          orden: i?.orden ?? 0
+        })) : null;
+
+        const precioReducido = priceJson ? pick(priceJson, [
+          'montoCentavos','precioAnteriorCentavos','precioSinIvaCentavos',
+          'ivaPorcentaje','descuentoPorcentaje','moneda','activo'
+        ]) : null;
+
+        const opcionesReducidas = Array.isArray(opcionesJson) ? opcionesJson.map(o => ({
+          nombre: o?.nombre ?? '',
+          orden: o?.orden ?? 0,
+          tipo: o?.tipo ?? 'select'
+        })) : null;
+
+        const reduced = {
+          producto: productoReducido,
+          imagenes: imagenesReducidas,
+          precio: precioReducido,
+          stock: stockJson ?? null,
+          opciones: opcionesReducidas
+        };
+
+        // render seguro: limpia y agrega dos bloques estilados
+        logEl.innerHTML = '';
+
+        const rawDiv = document.createElement('div');
+        rawDiv.className = 'api-raw';
+        const rawH = document.createElement('h4'); rawH.textContent = 'Respuesta de la API:'; rawDiv.appendChild(rawH);
+        const rawPre = document.createElement('pre'); rawPre.textContent = JSON.stringify({ producto: productJson, imagenes: imagesJson, precio: priceJson, stock: stockJson, opciones: opcionesJson }, null, 2); rawDiv.appendChild(rawPre);
+
+        const redDiv = document.createElement('div');
+        redDiv.className = 'api-reduced';
+        const redH = document.createElement('h4'); redH.textContent = 'DEBUG REDUCIDO (producto | imagenes | opciones | precio | stock):'; redDiv.appendChild(redH);
+        const redPre = document.createElement('pre'); redPre.textContent = JSON.stringify(reduced, null, 2); redDiv.appendChild(redPre);
+
+        logEl.appendChild(rawDiv);
+        logEl.appendChild(redDiv);
+      } catch (e) {
+        console.warn('showApiDebug error:', e);
+      }
+    }
+    // Llamada automática al cargar la página
+    cargarProductoDesdeAPI();
+  </script>
+</body>
+</html>

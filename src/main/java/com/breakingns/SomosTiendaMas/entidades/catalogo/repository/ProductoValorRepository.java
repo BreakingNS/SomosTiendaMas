@@ -20,4 +20,6 @@ public interface ProductoValorRepository extends JpaRepository<ProductoValor, Lo
 
     void deleteByProductoId(Long productoId);
     void deleteByValorId(Long valorId);
+
+    List<ProductoValor> findByProducto_IdAndDeletedAtIsNull(Long productoId);
 }

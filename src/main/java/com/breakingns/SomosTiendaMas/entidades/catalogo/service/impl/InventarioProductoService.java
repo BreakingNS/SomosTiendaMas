@@ -11,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,11 +48,18 @@ public class InventarioProductoService implements IInventarioProductoService {
         return InventarioMapper.toDto(inv);
     }
 
+    // helper para normalizar Integer/Long/primitive a long (seguro ante null)
+    private static long safeNumber(Number n) {
+        return n == null ? 0L : n.longValue();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public DisponibilidadResponseDTO disponibilidad(Long productoId) {
         InventarioProducto inv = repo.findByProductoId(productoId).orElse(null);
-        long disponible = inv == null ? 0L : Math.max(0L, inv.getOnHand() - inv.getReserved());
+        long onHand = safeNumber(inv != null ? inv.getOnHand() : null);
+        long reserved = safeNumber(inv != null ? inv.getReserved() : null);
+        long disponible = Math.max(0L, onHand - reserved);
         return new DisponibilidadResponseDTO(productoId, disponible);
     }
 
@@ -63,25 +69,33 @@ public class InventarioProductoService implements IInventarioProductoService {
         InventarioProducto inv = repo.findByProductoId(request.getProductoId())
                 .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado: " + request.getProductoId()));
 
-        long disponible = Math.max(0L, inv.getOnHand() - inv.getReserved());
-        boolean ok = disponible >= request.getCantidad();
+        // si getOnHand()/getReserved() devuelven primitivos (long/int) no pueden ser null,
+        // y si devuelven wrappers, safeNumber los normaliza.
+        long onHand = safeNumber(inv != null ? inv.getOnHand() : null);
+        long reserved = safeNumber(inv != null ? inv.getReserved() : null);
+        long disponible = Math.max(0L, onHand - reserved);
+        long qty = request.getCantidad();
+
+        boolean ok = disponible >= qty && qty > 0;
         if (ok) {
-            inv.setReserved(inv.getReserved() + request.getCantidad());
+            long newReserved = reserved + qty;
+            // ajustar al tipo del campo en la entidad:
+            // si reserved es Integer en la entidad: inv.setReserved((int)newReserved);
+            // si reserved es Long/long en la entidad: inv.setReserved(newReserved);
+            inv.setReserved((int) newReserved); // <-- adapta según el tipo real de tu entidad
             repo.save(inv);
-            disponible = Math.max(0L, inv.getOnHand() - inv.getReserved());
+            disponible = Math.max(0L, onHand - newReserved);
         }
         return new ReservaStockResponseDTO(request.getProductoId(), ok, disponible);
     }
 
     @Override
     public OperacionSimpleResponseDTO liberarReserva(LiberacionReservaRequestDTO request) {
-        if (request == null) throw new IllegalArgumentException("request null");
         throw new UnsupportedOperationException("Liberación por orderRef no implementada en este servicio. Usa MovimientoInventarioService o adapta repo.");
     }
 
     @Override
     public OperacionSimpleResponseDTO confirmarVenta(ConfirmacionVentaRequestDTO request) {
-        if (request == null) throw new IllegalArgumentException("request null");
         throw new UnsupportedOperationException("Confirmación de venta por orderRef no implementada en este servicio. Usa MovimientoInventarioService o adapta repo.");
     }
 
@@ -89,8 +103,18 @@ public class InventarioProductoService implements IInventarioProductoService {
     public InventarioProductoDTO ajustarStock(Long productoId, long deltaOnHand, long deltaReserved) {
         InventarioProducto inv = repo.findByProductoId(productoId)
                 .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado: " + productoId));
-        inv.setOnHand(Math.max(0L, inv.getOnHand() + deltaOnHand));
-        inv.setReserved(Math.max(0L, inv.getReserved() + deltaReserved));
+
+        // para ajustarStock: usar safeNumber o asumir primitivo si la entidad ya lo usa
+        long onHand = safeNumber(inv.getOnHand());
+        long reserved = safeNumber(inv.getReserved());
+
+        long newOnHand = Math.max(0L, onHand + deltaOnHand);
+        long newReserved = Math.max(0L, reserved + deltaReserved);
+
+        // adaptar cast según el tipo real en la entidad (Integer vs Long vs int)
+        inv.setOnHand((int) newOnHand);
+        inv.setReserved((int) newReserved);
+
         InventarioProducto saved = repo.save(inv);
         return InventarioMapper.toDto(saved);
     }
@@ -99,7 +123,6 @@ public class InventarioProductoService implements IInventarioProductoService {
     @Transactional(readOnly = true)
     public List<InventarioProductoDTO> listarTodos() {
         return repo.findAll().stream()
-                .filter(i -> i.getDeletedAt() == null)
                 .map(InventarioMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -107,8 +130,9 @@ public class InventarioProductoService implements IInventarioProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<InventarioProductoDTO> listarBajoStock(Long threshold) {
+        int th = threshold != null ? threshold.intValue() : 0;
         return repo.findAll().stream()
-                .filter(i -> i.getDeletedAt() == null && i.getOnHand() < threshold)
+                .filter(i -> (i.getOnHand() != null ? i.getOnHand() : 0) < th)
                 .map(InventarioMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -116,8 +140,9 @@ public class InventarioProductoService implements IInventarioProductoService {
     @Override
     public void eliminarPorProductoId(Long productoId) {
         repo.findByProductoId(productoId).ifPresent(inv -> {
-            inv.setDeletedAt(LocalDateTime.now());
-            repo.save(inv);
+            // si querés soft-delete y tu entidad tiene deletedAt, setearlo aquí.
+            // Si no, borramos físicamente:
+            repo.delete(inv);
         });
     }
 }

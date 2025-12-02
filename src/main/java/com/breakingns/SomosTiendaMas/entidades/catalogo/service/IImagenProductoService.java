@@ -1,7 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenProductoDTO;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
 
 import java.util.List;
 

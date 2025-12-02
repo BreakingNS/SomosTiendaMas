@@ -24,6 +24,18 @@ public class PrecioProducto extends BaseEntidadAuditada {
     @Column(name = "monto_centavos", nullable = false)
     private Long montoCentavos;
 
+    // nuevo: precio anterior (nullable)
+    @Column(name = "precio_anterior_centavos")
+    private Long precioAnteriorCentavos;
+
+    // nuevo: precio sin IVA (nullable — si es null se calcula y se guarda)
+    @Column(name = "precio_sin_iva_centavos")
+    private Long precioSinIvaCentavos;
+
+    // nuevo: tasa de IVA aplicada (por ejemplo 21 para 21%)
+    @Column(name = "iva_porcentaje")
+    private Integer ivaPorcentaje;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
     private Moneda moneda = Moneda.ARS;

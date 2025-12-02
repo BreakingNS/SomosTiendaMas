@@ -19,11 +19,7 @@ public final class OpcionValorMapper {
                 .id(v.getId())
                 .opcionId(v.getOpcion() != null ? v.getOpcion().getId() : null)
                 .valor(v.getValor())
-                .slug(v.getSlug())
                 .orden(v.getOrden())
-                .createdAt(v.getCreatedAt())
-                .updatedAt(v.getUpdatedAt())
-                .deletedAt(v.getDeletedAt())
                 .build();
     }
 

@@ -16,4 +16,7 @@ public interface PrecioProductoRepository extends JpaRepository<PrecioProducto, 
     List<PrecioProducto> findByProductoIdAndVigenciaDesdeLessThanEqualAndVigenciaHastaGreaterThanEqual(Long productoId, LocalDateTime desde, LocalDateTime hasta);
 
     List<PrecioProducto> findAllByDeletedAtIsNull();
+
+    // útil: obtener primer precio activo y no eliminado
+    Optional<PrecioProducto> findFirstByProductoIdAndActivoTrueAndDeletedAtIsNullOrderByVigenciaDesdeDesc(Long productoId);
 }

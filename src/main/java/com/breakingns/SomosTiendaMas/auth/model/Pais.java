@@ -1,21 +1,18 @@
 package com.breakingns.SomosTiendaMas.auth.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Getter @Setter
+@Table(name = "pais")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @EqualsAndHashCode(of = "id")
 public class Pais {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String nombre;
 
-    public Pais() {} // Constructor vacío
+    @Column(name = "nombre", nullable = false, unique = true)
+    private String nombre;
 
     public Pais(String nombre) {
         this.nombre = nombre;

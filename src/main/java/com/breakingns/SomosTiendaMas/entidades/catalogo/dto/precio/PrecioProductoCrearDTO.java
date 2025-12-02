@@ -14,7 +14,18 @@ public class PrecioProductoCrearDTO {
 
     @NotNull
     @Min(0)
-    private Long montoCentavos;
+    private Long montoCentavos; // precio final ingresado (con IVA)
+
+    // opcional: permitir proporcionar precio anterior (para mostrar tachado)
+    @Min(0)
+    private Long precioAnteriorCentavos;
+
+    // opcional: precio sin IVA (si no se provee, se calculará en el service)
+    @Min(0)
+    private Long precioSinIvaCentavos;
+
+    // opcional: tasa de IVA aplicada; si es null usar valor por defecto/config
+    private Integer ivaPorcentaje;
 
     private Moneda moneda;
 

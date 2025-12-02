@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.config.UploadProperties;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ImagenProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ImagenProductoRepository;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.nio.file.Paths;
 
 @Service
 @Transactional
@@ -26,10 +28,12 @@ public class ImagenProductoService implements IImagenProductoService {
 
     private final ImagenProductoRepository imagenRepo;
     private final ProductoRepository productoRepo;
+    private final UploadProperties uploadProps;
 
-    public ImagenProductoService(ImagenProductoRepository imagenRepo, ProductoRepository productoRepo) {
+    public ImagenProductoService(ImagenProductoRepository imagenRepo, ProductoRepository productoRepo, UploadProperties uploadProps) {
         this.imagenRepo = imagenRepo;
         this.productoRepo = productoRepo;
+        this.uploadProps = uploadProps;
     }
 
     @Override
@@ -138,7 +142,12 @@ public class ImagenProductoService implements IImagenProductoService {
         ImagenProductoDTO dto = new ImagenProductoDTO();
         dto.setId(e.getId());
         dto.setProductoId(e.getProducto() != null ? e.getProducto().getId() : null);
-        dto.setUrl(e.getUrl());
+        // normalizar url: si no empieza con '/' o 'http' añadir prefijo urlBase
+        String url = e.getUrl();
+        if (url != null && !url.startsWith("/") && !url.startsWith("http")) {
+            url = uploadProps.getUrlBase() + "/" + url;
+        }
+        dto.setUrl(url);
         dto.setAlt(e.getAlt());
         dto.setOrden(e.getOrden());
         // No estan implementados
@@ -155,8 +164,9 @@ public class ImagenProductoService implements IImagenProductoService {
         List<ImagenProductoDTO> out = new ArrayList<>();
         if (files == null || files.length == 0) return out;
 
-        // carpeta base local (puedes cambiar por propiedad)
-        Path baseDir = Path.of("uploads", "productos", String.valueOf(productoId));
+        // carpeta base según UploadProperties (usa la ruta configurada en UploadProperties)
+        Path baseDir = uploadProps.getRoot().resolve(Paths.get("productos", String.valueOf(productoId)));
+
         try {
             Files.createDirectories(baseDir);
         } catch (IOException e) {
@@ -175,8 +185,9 @@ public class ImagenProductoService implements IImagenProductoService {
                 continue;
             }
 
-            // URL pública relativa (ajustar si servís estáticos desde otra ruta / CDN)
-            String publicUrl = "/uploads/productos/" + productoId + "/" + safeName;
+            // URL pública relativa usando urlBase de UploadProperties
+            String publicUrl = uploadProps.getUrlBase() + "/productos/" + productoId + "/" + safeName;
+
 
             ImagenProductoDTO dto = new ImagenProductoDTO();
             dto.setProductoId(productoId);

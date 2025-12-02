@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.EstadoProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.VisibilidadProducto;
 import lombok.Builder;
@@ -16,11 +17,21 @@ public class ProductoResponseDTO {
     private String descripcion;
     private Long marcaId;
     private Long categoriaId;
+
+    // nuevos campos para breadcrumb directo desde el producto
+    private Long idCategoriaPadre;
+    private Long idCategoriaHija;
+    private String nombreCategoriaPadre;
+    private String nombreCategoriaHija;
+
     private EstadoProducto estado;
     private VisibilidadProducto visibilidad;
     private String metadataJson;
     private String atributosJson;
     private String sku;
+
+    // nuevo
+    private CondicionProducto condicion;
 
     // auditoría / soft-delete
     private LocalDateTime createdAt;
@@ -29,4 +40,8 @@ public class ProductoResponseDTO {
 
     // optimistic locking
     private Long version;
+
+    // nuevos campos para la ficha
+    private String garantia;
+    private String politicaDevoluciones;
 }

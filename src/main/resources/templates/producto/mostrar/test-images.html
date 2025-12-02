@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Prueba imágenes - Producto</title>
+  <style>
+    .main-img{width:100%;height:420px;object-fit:contain;background:#f0f0f0}
+    .thumbs{display:flex;gap:8px;margin-top:8px}
+    .thumb{width:100px;height:70px;cursor:pointer;border:2px solid transparent}
+    .thumb.active{border-color:#1976d2}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  </style>
+</head>
+<body>
+  <h2 th:text="${producto != null ? producto.nombre : 'Producto'}">Producto</h2>
+
+  <div>
+    <img id="mainImage" class="main-img"
+         th:src="${(imagenes != null and !#lists.isEmpty(imagenes)) ? @{/productos/{pid}/{file}(pid=${producto.id},file=${imagenes[0].url})} : '/img/placeholder.png'}"
+         th:alt="${producto != null ? producto.nombre : 'Imagen'}"/>
+  </div>
+
+  <div class="thumbs">
+    <div th:if="${imagenes == null or #lists.isEmpty(imagenes)}">No hay imágenes</div>
+
+    <div th:each="imagen,iterStat : ${imagenes}"
+         th:classappend="${iterStat.index == 0} ? ' active' : ''"
+         class="thumb"
+         th:attr="data-image=@{/productos/{pid}/{file}(pid=${producto.id},file=${imagen.url})}">
+      <img th:src="@{/productos/{pid}/{file}(pid=${producto.id},file=${imagen.url})}"
+           th:alt="${imagen.alt != null ? imagen.alt : producto.nombre}"/>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const thumbs = document.querySelectorAll('.thumb');
+      const main = document.getElementById('mainImage');
+      thumbs.forEach(t=>{
+        t.addEventListener('click',()=>{
+          thumbs.forEach(x=>x.classList.remove('active'));
+          t.classList.add('active');
+          const src = t.getAttribute('data-image');
+          if(src) main.src = src;
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -8,19 +8,22 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class InventarioProductoDTO {
     private Long id;
     private Long productoId;
-    private Long onHand;
-    private Long reserved;
-    private Long disponible; // onHand - reserved (puede rellenarse en el mapper)
-    // auditoría
+    private Integer onHand;
+    private Integer reserved;
+    private Integer disponible; // onHand - reserved (para UI)
+    private Long almacenId;
+
+    // trazabilidad / auditoría
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
-    // versión para optimistic locking
+
+    // version para optimistic locking
     private Long version;
 }

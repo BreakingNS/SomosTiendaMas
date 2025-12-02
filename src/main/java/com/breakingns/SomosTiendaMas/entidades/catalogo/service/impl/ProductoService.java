@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
@@ -49,7 +50,10 @@ public class ProductoService implements IProductoService {
 
         Producto entidad = ProductoMapper.toEntity(dto, marca, categoria);
         Producto saved = repo.save(entidad);
-        return ProductoMapper.toResponse(saved);
+        ProductoResponseDTO resp = ProductoMapper.toResponse(saved);
+        resp.setGarantia(saved.getGarantia());
+        resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
+        return resp;
     }
 
     @Override
@@ -67,7 +71,10 @@ public class ProductoService implements IProductoService {
 
         ProductoMapper.applyActualizar(dto, p, marca, categoria);
         Producto updated = repo.save(p);
-        return ProductoMapper.toResponse(updated);
+        ProductoResponseDTO resp = ProductoMapper.toResponse(updated);
+        resp.setGarantia(updated.getGarantia());
+        resp.setPoliticaDevoluciones(updated.getPoliticaDevoluciones());
+        return resp;
     }
 
     @Override
@@ -75,7 +82,11 @@ public class ProductoService implements IProductoService {
     public ProductoResponseDTO obtenerPorId(Long id) {
         Producto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
         if (p.getDeletedAt() != null) throw new EntityNotFoundException("Producto eliminado: " + id);
-        return ProductoMapper.toResponse(p);
+        ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+        // asegurar que los campos de garantía y política de devoluciones estén presentes en el DTO
+        dto.setGarantia(p.getGarantia());
+        dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+        return enrichWithCategoria(dto, p);
     }
 
     @Override
@@ -88,19 +99,43 @@ public class ProductoService implements IProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductoResponseDTO> listarActivas() {
-        return repo.findAllByDeletedAtIsNull().stream().map(ProductoMapper::toResponse).collect(Collectors.toList());
+        return repo.findAllByDeletedAtIsNull()
+                .stream()
+                .map(p -> {
+                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    dto.setGarantia(p.getGarantia());
+                    dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+                    return enrichWithCategoria(dto, p);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductoResponseDTO> listarPorCategoriaId(Long categoriaId) {
-        return repo.findByCategoria_IdAndDeletedAtIsNull(categoriaId).stream().map(ProductoMapper::toResponse).collect(Collectors.toList());
+        return repo.findByCategoria_IdAndDeletedAtIsNull(categoriaId)
+                .stream()
+                .map(p -> {
+                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    dto.setGarantia(p.getGarantia());
+                    dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+                    return enrichWithCategoria(dto, p);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductoResponseDTO> listarPorMarcaId(Long marcaId) {
-        return repo.findByMarca_IdAndDeletedAtIsNull(marcaId).stream().map(ProductoMapper::toResponse).collect(Collectors.toList());
+        return repo.findByMarca_IdAndDeletedAtIsNull(marcaId)
+                .stream()
+                .map(p -> {
+                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    dto.setGarantia(p.getGarantia());
+                    dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+                    return enrichWithCategoria(dto, p);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -108,5 +143,50 @@ public class ProductoService implements IProductoService {
         Producto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
         p.setDeletedAt(LocalDateTime.now());
         repo.save(p);
+    }
+
+    // nuevo: listar por condición
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoResponseDTO> listarPorCondicion(CondicionProducto condicion) {
+        return repo.findByCondicionAndDeletedAtIsNull(condicion).stream().map(ProductoMapper::toResponse).collect(Collectors.toList());
+    }
+
+    // Helper: intenta completar id/nombre de categoría padre/hija en el DTO.
+    private ProductoResponseDTO enrichWithCategoria(ProductoResponseDTO dto, Producto p) {
+        try {
+            // primer intento: usar lo que ya tenga el DTO
+            if ((dto.getNombreCategoriaHija() != null && !dto.getNombreCategoriaHija().isBlank())
+                    || (dto.getIdCategoriaHija() != null)) {
+                return dto;
+            }
+
+            Long catId = null;
+            if (p.getCategoria() != null) {
+                catId = p.getCategoria().getId();
+            } else if (dto.getCategoriaId() != null) {
+                catId = dto.getCategoriaId();
+            }
+            if (catId == null) return dto;
+            var optCat = categoriaRepo.findByIdWithParent(catId);
+            if (optCat.isEmpty()) return dto;
+            Categoria cat = optCat.get();
+
+            // hija = la categoria asociada al producto
+            dto.setIdCategoriaHija(cat.getId());
+            dto.setNombreCategoriaHija(cat.getNombre());
+
+            // padre (si existe)
+            if (cat.getCategoriaPadre() != null) {
+                dto.setIdCategoriaPadre(cat.getCategoriaPadre().getId());
+                dto.setNombreCategoriaPadre(cat.getCategoriaPadre().getNombre());
+            } else {
+                // si la categoria no tiene padre -> asignar como padre si se quiere ese comportamiento
+                // aquí dejamos idCategoriaPadre en null (producto en categoría padre de primer nivel)
+            }
+        } catch (Exception ex) {
+            // no romper la respuesta por fallo en categoría; opcional: loggear
+        }
+        return dto;
     }
 }

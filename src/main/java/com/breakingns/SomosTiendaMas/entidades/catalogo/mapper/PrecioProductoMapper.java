@@ -4,11 +4,19 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProduct
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResumenDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoUIResumenDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.PrecioProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public final class PrecioProductoMapper {
 
@@ -16,10 +24,27 @@ public final class PrecioProductoMapper {
 
     public static PrecioProductoResponseDTO toResponse(PrecioProducto p) {
         if (p == null) return null;
+
+        BigDecimal descuento = null;
+        if (p.getPrecioAnteriorCentavos() != null && p.getMontoCentavos() != null
+                && p.getPrecioAnteriorCentavos() > p.getMontoCentavos()
+                && p.getPrecioAnteriorCentavos() > 0) {
+            BigDecimal prev = BigDecimal.valueOf(p.getPrecioAnteriorCentavos());
+            BigDecimal cur = BigDecimal.valueOf(p.getMontoCentavos());
+            descuento = prev.subtract(cur)
+                    .divide(prev, 8, RoundingMode.HALF_EVEN)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, RoundingMode.HALF_EVEN);
+        }
+
         return PrecioProductoResponseDTO.builder()
                 .id(p.getId())
                 .productoId(p.getProducto() != null ? p.getProducto().getId() : null)
                 .montoCentavos(p.getMontoCentavos())
+                .precioAnteriorCentavos(p.getPrecioAnteriorCentavos())
+                .precioSinIvaCentavos(p.getPrecioSinIvaCentavos())
+                .ivaPorcentaje(p.getIvaPorcentaje())
+                .descuentoPorcentaje(descuento)
                 .moneda(p.getMoneda())
                 .vigenciaDesde(p.getVigenciaDesde())
                 .vigenciaHasta(p.getVigenciaHasta())
@@ -33,10 +58,25 @@ public final class PrecioProductoMapper {
 
     public static PrecioProductoResumenDTO toResumen(PrecioProducto p) {
         if (p == null) return null;
+
+        BigDecimal descuento = null;
+        if (p.getPrecioAnteriorCentavos() != null && p.getMontoCentavos() != null
+                && p.getPrecioAnteriorCentavos() > p.getMontoCentavos()
+                && p.getPrecioAnteriorCentavos() > 0) {
+            BigDecimal prev = BigDecimal.valueOf(p.getPrecioAnteriorCentavos());
+            BigDecimal cur = BigDecimal.valueOf(p.getMontoCentavos());
+            descuento = prev.subtract(cur)
+                    .divide(prev, 8, RoundingMode.HALF_EVEN)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, RoundingMode.HALF_EVEN);
+        }
+
         PrecioProductoResumenDTO r = new PrecioProductoResumenDTO();
         r.setId(p.getId());
         r.setProductoId(p.getProducto() != null ? p.getProducto().getId() : null);
         r.setMontoCentavos(p.getMontoCentavos());
+        r.setPrecioAnteriorCentavos(p.getPrecioAnteriorCentavos());
+        r.setDescuentoPorcentaje(descuento);
         r.setMoneda(p.getMoneda());
         r.setActivo(p.getActivo());
         r.setVigenciaDesde(p.getVigenciaDesde());
@@ -57,6 +97,9 @@ public final class PrecioProductoMapper {
         if (dto == null) return null;
         PrecioProducto p = new PrecioProducto();
         p.setMontoCentavos(dto.getMontoCentavos());
+        p.setPrecioAnteriorCentavos(dto.getPrecioAnteriorCentavos());
+        p.setPrecioSinIvaCentavos(dto.getPrecioSinIvaCentavos());
+        p.setIvaPorcentaje(dto.getIvaPorcentaje());
         p.setMoneda(dto.getMoneda());
         p.setVigenciaDesde(dto.getVigenciaDesde());
         p.setVigenciaHasta(dto.getVigenciaHasta());
@@ -75,10 +118,14 @@ public final class PrecioProductoMapper {
     public static void applyActualizar(PrecioProductoActualizarDTO dto, PrecioProducto entidad) {
         if (dto == null || entidad == null) return;
         if (dto.getMontoCentavos() != null) entidad.setMontoCentavos(dto.getMontoCentavos());
+        if (dto.getPrecioAnteriorCentavos() != null) entidad.setPrecioAnteriorCentavos(dto.getPrecioAnteriorCentavos());
+        if (dto.getPrecioSinIvaCentavos() != null) entidad.setPrecioSinIvaCentavos(dto.getPrecioSinIvaCentavos());
+        if (dto.getIvaPorcentaje() != null) entidad.setIvaPorcentaje(dto.getIvaPorcentaje());
         if (dto.getMoneda() != null) entidad.setMoneda(dto.getMoneda());
         if (dto.getVigenciaDesde() != null) entidad.setVigenciaDesde(dto.getVigenciaDesde());
         if (dto.getVigenciaHasta() != null) entidad.setVigenciaHasta(dto.getVigenciaHasta());
         if (dto.getActivo() != null) entidad.setActivo(dto.getActivo());
         if (dto.getCreadoPor() != null) entidad.setCreadoPor(dto.getCreadoPor());
     }
+
 }

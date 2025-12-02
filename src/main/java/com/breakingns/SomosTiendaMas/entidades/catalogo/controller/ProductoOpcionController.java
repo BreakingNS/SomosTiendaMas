@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoOpcionesAsignarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoOpcionService;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,20 @@ public class ProductoOpcionController {
     @GetMapping("/con-opciones")
     public ResponseEntity<List<ProductoConOpcionesDTO>> obtenerTodosConOpciones() {
         var res = service.obtenerTodosConOpciones();
+        return ResponseEntity.ok(res);
+    }
+
+    // nuevo: obtener un producto con sus opciones y los valores (producto_valor o plantilla)
+    @GetMapping("/{productoId}/con-opciones-valores")
+    public ResponseEntity<ProductoConOpcionesValoresDTO> obtenerProductoConOpcionesConValores(@PathVariable Long productoId) {
+        var res = service.obtenerProductoConOpcionesConValores(productoId);
+        return ResponseEntity.ok(res);
+    }
+
+    // nuevo: obtener todos los productos con opciones y valores
+    @GetMapping("/con-opciones-valores")
+    public ResponseEntity<List<ProductoConOpcionesValoresDTO>> obtenerTodosConOpcionesConValores() {
+        var res = service.obtenerTodosConOpcionesConValores();
         return ResponseEntity.ok(res);
     }
 

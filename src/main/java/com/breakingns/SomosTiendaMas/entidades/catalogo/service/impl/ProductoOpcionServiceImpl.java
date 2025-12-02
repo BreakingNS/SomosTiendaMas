@@ -1,9 +1,14 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.OpcionConValoresDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.OpcionValorMapper;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoOpcion;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoValor;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoOpcionesAsignarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoOpcionMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoOpcionService;
 import org.springframework.stereotype.Service;
@@ -13,6 +18,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ProductoOpcionServiceImpl implements IProductoOpcionService {
     private final ProductoOpcionRepository productoOpcionRepo;
@@ -20,6 +28,9 @@ public class ProductoOpcionServiceImpl implements IProductoOpcionService {
     private final ProductoRepository productoRepo;
     private final OpcionRepository opcionRepo;
     private final OpcionValorRepository opcionValorRepo;
+
+    private static final Logger log = LoggerFactory.getLogger(ProductoOpcionServiceImpl.class);
+
 
     public ProductoOpcionServiceImpl(ProductoOpcionRepository productoOpcionRepo,
                                      ProductoValorRepository productoValorRepo,
@@ -185,5 +196,62 @@ public class ProductoOpcionServiceImpl implements IProductoOpcionService {
         productoOpcionRepo.saveAll(aActualizar);
         productoOpcionRepo.saveAll(aCrear);
         productoValorRepo.saveAll(valoresCrear);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductoConOpcionesValoresDTO obtenerProductoConOpcionesConValores(Long productoId) {
+        if (productoId == null) throw new IllegalArgumentException("productoId required");
+        var producto = productoRepo.findById(productoId).orElseThrow(() -> new NoSuchElementException("Producto no encontrado"));
+
+        var relaciones = productoOpcionRepo.findByProducto_IdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        // precargar todos los valores del producto para evitar N+1
+        List<ProductoValor> pvAll = productoValorRepo.findByProducto_IdAndDeletedAtIsNull(productoId);
+
+        log.debug("obtenerProductoConOpcionesConValores -> productoId={}, relacionesCount={}, pvAllCount={}",
+                productoId, relaciones.size(), pvAll.size());
+
+        List<OpcionConValoresDTO> opciones = new ArrayList<>();
+        for (ProductoOpcion po : relaciones) {
+            Long opcionId = po.getOpcion().getId();
+
+            List<OpcionValorResponseDTO> valoresDto = pvAll.stream()
+                    .filter(pv -> pv.getValor() != null
+                            && pv.getValor().getOpcion() != null
+                            && pv.getValor().getOpcion().getId().equals(opcionId)
+                            && pv.getDeletedAt() == null)
+                    .map(pv -> OpcionValorMapper.toResponse(pv.getValor()))
+                    .collect(Collectors.toList());
+
+            if (valoresDto.isEmpty()) {
+                // fallback: valores plantilla de la opción (si no hay valores asociados al producto)
+                valoresDto = opcionValorRepo.findByOpcion_IdAndDeletedAtIsNull(opcionId).stream()
+                        .map(OpcionValorMapper::toResponse)
+                        .collect(Collectors.toList());
+                log.debug("opcionId={} -> uso fallback plantilla valores, count={}", opcionId, valoresDto.size());
+            } else {
+                log.debug("opcionId={} -> valores desde producto, count={}", opcionId, valoresDto.size());
+            }
+
+            opciones.add(new OpcionConValoresDTO(
+                    opcionId,
+                    po.getOpcion().getNombre(),
+                    po.getOrden(),
+                    valoresDto
+            ));
+        }
+
+        return new ProductoConOpcionesValoresDTO(producto.getId(), opciones);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoConOpcionesValoresDTO> obtenerTodosConOpcionesConValores() {
+        var productos = productoRepo.findAll();
+        List<ProductoConOpcionesValoresDTO> salida = new ArrayList<>();
+        for (var p : productos) {
+            salida.add(obtenerProductoConOpcionesConValores(p.getId()));
+        }
+        return salida;
     }
 }

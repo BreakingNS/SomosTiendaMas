@@ -3,6 +3,8 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioProductoService;
 import jakarta.validation.Valid;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -46,10 +48,20 @@ public class PrecioProductoController {
 
     // Obtener precio vigente para producto
     @GetMapping("/productos/{productoId}/precios/vigente")
-    public ResponseEntity<PrecioProductoResponseDTO> obtenerVigentePorProducto(@PathVariable Long productoId) {
+    public ResponseEntity<PrecioProductoUIResumenDTO> obtenerVigenteUI(@PathVariable Long productoId) {
         PrecioProductoResponseDTO dto = service.obtenerVigentePorProductoId(productoId);
         if (dto == null) return ResponseEntity.noContent().build();
-        return ResponseEntity.ok(dto);
+
+        PrecioProductoUIResumenDTO ui = new PrecioProductoUIResumenDTO();
+        ui.setProductoId(dto.getProductoId());
+        ui.setMontoCentavos(dto.getMontoCentavos());
+        ui.setPrecioAnteriorCentavos(dto.getPrecioAnteriorCentavos());
+        ui.setPrecioSinIvaCentavos(dto.getPrecioSinIvaCentavos());
+        ui.setIvaPorcentaje(dto.getIvaPorcentaje());
+        ui.setDescuentoPorcentaje(dto.getDescuentoPorcentaje());
+        ui.setMoneda(dto.getMoneda());
+        ui.setActivo(dto.getActivo());
+        return ResponseEntity.ok(ui);
     }
 
     // Listar precios por producto
@@ -75,7 +87,7 @@ public class PrecioProductoController {
     @GetMapping("/productos/{productoId}/precios/vigentes")
     public ResponseEntity<List<PrecioProductoResponseDTO>> buscarVigentesEnFecha(
             @PathVariable Long productoId,
-            @RequestParam(required = false) LocalDateTime fecha) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fecha) {
         List<PrecioProductoResponseDTO> list = service.buscarVigentesPorProductoIdEnFecha(productoId, fecha);
         return ResponseEntity.ok(list);
     }

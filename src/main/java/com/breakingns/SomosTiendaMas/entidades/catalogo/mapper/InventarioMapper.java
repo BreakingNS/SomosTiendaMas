@@ -5,8 +5,6 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.ReservaSt
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.InventarioProductoDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.InventarioProducto;
 
-import java.util.Objects;
-
 public final class InventarioMapper {
 
     private InventarioMapper() {}
@@ -19,15 +17,32 @@ public final class InventarioMapper {
         return new ReservaStockResponseDTO(productoId, ok, disponible);
     }
 
-    // ...existing code...
     public static InventarioProducto fromDto(InventarioProductoDTO dto) {
         if (dto == null) return null;
         InventarioProducto e = new InventarioProducto();
         if (dto.getId() != null) e.setId(dto.getId());
-        // suponemos que InventarioProducto tiene campos onHand y reserved (Long)
+        // NOTA: no seteamos producto aquí (se debe enlazar en el service si corresponde)
         if (dto.getOnHand() != null) e.setOnHand(dto.getOnHand());
         if (dto.getReserved() != null) e.setReserved(dto.getReserved());
+        if (dto.getAlmacenId() != null) e.setAlmacenId(dto.getAlmacenId());
+        // trazabilidad si la entidad tiene campos
+        if (dto.getCreatedAt() != null) e.setCreatedAt(dto.getCreatedAt());
+        if (dto.getUpdatedAt() != null) e.setUpdatedAt(dto.getUpdatedAt());
+        if (dto.getVersion() != null) e.setVersion(dto.getVersion());
         return e;
+    }
+
+    @SuppressWarnings("unused")
+    private static boolean hasMethodSetDeletedAt(InventarioProducto e) {
+        // helper para evitar errores si la entidad no tiene setDeletedAt;
+        // Esta función se evalúa en tiempo de compilación solo por presencia del método en la entidad.
+        // Si tu entidad NO tiene deletedAt elimina las referencias a deletedAt en fromDto/toDto en lugar de usar este helper.
+        try {
+            e.getClass().getMethod("setDeletedAt", java.time.LocalDateTime.class);
+            return true;
+        } catch (NoSuchMethodException ex) {
+            return false;
+        }
     }
 
     public static InventarioProductoDTO toDto(InventarioProducto e) {
@@ -35,14 +50,21 @@ public final class InventarioMapper {
         InventarioProductoDTO dto = InventarioProductoDTO.builder().build();
         dto.setId(e.getId());
         dto.setProductoId(e.getProducto() != null ? e.getProducto().getId() : null);
-        dto.setOnHand(Objects.requireNonNullElse(e.getOnHand(), 0L));
-        dto.setReserved(Objects.requireNonNullElse(e.getReserved(), 0L));
-        dto.setDisponible(Math.max(0L, dto.getOnHand() - dto.getReserved()));
+
+        // Normalizar nulls a 0 (Integer)
+        Integer onHand = e.getOnHand() != null ? e.getOnHand() : 0;
+        Integer reserved = e.getReserved() != null ? e.getReserved() : 0;
+
+        dto.setOnHand(onHand);
+        dto.setReserved(reserved);
+        dto.setDisponible(Math.max(0, onHand - reserved)); // devuelve int, DTO acepta Integer
+        dto.setAlmacenId(e.getAlmacenId());
+
         dto.setCreatedAt(e.getCreatedAt());
         dto.setUpdatedAt(e.getUpdatedAt());
-        dto.setDeletedAt(e.getDeletedAt());
+        // si tu entidad tiene deletedAt:
+        // dto.setDeletedAt(e.getDeletedAt());
         dto.setVersion(e.getVersion());
         return dto;
     }
-    // ...existing code...
 }

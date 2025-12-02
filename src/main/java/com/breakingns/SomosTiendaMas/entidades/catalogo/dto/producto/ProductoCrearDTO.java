@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.validation.UniqueSlug;
 import jakarta.validation.constraints.NotBlank;
@@ -20,8 +21,15 @@ public class ProductoCrearDTO {
     @Size(max = 65535)
     private String descripcion;
 
+    // opcionales al crear
+    private String garantia;
+    private String politicaDevoluciones;
+
     private Long marcaId;
     private Long categoriaId;
 
     private String metadataJson;
+
+    // nuevo: condición del producto (opcional)
+    private CondicionProducto condicion;
 }

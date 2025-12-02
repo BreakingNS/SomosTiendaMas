@@ -11,7 +11,11 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDateTime;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,9 @@ public class PrecioProductoService implements IPrecioProductoService {
 
     private final PrecioProductoRepository repo;
     private final ProductoRepository productoRepo;
+    
+    @Value("${app.iva.porcentaje:21}")
+    private Integer defaultIvaPct;
 
     public PrecioProductoService(PrecioProductoRepository repo, ProductoRepository productoRepo) {
         this.repo = repo;
@@ -38,11 +45,28 @@ public class PrecioProductoService implements IPrecioProductoService {
         PrecioProducto entidad = PrecioProductoMapper.fromCrear(dto);
         entidad = PrecioProductoMapper.fromCrearWithProducto(dto, producto);
 
-        // si el nuevo precio viene activo, desactivar otros activos del mismo producto
+        // calcular IVA y precioSinIva si no vienen
+        Integer ivaPct = entidad.getIvaPorcentaje() != null ? entidad.getIvaPorcentaje() : this.defaultIvaPct;
+        entidad.setIvaPorcentaje(ivaPct);
+        if (entidad.getPrecioSinIvaCentavos() == null) {
+            entidad.setPrecioSinIvaCentavos(calcularPrecioSinIvaCentavos(entidad.getMontoCentavos(), ivaPct));
+        }
+
+       // asegurar vigenciaDesde si no viene
+        if (entidad.getVigenciaDesde() == null) {
+            entidad.setVigenciaDesde(LocalDateTime.now());
+        }
+
+        // si el nuevo precio viene activo, desactivar/fechar otros activos del mismo producto
         if (Boolean.TRUE.equals(entidad.getActivo())) {
             List<PrecioProducto> activos = repo.findByProductoIdAndActivoTrueOrderByVigenciaDesdeDesc(dto.getProductoId());
+            LocalDateTime now = LocalDateTime.now();
             for (PrecioProducto p : activos) {
-                p.setActivo(false);
+                if (!p.getId().equals(entidad.getId())) {
+                    p.setActivo(false);
+                    // cerrar vigencia del anterior
+                    if (p.getVigenciaHasta() == null) p.setVigenciaHasta(now);
+                }
             }
             if (!activos.isEmpty()) repo.saveAll(activos);
         }
@@ -57,15 +81,35 @@ public class PrecioProductoService implements IPrecioProductoService {
                 .orElseThrow(() -> new EntityNotFoundException("Precio no encontrado: " + id));
 
         boolean activating = dto.getActivo() != null && dto.getActivo() && !Boolean.TRUE.equals(existing.getActivo());
+        // aplicar cambios básicos
         PrecioProductoMapper.applyActualizar(dto, existing);
+
+        // determinar tasa de IVA a usar (dto > existente > default)
+        Integer ivaPct = dto.getIvaPorcentaje() != null ? dto.getIvaPorcentaje()
+                : (existing.getIvaPorcentaje() != null ? existing.getIvaPorcentaje() : this.defaultIvaPct);
+        existing.setIvaPorcentaje(ivaPct);
+
+        // calcular precioSinIva si quedó nulo
+        if (dto.getPrecioSinIvaCentavos() == null) {
+            Long monto = dto.getMontoCentavos() != null ? dto.getMontoCentavos() : existing.getMontoCentavos();
+            if (monto != null) {
+                existing.setPrecioSinIvaCentavos(calcularPrecioSinIvaCentavos(monto, ivaPct));
+            }
+        }
 
         // si se activa este precio, desactivar los demás activos para el mismo producto
         if (activating && existing.getProducto() != null) {
             List<PrecioProducto> activos = repo.findByProductoIdAndActivoTrueOrderByVigenciaDesdeDesc(existing.getProducto().getId());
-            for (PrecioProducto p : activos) {
-                if (!p.getId().equals(existing.getId())) p.setActivo(false);
+            if (!activos.isEmpty()) {
+                LocalDateTime now = LocalDateTime.now();
+                for (PrecioProducto p : activos) {
+                    if (!p.getId().equals(existing.getId())) {
+                        p.setActivo(false);
+                      if (p.getVigenciaHasta() == null) p.setVigenciaHasta(now);
+                    }
+                }
+                repo.saveAll(activos);
             }
-            if (!activos.isEmpty()) repo.saveAll(activos);
         }
 
         PrecioProducto updated = repo.save(existing);
@@ -115,5 +159,14 @@ public class PrecioProductoService implements IPrecioProductoService {
         PrecioProducto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Precio no encontrado: " + id));
         p.setDeletedAt(LocalDateTime.now());
         repo.save(p);
+    }
+
+    public static Long calcularPrecioSinIvaCentavos(Long montoCentavos, Integer ivaPct) {
+        if (montoCentavos == null || ivaPct == null) return null;
+        BigDecimal monto = BigDecimal.valueOf(montoCentavos);
+        BigDecimal divisor = BigDecimal.ONE.add(BigDecimal.valueOf(ivaPct).divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_EVEN));
+        // Dividir y redondear al entero más cercano (centavos)
+        BigDecimal neto = monto.divide(divisor, 0, RoundingMode.HALF_EVEN);
+        return neto.longValue();
     }
 }

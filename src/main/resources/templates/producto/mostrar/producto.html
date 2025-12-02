@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${producto != null ? producto.nombre + ' | Tienda Mas+' : 'Producto'}">Producto</title>
+    <meta name="description" th:content="${producto != null ? producto.descripcion : ''}"/><meta name="keywords" content="Smart TV, 4K, Android TV, Televisor, Electrónica, Hisense">
+    <meta name="author" content="TuMarketplace">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --background: #F8F9FA;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #DDDDDD;
+            --success: #28A745;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background-color: var(--background);
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .nav-desktop {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-desktop a {
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-desktop a:hover {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .header-actions button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text);
+            transition: color 0.2s;
+        }
+
+        .header-actions button:hover {
+            color: var(--primary);
+        }
+
+        .cart-btn {
+            position: relative;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--primary);
+            color: white;
+            font-size: 12px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+        }
+
+        .nav-mobile {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+            background-color: white;
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-mobile.active {
+            display: flex;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 16px 0;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Product Section */
+        .product-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            padding: 32px 0;
+        }
+
+        @media (max-width: 900px) {
+            .product-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Product Gallery */
+        .product-gallery {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gallery-main {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .gallery-main img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .gallery-thumbs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .thumb:hover, .thumb.active {
+            opacity: 1;
+            border-color: var(--primary);
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Product Info */
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .product-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            color: #FFC107;
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-count {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .product-price {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .current-price {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .original-price {
+            font-size: 18px;
+            color: var(--text-light);
+            text-decoration: line-through;
+        }
+
+        .discount {
+            background-color: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background-color: #e55a2b;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #003c6b;
+        }
+
+        .product-shipping {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .shipping-icon {
+            color: var(--success);
+            font-size: 20px;
+        }
+
+        .shipping-text {
+            font-size: 14px;
+        }
+
+        .shipping-text strong {
+            color: var(--success);
+        }
+
+        /* Product Details */
+        .product-details {
+            margin: 32px 0;
+        }
+
+        .accordion {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .accordion-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .accordion-content {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 500px;
+            padding: 0 16px 16px;
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .specs-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .specs-table td {
+            padding: 8px 0;
+        }
+
+        .specs-table td:first-child {
+            font-weight: 500;
+            width: 40%;
+            color: var(--text-light);
+        }
+
+        /* Related Products */
+        .related-products {
+            margin: 48px 0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card-image {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .card-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .card-content {
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-price {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .card-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .card-btn:hover {
+            background-color: #e55a2b;
+        }
+
+        /* Footer */
+        footer {
+            background-color: white;
+            padding: 48px 0 24px;
+            margin-top: 48px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: var(--background);
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-desktop, .header-actions .search-btn {
+                display: none;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .product-actions {
+                flex-direction: column;
+            }
+
+            .gallery-main {
+                height: 300px;
+            }
+
+            .gallery-thumbs {
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">Tienda <span>Mas+</span></a>
+                
+                <nav class="nav-desktop">
+                    <a href="#">Inicio</a>
+                    <a href="#">Categorías</a>
+                    <a href="#">Ofertas</a>
+                    <a href="#">Vender</a>
+                    <a href="#">Ayuda</a>
+                </nav>
+                
+                <div class="header-actions" style="display: none;">
+                    <button class="search-btn" aria-label="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="cart-btn" aria-label="Carrito">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">3</span>
+                    </button>
+                    <button class="hamburger" aria-label="Menú">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <nav class="nav-mobile" id="mobileNav">
+                <a href="#">Inicio</a>
+                <a href="#">Categorías</a>
+                <a href="#">Ofertas</a>
+                <a href="#">Vender</a>
+                <a href="#">Ayuda</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="#">Inicio</a> > 
+            <a href="#">Electrónicos</a> > 
+            <a href="#">Televisores</a> > 
+            <span th:text="${producto != null ? producto.nombre : 'Producto'}">Nombre Producto</span>
+        </div>
+
+        <!-- Product Section -->
+        <section class="product-section">
+            <!-- Product Gallery -->
+            <div class="product-gallery">
+                <div class="gallery-main">
+                    <img id="mainImage"
+                        th:src="${(imagenes != null and !#lists.isEmpty(imagenes)) ? imagenes[0].url : '/img/placeholder.png'}"
+                        th:alt="${producto.nombre}"
+                        loading="lazy" />
+                </div>
+
+                <div class="gallery-thumbs">
+                    <div th:if="${imagenes == null or #lists.isEmpty(imagenes)}">
+                        <div class="thumb active">
+                            <img src="/img/placeholder-thumb.png" alt="Sin imagen" />
+                        </div>
+                    </div>
+
+                    <div th:each="imagen, iterStat : ${imagenes}"
+                        th:classappend="${iterStat.index == 0} ? ' active' : ''"
+                        class="thumb"
+                        th:attr="data-image=${imagen.url}">
+                        <img th:src="${imagen.url}" th:alt="${imagen.alt != null ? imagen.alt : producto.nombre}" loading="lazy"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h1 class="product-title" th:text="${producto.nombre}">Nombre Producto</h1>
+                
+                <div class="product-rating">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <span class="rating-count">(128 reseñas)</span>
+                </div>
+                
+                <div class="product-price">
+                    <span class="current-price">$299.999</span>
+                    <div>
+                        <span class="original-price">$399.999</span>
+                        <span class="discount">25% OFF</span>
+                    </div>
+                </div>
+                
+                <p>Disfruta de una experiencia cinematográfica en tu hogar con este Smart TV 4K UHD. Con Android TV integrado, podrás acceder a todas tus aplicaciones favoritas y contenido en streaming.</p>
+                
+                <div class="product-actions">
+                    <button class="btn btn-primary" id="addToCart">
+                        <i class="fas fa-shopping-cart"></i> Agregar al carrito
+                    </button>
+                    <button class="btn btn-secondary">Comprar ahora</button>
+                </div>
+                
+                <div class="product-shipping">
+                    <div class="shipping-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="shipping-text">
+                        <strong>Envío gratis</strong> a todo el país. <strong>Llega mañana</strong> para órdenes antes de las 18hs.
+                    </div>
+                </div>
+                
+                <div class="product-stock">
+                    <p><strong>Stock disponible:</strong> 15 unidades</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Details -->
+        <section class="product-details">
+            <div class="accordion">
+                <div class="accordion-header" data-target="description">
+                    Descripción del producto <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" id="description">
+                    <p>Este Smart TV 55" 4K UHD te ofrece una experiencia visual increíble con resolución 4K que cuadruplica la resolución Full HD. Con HDR10 y HLG, los contenidos cobran vida con colores más vibrantes y detalles más nítidos.</p>
+                    <p>El sistema Android TV integrado te permite acceder a Google Play Store para descargar tus aplicaciones favoritas como Netflix, YouTube, Spotify y muchas más. Controla tu TV con tu voz gracias a la compatibilidad con Google Assistant.</p>
+                    <p>Características principales:</p>
+                    <ul>
+                        <li>Pantalla 55" 4K UHD con HDR</li>
+                        <li>Sistema Android TV con Google Assistant</li>
+                        <li>3x HDMI 2.0, 2x USB, Ethernet, Wi-Fi</li>
+                        <li>Sonido Dolby Audio</li>
+                        <li>Modo Deportes y Modo Cine</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="accordion">
+                <div class="accordion-header" data-target="specs">
+                    Especificaciones técnicas <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" id="specs">
+                    <table class="specs-table">
+                        <tr>
+                            <td>Modelo</td>
+                            <td>TV55UHDAND</td>
+                        </tr>
+                        <tr>
+                            <td>Tamaño de pantalla</td>
+                            <td>55"</td>
+                        </tr>
+                        <tr>
+                            <td>Resolución</td>
+                            <td>4K UHD (3840 x 2160)</td>
+                        </tr>
+                        <tr>
+                            <td>Tecnología HDR</td>
+                            <td>HDR10, HLG</td>
+                        </tr>
+                        <tr>
+                            <td>Sistema operativo</td>
+                            <td>Android TV 11</td>
+                        </tr>
+                        <tr>
+                            <td>Procesador</td>
+                            <td>Quad Core</td>
+                        </tr>
+                        <tr>
+                            <td>Memoria</td>
+                            <td>2GB RAM + 16GB almacenamiento</td>
+                        </tr>
+                        <tr>
+                            <td>Conectividad</td>
+                            <td>Wi-Fi Dual Band, Ethernet, Bluetooth 5.0</td>
+                        </tr>
+                        <tr>
+                            <td>Puertos</td>
+                            <td>3x HDMI 2.0, 2x USB, AV, Optical Audio, Earphone Out</td>
+                        </tr>
+                        <tr>
+                            <td>Sonido</td>
+                            <td>20W, Dolby Audio</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="accordion">
+                <div class="accordion-header" data-target="reviews">
+                    Reseñas (128) <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content" id="reviews">
+                    <div class="review">
+                        <div class="review-header">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="review-author">Juan Pérez</span>
+                        </div>
+                        <p class="review-content">Excelente televisor. La calidad de imagen es increíble y el Android TV funciona muy fluido. Lo recomiendo totalmente.</p>
+                    </div>
+                    <div class="review">
+                        <div class="review-header">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="review-author">María González</span>
+                        </div>
+                        <p class="review-content">Llegó antes de lo esperado y superó mis expectativas. El sonido es muy bueno y la imagen espectacular.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Related Products -->
+        <section class="related-products">
+            <h2 class="section-title">Productos relacionados</h2>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="card-image">
+                        <img src="img/Producto/Soundbar 2.1 Canales.jpg" alt="Soundbar 2.1 Canales">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">Soundbar 2.1 Canales con Subwoofer Inalámbrico</h3>
+                        <div class="card-price">$45.999</div>
+                        <button class="card-btn">Agregar al carrito</button>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="card-image">
+                        <img src="img/Producto/Soporte TV.jpg" alt="Soporte TV">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">Soporte para TV de 32" a 65" con Base Giratoria</h3>
+                        <div class="card-price">$18.999</div>
+                        <button class="card-btn">Agregar al carrito</button>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="card-image">
+                        <img src="img/Producto/Fire TV Stick.jpg" alt="Fire TV Stick">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">Amazon Fire TV Stick 4K con Control Remoto por Voz</h3>
+                        <div class="card-price">$32.999</div>
+                        <button class="card-btn">Agregar al carrito</button>
+                    </div>
+                </div>
+                
+                <div class="product-card">
+                    <div class="card-image">
+                        <img src="img/Producto/Cable HDMI.jpg" alt="Cable HDMI">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">Cable HDMI Ultra High Speed 2.1 Metro 1.5m</h3>
+                        <div class="card-price">$5.999</div>
+                        <button class="card-btn">Agregar al carrito</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Tienda Mas+</h3>
+                    <div class="footer-links">
+                        <a href="#">Quiénes somos</a>
+                        <a href="#">Nuestras tiendas</a>
+                        <a href="#">Trabaja con nosotros</a>
+                        <a href="#">Términos y condiciones</a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Ayuda</h3>
+                    <div class="footer-links">
+                        <a href="#">Preguntas frecuentes</a>
+                        <a href="#">Cómo comprar</a>
+                        <a href="#">Métodos de pago</a>
+                        <a href="#">Política de devoluciones</a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Contacto</h3>
+                    <div class="footer-links">
+                        <a href="#">+54 9 341 2005545</a>
+                        <a href="#">info@tiendamas.com</a>
+                        <a href="#">Soporte técnico</a>
+                        <a href="#">Chat en vivo</a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Síguenos</h3>
+                    <p>No te pierdas nuestras ofertas exclusivas</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Tienda Mas+. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span>Producto agregado al carrito</span>
+    </div>
+
+    <!-- Font Awesome Script -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const hamburger = document.querySelector('.hamburger');
+            const mobileNav = document.getElementById('mobileNav');
+            
+            hamburger.addEventListener('click', function() {
+                mobileNav.classList.toggle('active');
+            });
+            
+            // Image gallery
+            const thumbs = document.querySelectorAll('.thumb');
+            const mainImage = document.getElementById('mainImage');
+            
+            thumbs.forEach(thumb => {
+                thumb.addEventListener('click', function() {
+                    // Remove active class from all thumbs
+                    thumbs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked thumb
+                    this.classList.add('active');
+                    
+                    // Change main image
+                    const newImage = this.getAttribute('data-image');
+                    mainImage.src = newImage;
+                    mainImage.alt = this.querySelector('img').alt;
+                });
+            });
+            
+            // Accordion functionality
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const content = document.getElementById(targetId);
+                    const icon = this.querySelector('i');
+                    
+                    // Toggle active class
+                    content.classList.toggle('active');
+                    
+                    // Change icon
+                    if (content.classList.contains('active')) {
+                        icon.className = 'fas fa-chevron-up';
+                    } else {
+                        icon.className = 'fas fa-chevron-down';
+                    }
+                });
+            });
+            
+            // Add to cart functionality
+            const addToCartBtn = document.getElementById('addToCart');
+            const toast = document.getElementById('toast');
+            const cartCount = document.querySelector('.cart-count');
+            
+            addToCartBtn.addEventListener('click', function() {
+                // Show toast notification
+                toast.classList.add('show');
+                
+                // Update cart count
+                let count = parseInt(cartCount.textContent);
+                cartCount.textContent = count + 1;
+                
+                // Hide toast after 3 seconds
+                setTimeout(function() {
+                    toast.classList.remove('show');
+                }, 3000);
+            });
+            
+            // Close toast when clicked
+            toast.addEventListener('click', function() {
+                toast.classList.remove('show');
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle (no cambios)...
+
+            // Image gallery
+            const thumbs = document.querySelectorAll('.thumb');
+            const mainImage = document.getElementById('mainImage');
+
+            if (thumbs && thumbs.length > 0) {
+                thumbs.forEach(thumb => {
+                    thumb.addEventListener('click', function() {
+                        // Remove active class from all thumbs
+                        thumbs.forEach(t => t.classList.remove('active'));
+
+                        // Add active class to clicked thumb
+                        this.classList.add('active');
+
+                        // Change main image
+                        const newImage = this.getAttribute('data-image') || this.querySelector('img')?.src;
+                        if (newImage && mainImage) {
+                            mainImage.src = newImage;
+                            mainImage.alt = this.querySelector('img')?.alt || mainImage.alt;
+                        }
+                    });
+                });
+            } else {
+                // No thumbs: ocultar la fila si querés
+                const thumbsContainer = document.querySelector('.gallery-thumbs');
+                if (thumbsContainer) thumbsContainer.style.display = 'none';
+            }
+
+            // Accordion, addToCart, etc. (sin cambios)...
+        });
+    </script>
+</body>
+</html>
+

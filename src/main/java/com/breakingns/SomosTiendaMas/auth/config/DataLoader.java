@@ -8,6 +8,7 @@ import com.breakingns.SomosTiendaMas.auth.service.ImportLocalidadesService;
 import com.breakingns.SomosTiendaMas.auth.service.ImportMunicipiosService;
 import com.breakingns.SomosTiendaMas.auth.service.ImportProvinciasService;
 import com.breakingns.SomosTiendaMas.entidades.telefono.service.ImportCodigosAreaService;
+import com.breakingns.SomosTiendaMas.auth.service.PaisImportService;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 public class DataLoader implements CommandLineRunner {
 
     private final IRolRepository rolRepository;
+    private final PaisImportService paisImportService;
     private final ImportProvinciasService importProvinciasService;
     private final ImportDepartamentosService importDepartamentosService;
     private final ImportMunicipiosService importMunicipiosService;
@@ -26,6 +28,7 @@ public class DataLoader implements CommandLineRunner {
 
     public DataLoader(
         IRolRepository rolRepository,
+        PaisImportService paisImportService,
         ImportProvinciasService importProvinciasService,
         ImportDepartamentosService importDepartamentosService,
         ImportMunicipiosService importMunicipiosService,
@@ -33,6 +36,7 @@ public class DataLoader implements CommandLineRunner {
         ImportCodigosAreaService importCodigosAreaService
     ) {
         this.rolRepository = rolRepository;
+        this.paisImportService = paisImportService;
         this.importProvinciasService = importProvinciasService;
         this.importDepartamentosService = importDepartamentosService;
         this.importMunicipiosService = importMunicipiosService;
@@ -55,6 +59,10 @@ public class DataLoader implements CommandLineRunner {
         } else {
             System.out.println("Los roles ya existen.");
         }
+
+        // Asegurar países base antes de importar provincias (evita FK violadas)
+        paisImportService.importBaseCountries();
+        System.out.println("Países base asegurados.");
 
         // Importar provincias si la tabla está vacía
         if (importProvinciasService.count() == 0) {

@@ -1,5 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
+
 import lombok.Data;
 
 @Data
@@ -12,4 +14,7 @@ public class ProductoListaDTO {
     private String sku;
     private Long precioCentavos; // opcional, si quieres mostrar precio en lista
     private long disponible;     // opcional, resumen de inventario
+
+    // nuevo
+    private CondicionProducto condicion;
 }

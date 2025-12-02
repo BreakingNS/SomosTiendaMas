@@ -1,6 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoOpcionService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,11 @@ import java.util.List;
 public class ProductoController {
 
     private final IProductoService service;
+    private final IProductoOpcionService productoOpcionService;
 
-    public ProductoController(IProductoService service) {
+    public ProductoController(IProductoService service, IProductoOpcionService productoOpcionService) {
         this.service = service;
+        this.productoOpcionService = productoOpcionService;
     }
 
     @PostMapping
@@ -63,4 +67,15 @@ public class ProductoController {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    //-----------
+
+    // delega al service de opciones para devolver opciones + valores del producto
+    @GetMapping("/{id}/con-opciones-valores-finales")
+    public ResponseEntity<com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO> obtenerConOpcionesYValores(@PathVariable Long id) {
+        var dto = productoOpcionService.obtenerProductoConOpcionesConValores(id);
+        return ResponseEntity.ok(dto);
+    }
+
+    //-------------
 }

@@ -18,4 +18,6 @@ public interface OpcionValorRepository extends JpaRepository<OpcionValor, Long> 
     Optional<OpcionValor> findByIdAndDeletedAtIsNull(Long id);
 
     void deleteByOpcionId(Long opcionId);
+
+    List<OpcionValor> findByOpcion_IdAndDeletedAtIsNull(Long opcionId);
 }

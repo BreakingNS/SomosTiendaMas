@@ -12,6 +12,17 @@ public class PrecioProductoActualizarDTO {
     @Min(0)
     private Long montoCentavos;
 
+    // editable: precio anterior (nullable)
+    @Min(0)
+    private Long precioAnteriorCentavos;
+
+    // editable: precio sin IVA (nullable)
+    @Min(0)
+    private Long precioSinIvaCentavos;
+
+    // editable: iva aplicado (nullable)
+    private Integer ivaPorcentaje;
+
     private Moneda moneda;
 
     private LocalDateTime vigenciaDesde;
