@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/")
 public class OpcionController {
 
     private final IOpcionService service;
@@ -78,6 +78,11 @@ public class OpcionController {
     @GetMapping("/opciones/{opcionId}/valores")
     public ResponseEntity<List<OpcionValorResponseDTO>> listarValoresPorOpcion(@PathVariable Long opcionId) {
         return ResponseEntity.ok(service.listarValoresPorOpcionId(opcionId));
+    }
+
+    @GetMapping("/opciones/with-valores")
+    public ResponseEntity<List<OpcionConValoresSimpleDTO>> listarOpcionesConValores() {
+        return ResponseEntity.ok(service.listarOpcionesConValores());
     }
 
 }

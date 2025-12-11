@@ -20,4 +20,7 @@ public interface IOpcionService {
     List<OpcionResumenDTO> listarPlantillas();
     OpcionResponseDTO asignarOpcionAProducto(Long productoId, Long opcionId);
     void desasignarOpcionDeProducto(Long productoId, Long opcionId);
+
+    // devuelve todas las opciones (plantillas) con su lista de valores simplificada
+    List<OpcionConValoresSimpleDTO> listarOpcionesConValores();
 }

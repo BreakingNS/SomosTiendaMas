@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.ProductoDetalleResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl.ProductoAggregatorServiceImpl;
 
 @RestController

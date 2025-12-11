@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -174,6 +175,37 @@ public class OpcionServiceImpl implements IOpcionService {
                 .orElseThrow(() -> new EntityNotFoundException("Relación no encontrada"));
         rel.setDeletedAt(LocalDateTime.now());
         productoOpcionRepo.save(rel);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OpcionConValoresSimpleDTO> listarOpcionesConValores() {
+        List<Opcion> opciones = opcionRepo.findByDeletedAtIsNullOrderByOrdenAsc();
+        if (opciones == null || opciones.isEmpty()) return List.of();
+
+        List<OpcionConValoresSimpleDTO> salida = new java.util.ArrayList<>(opciones.size());
+        for (Opcion o : opciones) {
+            // obtener valores ordenados para esta opción
+            List<OpcionValor> valores = valorRepo.findByOpcionIdOrderByOrdenAsc(o.getId());
+            List<OpcionValorSimpleDTO> valoresDto = valores.stream()
+                    .map(v -> OpcionValorSimpleDTO.builder()
+                            .id(v.getId())
+                            .valor(v.getValor())
+                            .orden(v.getOrden())
+                            .build())
+                    .collect(java.util.stream.Collectors.toList());
+
+            OpcionConValoresSimpleDTO dto = OpcionConValoresSimpleDTO.builder()
+                    .id(o.getId())
+                    .nombre(o.getNombre())
+                    .orden(o.getOrden())
+                    .tipo(o.getTipo())
+                    .valores(valoresDto)
+                    .build();
+
+            salida.add(dto);
+        }
+        return salida;
     }
 
 }

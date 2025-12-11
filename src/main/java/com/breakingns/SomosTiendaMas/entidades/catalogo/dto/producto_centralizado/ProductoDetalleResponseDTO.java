@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.dto;
+package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado;
 
 import java.util.List;
 
@@ -15,6 +15,9 @@ public class ProductoDetalleResponseDTO {
     private PrecioProductoResponseDTO precio;
     private DisponibilidadResponseDTO stock;
     private List<OpcionResumenDTO> opciones;
+
+    // Nuevo: propiedades físicas opcionales
+    private PhysicalPropertiesDTO physical;
 
     public ProductoResponseDTO getProducto() {
         return producto;
@@ -54,5 +57,13 @@ public class ProductoDetalleResponseDTO {
 
     public void setOpciones(List<OpcionResumenDTO> opciones) {
         this.opciones = opciones;
+    }
+
+    public PhysicalPropertiesDTO getPhysical() {
+        return physical;
+    }
+
+    public void setPhysical(PhysicalPropertiesDTO physical) {
+        this.physical = physical;
     }
 }
