@@ -152,7 +152,7 @@
 
         <section class="panel" aria-live="polite">
           <h3 id="panel-title">Paso 1 — Identificación / clasificación</h3>
-          <div class="meta">Campos mínimos: categoriaId (subcategoría), etiquetas[]</div>
+          <div class="meta">Campos mínimos: categoryId, subcategoryId, tags[]</div>
 
           <form id="step-form" onsubmit="return false;">
             <!-- STEP 1 -->
@@ -193,16 +193,6 @@
                 <select id="marcaId" required>
                   <option value="OTRA">Otro</option>
                   <!-- Opcional: poblar dinámicamente con /api/marcas -->
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="condicion">Condición</label>
-                <select id="condicion">
-                  <option value="">-- seleccionar --</option>
-                  <option value="NUEVO">NUEVO</option>
-                  <option value="USADO">USADO</option>
-                  <option value="REACONDICIONADO">REACONDICIONADO</option>
                 </select>
               </div>
 
@@ -305,32 +295,6 @@
                   </div>
                 </div>
                 <small style="color:var(--muted);font-size:13px;margin-top:6px">Ingresá medidas en centímetros. Útil para calcular volumetría / embalaje.</small>
-              </div>
-
-              <!-- Campos del paquete para envío -->
-              <div class="field" style="margin-top:12px;border-top:1px dashed var(--border);padding-top:12px">
-                <label style="font-weight:700">Dimensiones del paquete (envío)</label>
-                <div style="display:flex;gap:8px;margin-top:8px;">
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-l" style="font-size:12px;color:var(--muted);margin-bottom:6px">Largo paquete (cm)</label>
-                    <input id="package-dim-l" type="number" min="0" step="0.1" placeholder="Largo paquete (cm)"/>
-                  </div>
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-w" style="font-size:12px;color:var(--muted);margin-bottom:6px">Ancho paquete (cm)</label>
-                    <input id="package-dim-w" type="number" min="0" step="0.1" placeholder="Ancho paquete (cm)"/>
-                  </div>
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-h" style="font-size:12px;color:var(--muted);margin-bottom:6px">Alto paquete (cm)</label>
-                    <input id="package-dim-h" type="number" min="0" step="0.1" placeholder="Alto paquete (cm)"/>
-                  </div>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-weight" style="font-size:12px;color:var(--muted);margin-bottom:6px">Peso paquete (kg)</label>
-                    <input id="package-weight" type="number" min="0" step="0.01" placeholder="Peso paquete (kg)" />
-                  </div>
-                </div>
-                <small style="color:var(--muted);font-size:13px;margin-top:6px">Medidas del paquete en centímetros; peso en kilogramos. Se guardarán en mm y gramos respectivamente.</small>
               </div>
 
               <div class="field">
@@ -624,392 +588,6 @@
       // si llegamos aquí, no hay valores detectados; dejamos disabled
     }
     
-    // --- Local client-side product store (replaces server-side draft autosave) ---
-    // Mantiene el estado en `productoDraft` y lo persiste en `sessionStorage`.
-    let productoDraft = JSON.parse(sessionStorage.getItem('productoDraft_v1') || '{}');
-
-    // Plantilla inicial del JSON final (campos en null/vacíos según spec del backend)
-    const productoTemplate = {
-      nombre: null,
-      slug: null,
-      descripcion: null,
-      categoriaId: null,
-      marcaId: null,
-      etiquetasIds: [],
-      sku: null,
-      condicion: null,
-      estadoModeracion: null,
-      estadoProducto: null,
-      visibilidad: null,
-      garantia: null,
-      politicaDevoluciones: null,
-      opciones: [],
-      price: null,
-      inventario: null,
-      fisicas: null,
-      images: [],
-      publicationOption: null,
-      featured: false,
-      shippingMethods: [],
-      specialRequirements: null,
-      metadata: { lastStepSaved: 0, updatedAt: null }
-    };
-
-    // ---- Plantillas por paso (guardadas en sessionStorage como keys separadas)
-    const step1Template = {
-      nombre: null,
-      slug: null,
-      descripcion: null,
-      categoriaId: null,
-      marcaId: null,
-      etiquetas: [],
-      sku: null,
-      condicion: null,
-      estadoModeracion: null,
-      estadoProducto: null,
-      visibilidad: null,
-      garantia: null,
-      politicaDevoluciones: null
-    };
-
-    const step2Template = {
-      opciones: []
-    };
-
-    const step3Template = {
-      productoId: null,
-      montoCentavos: null,
-      precioAnteriorCentavos: null,
-      precioSinIvaCentavos: null,
-      ivaPorcentaje: null,
-      moneda: null,
-      vigenciaDesde: null,
-      activo: null
-    };
-
-    const step4Template = {
-      productoId: null,
-      onHand: null,
-      reserved: null,
-      almacenId: null
-    };
-
-    const step5Template = {
-      weightGrams: null,
-      widthMm: null,
-      heightMm: null,
-      depthMm: null,
-      packageWeightGrams: null,
-      packageWidthMm: null,
-      packageHeightMm: null,
-      packageDepthMm: null
-    };
-
-    // Helpers para keys: usamos "producto" para el paso 1 y nombres explícitos para los demás pasos
-    // Mapeo solicitado:
-    //  paso 1 -> 'producto'
-    //  paso 2 -> 'producto.opciones'
-    //  paso 3 -> 'producto.precio'
-    //  paso 4 -> 'producto.inventario'
-    //  paso 5 -> 'producto.fisicas'
-    function stepKey(n){
-      const num = Number(n);
-      if (num === 1) return 'producto';
-      if (num === 2) return 'producto.opciones';
-      if (num === 3) return 'producto.precio';
-      if (num === 4) return 'producto.inventario';
-      if (num === 5) return 'producto.fisicas';
-      return 'producto.step' + num;
-    }
-
-    function saveStepLocal(n, obj){
-      try{
-        const key = stepKey(n);
-        // merge sobre plantilla para asegurar todas las keys
-        let base = {};
-        if (n === 1) base = Object.assign({}, step1Template);
-        else if (n === 2) base = Object.assign({}, step2Template);
-        else if (n === 3) base = Object.assign({}, step3Template);
-        else if (n === 4) base = Object.assign({}, step4Template);
-        else if (n === 5) base = Object.assign({}, step5Template);
-        if (obj && typeof obj === 'object') base = Object.assign(base, obj);
-        sessionStorage.setItem(key, JSON.stringify(base));
-        return base;
-      }catch(e){ console.warn('saveStepLocal error', e); return null; }
-    }
-
-    function loadStepLocal(n){
-      try{
-        const key = stepKey(n);
-        const raw = sessionStorage.getItem(key);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      }catch(e){ console.warn('loadStepLocal error', e); return null; }
-    }
-
-    function initAllStepStorage(){
-      // crear keys con plantilla si no existen
-      for (let i=1;i<=5;i++){
-        const key = stepKey(i);
-        if (!sessionStorage.getItem(key)){
-          if (i===1) sessionStorage.setItem(key, JSON.stringify(step1Template));
-          if (i===2) sessionStorage.setItem(key, JSON.stringify(step2Template));
-          if (i===3) sessionStorage.setItem(key, JSON.stringify(step3Template));
-          if (i===4) sessionStorage.setItem(key, JSON.stringify(step4Template));
-          if (i===5) sessionStorage.setItem(key, JSON.stringify(step5Template));
-        }
-      }
-    }
-
-    function ensureTemplate(){
-      if (!productoDraft || Object.keys(productoDraft).length === 0) {
-        productoDraft = JSON.parse(JSON.stringify(productoTemplate));
-        saveDraftLocal();
-      } else {
-        // asegurarse que existan todas las keys de la plantilla
-        for (const k of Object.keys(productoTemplate)) if (productoDraft[k] === undefined) productoDraft[k] = JSON.parse(JSON.stringify(productoTemplate[k]));
-      }
-    }
-
-    function saveDraftLocal(){
-      try { sessionStorage.setItem('productoDraft_v1', JSON.stringify(productoDraft || {})); }
-      catch(e){ console.warn('No se pudo guardar productoDraft en sessionStorage:', e); }
-    }
-    function clearLocalDraft(){ sessionStorage.removeItem('productoDraft_v1'); productoDraft = {}; }
-
-    // Rehidrata UI desde `productoDraft` almacenado (simple, cubre campos principales)
-    function rehydrateUIFromDraft(){
-      try{
-        if (!productoDraft || Object.keys(productoDraft).length === 0) return;
-        // if productoDraft.categoriaId refers to the selected subcategory, populate selects accordingly
-        if (productoDraft.categoriaId) {
-          // try to find node and set parent in selectCat
-          const subId = String(productoDraft.categoriaId);
-          const node = byId.get(subId);
-          if (node) {
-            // determine parent id (may be in various fields)
-            const parentId = node.categoriaPadreId ?? node.parentId ?? node.padreId ?? node.parent ?? null;
-            if (parentId != null && parentId !== '') selectCat.value = String(parentId);
-            // trigger change to populate subselect, then set sub
-            const ev = new Event('change'); selectCat.dispatchEvent(ev);
-            setTimeout(()=>{ selectSub.value = subId; }, 80);
-          } else {
-            // fallback: set selects directly (best effort)
-            selectSub.value = subId;
-          }
-        }
-        if (productoDraft.etiquetas && Array.isArray(productoDraft.etiquetas)) { tagsInput.value = productoDraft.etiquetas.join(', '); tagsInput.dispatchEvent(new Event('change')); }
-        if (productoDraft.title) titleInput.value = productoDraft.title;
-        if (productoDraft.sku) skuInput.value = productoDraft.sku;
-        if (productoDraft.marcaId) marcaSelect.value = productoDraft.marcaId;
-        if (productoDraft.slug) slugInput.value = productoDraft.slug;
-        if (productoDraft.price) {
-          const p = productoDraft.price;
-          if (p.montoCentavos != null) priceAmount.value = (Number(p.montoCentavos) / 100).toFixed(2);
-          if (p.precioAnteriorCentavos != null) document.getElementById('price-previous').value = (Number(p.precioAnteriorCentavos) / 100).toFixed(2);
-          if (p.moneda) document.getElementById('price-currency').value = p.moneda;
-        }
-        if (productoDraft.descripcionTexto) descText.value = productoDraft.descripcionTexto;
-        if (productoDraft.warranty) document.getElementById('warranty').value = productoDraft.warranty;
-        if (productoDraft.returns) document.getElementById('returns').value = productoDraft.returns;
-        if (productoDraft.stock != null) document.getElementById('stock').value = productoDraft.stock;
-        if (productoDraft.condicion) document.getElementById('condicion').value = productoDraft.condicion;
-        // Preferir valores almacenados en producto.fisicas (mm/grams) si existen, sino usar productoDraft.*
-        const storedFis = productoDraft.fisicas || loadStepLocal(5) || {};
-        if (storedFis && Object.keys(storedFis).length) {
-          // dimensiones producto (convertir mm -> cm)
-          if (storedFis.widthMm != null) document.getElementById('dim-l').value = (Number(storedFis.widthMm) / 10);
-          if (storedFis.depthMm != null) document.getElementById('dim-w').value = (Number(storedFis.depthMm) / 10);
-          if (storedFis.heightMm != null) document.getElementById('dim-h').value = (Number(storedFis.heightMm) / 10);
-          // peso producto (grams -> kg)
-          if (storedFis.weightGrams != null) document.getElementById('weight').value = (Number(storedFis.weightGrams) / 1000);
-          // package fields (mm -> cm, grams -> kg)
-          if (storedFis.packageWidthMm != null) document.getElementById('package-dim-l').value = (Number(storedFis.packageWidthMm) / 10);
-          if (storedFis.packageDepthMm != null) document.getElementById('package-dim-w').value = (Number(storedFis.packageDepthMm) / 10);
-          if (storedFis.packageHeightMm != null) document.getElementById('package-dim-h').value = (Number(storedFis.packageHeightMm) / 10);
-          if (storedFis.packageWeightGrams != null) document.getElementById('package-weight').value = (Number(storedFis.packageWeightGrams) / 1000);
-        } else {
-          if (productoDraft.weightKg != null) document.getElementById('weight').value = productoDraft.weightKg;
-          if (productoDraft.dimensions) {
-            if (productoDraft.dimensions.l != null) document.getElementById('dim-l').value = productoDraft.dimensions.l;
-            if (productoDraft.dimensions.w != null) document.getElementById('dim-w').value = productoDraft.dimensions.w;
-            if (productoDraft.dimensions.h != null) document.getElementById('dim-h').value = productoDraft.dimensions.h;
-          }
-          if (productoDraft.packageWeightKg != null) document.getElementById('package-weight').value = productoDraft.packageWeightKg;
-          if (productoDraft.packageDimensions) {
-            if (productoDraft.packageDimensions.l != null) document.getElementById('package-dim-l').value = productoDraft.packageDimensions.l;
-            if (productoDraft.packageDimensions.w != null) document.getElementById('package-dim-w').value = productoDraft.packageDimensions.w;
-            if (productoDraft.packageDimensions.h != null) document.getElementById('package-dim-h').value = productoDraft.packageDimensions.h;
-          }
-        }
-        if (Array.isArray(productoDraft.features)){
-          productoDraft.features.forEach(f => {
-            const key = f.key; const val = f.value;
-            const keyText = f.keyText || key; const valText = f.valueText || val;
-            // crear elemento visual (se reutiliza markup del addFeatBtn)
-            const item = document.createElement('div');
-            item.className = 'feature-item';
-            item.dataset.key = key; item.dataset.keyText = keyText; item.dataset.value = val; item.dataset.valueText = valText;
-            item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '8px';
-            item.innerHTML = `<strong style="min-width:120px">${keyText}:</strong><span style="flex:1">${valText}</span><button type="button" class="btn btn-ghost btn-remove">Quitar</button>`;
-            featuresList.appendChild(item);
-            // eliminar opción del select si existe
-            const optEl = Array.from(featureOption.options).find(o => String(o.value) === String(key));
-            if (optEl) optEl.remove();
-          });
-        }
-
-        // Renderizar imágenes guardadas en productoDraft.images (pueden ser strings o objetos con dataUrl)
-        if (Array.isArray(productoDraft.images) && productoDraft.images.length){
-          imagesPreview.innerHTML = '';
-          // mostrar thumbnails desde dataUrl o URL
-          productoDraft.images.forEach((it, idx) => {
-            try{
-              const url = (typeof it === 'string') ? it : (it.dataUrl || it.url || null);
-              if (!url) return;
-              const wrap = document.createElement('div'); wrap.style.position='relative'; wrap.style.display='inline-block'; wrap.style.marginRight='8px';
-              const img = document.createElement('img'); img.src = url; img.style.width='80px'; img.style.height='80px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
-              wrap.appendChild(img);
-              const btnRemove = document.createElement('button'); btnRemove.type='button'; btnRemove.title='Quitar'; btnRemove.textContent='✕';
-              btnRemove.style.position='absolute'; btnRemove.style.top='4px'; btnRemove.style.right='4px'; btnRemove.style.width='22px'; btnRemove.style.height='22px';
-              btnRemove.style.border='none'; btnRemove.style.borderRadius='50%'; btnRemove.style.background='rgba(0,0,0,0.6)'; btnRemove.style.color='#fff';
-              btnRemove.addEventListener('click', ()=>{ productoDraft.images.splice(idx,1); try{ sessionStorage.setItem('producto.imagenes', JSON.stringify(productoDraft.images)); }catch(e){} saveDraftLocal(); rehydrateUIFromDraft(); });
-              wrap.appendChild(btnRemove);
-              imagesPreview.appendChild(wrap);
-            }catch(e){/* ignore */}
-          });
-
-          // Recrear selectedFiles a partir de dataUrls (async). Evitar duplicados.
-          (async function recreateSelectedFilesFromDraft(){
-            try{
-              const entries = productoDraft.images || [];
-              for (const it of entries){
-                try{
-                  if (!it || typeof it === 'string') continue;
-                  const already = selectedFiles.some(sf => sf.name === it.name && sf.size === it.size && sf.lastModified == it.lastModified);
-                  if (already) continue;
-                  if (it.dataUrl) {
-                    const res = await fetch(it.dataUrl);
-                    const blob = await res.blob();
-                    const file = new File([blob], it.name || ('img_' + Date.now()), { type: blob.type || 'application/octet-stream', lastModified: it.lastModified || Date.now() });
-                    selectedFiles.push(file);
-                  }
-                }catch(e){/* ignore per-file errors */}
-              }
-            }catch(e){ console.warn('Error recreando selectedFiles desde productoDraft.images', e); }
-            // actualizar previews para incluir any selectedFiles que no estaban en productoDraft.images (renderPreviews usa objectURL)
-            try{ renderPreviews(); }catch(e){}
-          })();
-        }
-        // actualizar UI dependiente
-        updatePriceWithoutIvaAuto(); updatePublicationSummary(); btnNext.disabled = !validForNext();
-      } catch(e){ console.warn('Error rehidratando UI desde productoDraft:', e); }
-    }
-
-    // Debug helper accesible desde la consola
-    window.debugDump = function(){
-      try{
-        const snap = collectDraft();
-        console.log('productoDraft (sessionStorage):', JSON.parse(sessionStorage.getItem('productoDraft_v1') || '{}'));
-        console.log('collectDraft snapshot:', snap);
-        return snap;
-      }catch(e){ console.warn('debugDump error', e); return null; }
-    };
-
-    // Envío final del producto: FormData con JSON + archivos (si hay)
-    async function sendFinalProduct(){
-      try{
-        // construir payload a partir de productoDraft (clonar para no mutar)
-        const payload = Object.assign({}, productoDraft || {});
-        // calcular campos derivados
-        const priceAmountValue = Number((document.getElementById('price-amount')||{}).value || 0);
-        const ivaPct = Number((document.getElementById('price-iva')||{}).value || 0) || 21;
-        payload.price = payload.price || {};
-        payload.price.montoCentavos = Math.round(priceAmountValue * 100);
-        payload.price.moneda = (document.getElementById('price-currency')||{}).value || 'ARS';
-        payload.price.ivaPorcentaje = ivaPct;
-        payload.price.precioSinIvaCentavos = Math.round(computePriceWithoutIva(priceAmountValue, ivaPct) * 100);
-
-        // preparar FormData
-        const form = new FormData();
-        form.append('product', JSON.stringify(payload));
-        (selectedFiles || []).forEach(f => form.append('files', f));
-
-        const res = await fetch('/api/productos', { method: 'POST', body: form, credentials: 'same-origin' });
-        if (!res.ok){ const err = await res.text(); throw new Error('HTTP ' + res.status + ' ' + err); }
-        const body = await res.json();
-        // limpiar estado local
-        clearLocalDraft(); selectedFiles = []; imagesPreview.innerHTML = '';
-        alert('Producto creado correctamente. ID: ' + (body.id || '[sin id]'));
-        // opcional: redirigir a edicion / detalle
-        // location.href = '/productos/' + (body.id || '');
-      }catch(e){ console.error('Error enviando producto:', e); alert('Error al enviar producto: ' + (e.message || e)); }
-    }
-
-    // Helper: recopila datos parciales según el paso
-    function collectStepData(step){
-      if (step === 1) {
-        // store the subcategory id in `categoriaId` (selected sub)
-        return {
-          categoriaId: selectSub.value || null,
-          etiquetas: (tagsInput.value || '').split(',').map(s=>s.trim()).filter(Boolean)
-        };
-      }
-      if (step === 2) {
-        return {
-          title: (titleInput.value||'').trim() || null,
-          sku: (skuInput.value||'').trim() || null,
-          marcaId: (marcaSelect && marcaSelect.value) || null,
-          slug: (slugInput && slugInput.value) || null,
-          condicion: (document.getElementById('condicion')||{}).value || null,
-          price: {
-            montoCentavos: Math.round((Number((priceAmount||{}).value||0)) * 100),
-            moneda: (document.getElementById('price-currency')||{}).value || 'ARS',
-            precioAnteriorCentavos: (Number((document.getElementById('price-previous')||{}).value||0) ? Math.round(Number((document.getElementById('price-previous')||{}).value||0)*100) : null)
-          }
-        };
-      }
-      if (step === 3) {
-        const features = Array.from(featuresList.querySelectorAll('.feature-item')).map(el=>({ key: el.dataset.key, value: el.dataset.value }));
-        return {
-          descripcionTexto: (descText.value||'').trim() || null,
-          features,
-          warranty: (document.getElementById('warranty')||{}).value || null,
-          returns: (document.getElementById('returns')||{}).value || null
-        };
-      }
-      if (step === 4) {
-        return {
-          stock: Number((document.getElementById('stock')||{}).value || 0),
-          weightKg: Number((document.getElementById('weight')||{}).value || 0),
-          dimensions: {
-            l: Number((document.getElementById('dim-l')||{}).value || 0),
-            w: Number((document.getElementById('dim-w')||{}).value || 0),
-            h: Number((document.getElementById('dim-h')||{}).value || 0)
-          },
-          // datos del paquete para envío
-          packageWeightKg: Number((document.getElementById('package-weight')||{}).value || 0),
-          packageDimensions: {
-            l: Number((document.getElementById('package-dim-l')||{}).value || 0),
-            w: Number((document.getElementById('package-dim-w')||{}).value || 0),
-            h: Number((document.getElementById('package-dim-h')||{}).value || 0)
-          },
-          shippingMethods: Array.from((document.getElementById('shipping-methods')||{}).querySelectorAll('input[type=checkbox]:checked')||[]).map(cb=>cb.value),
-          specialRequirements: (document.getElementById('specialRequirements')||{}).value || null
-        };
-      }
-      if (step === 5) {
-        const sel = getSelectedPublicationOption();
-        return {
-          publicationOption: sel || null,
-          featured: !!(document.getElementById('featured')||{}).checked
-        };
-      }
-      return {};
-    }
-
-    
-
     // Evento de cambio
     if (featureOption) featureOption.addEventListener('change', onFeatureOptionChange);
 
@@ -1044,27 +622,6 @@
         featureValue.innerHTML = '<option value="">-- seleccionar valor --</option>';
         featureValue.disabled = true;
         featureOption.value = '';
-
-        // Persistir en producto.opciones (mergear)
-        try {
-          const opcionesKey = stepKey(2); // 'producto.opciones'
-          const wrapper = loadStepLocal(2) || JSON.parse(JSON.stringify(step2Template));
-          const arr = Array.isArray(wrapper.opciones) ? wrapper.opciones.slice() : [];
-          let found = arr.find(o => String(o.opcionId) === String(key));
-          if (!found) {
-            found = { opcionId: key, opcionValorIds: [], requerido: false, activo: true, orden: arr.length };
-            arr.push(found);
-          }
-          if (!Array.isArray(found.opcionValorIds)) found.opcionValorIds = [];
-          if (val != null && !found.opcionValorIds.some(v=>String(v)===String(val))) found.opcionValorIds.push(val);
-          const newWrapper = Object.assign({}, wrapper, { opciones: arr });
-          sessionStorage.setItem(opcionesKey, JSON.stringify(newWrapper));
-          // sincronizar snapshot global
-          productoDraft.opciones = arr;
-          productoDraft.metadata = productoDraft.metadata || {};
-          productoDraft.metadata.updatedAt = new Date().toISOString();
-          saveDraftLocal();
-        } catch(e) { console.warn('No se pudo persistir producto.opciones al agregar:', e); }
       });
     }
 
@@ -1074,44 +631,16 @@
           const container = e.target.closest('.feature-item');
           if (!container) return;
           const restoredKey = container.dataset.key;
-          const restoredVal = container.dataset.value;
           // buscar en cache una opcion que coincida con este key
           const found = opcionesCache.find(o => String(o.id) === String(restoredKey) || String(o.nombre) === String(restoredKey));
           const restoredText = (found && (found.nombre || found.id)) || (container.dataset.keyText || restoredKey);
-          // restaurar opcion en el select (si no exista ya)
+          // restaurar opcion en el select (si no existe ya)
           if (!Array.from(featureOption.options).some(o => String(o.value) === String(restoredKey))) {
             const o = document.createElement('option');
             o.value = restoredKey;
             o.textContent = restoredText;
             featureOption.appendChild(o);
           }
-
-          // Actualizar producto.opciones en sessionStorage: quitar el valor y, si queda vacío, la opción
-          try {
-            const opcionesKey = stepKey(2);
-            const wrapper = loadStepLocal(2) || JSON.parse(JSON.stringify(step2Template));
-            let arr = Array.isArray(wrapper.opciones) ? wrapper.opciones.slice() : [];
-            const idx = arr.findIndex(o => String(o.opcionId) === String(restoredKey));
-            if (idx !== -1) {
-              const entry = arr[idx];
-              if (Array.isArray(entry.opcionValorIds)) {
-                entry.opcionValorIds = entry.opcionValorIds.filter(v => String(v) !== String(restoredVal));
-              }
-              // si no quedan valores, eliminar la opción completa
-              if (!entry.opcionValorIds || entry.opcionValorIds.length === 0) {
-                arr.splice(idx,1);
-              }
-              // reordenar
-              arr.forEach((o,i)=>o.orden = i);
-              const newWrapper = Object.assign({}, wrapper, { opciones: arr });
-              sessionStorage.setItem(opcionesKey, JSON.stringify(newWrapper));
-              productoDraft.opciones = arr;
-              productoDraft.metadata = productoDraft.metadata || {};
-              productoDraft.metadata.updatedAt = new Date().toISOString();
-              saveDraftLocal();
-            }
-          } catch(e) { console.warn('No se pudo actualizar producto.opciones al quitar:', e); }
-
           container.remove();
         }
       });
@@ -1201,212 +730,30 @@
       return true;
     }
 
-    document.getElementById('btn-next').addEventListener('click', async ()=>{
+    document.getElementById('btn-next').addEventListener('click', ()=>{
       if (!validForNext()){ alert(current === 1 ? 'Completa categoría y subcategoría.' : 'Completa los campos requeridos antes de continuar.'); return; }
-
-      try {
-        // guardar localmente los datos del paso actual en productoDraft
-        const partial = collectStepData(current) || {};
-        // mezclar conservando lo previo y sincronizar con plantilla
-        ensureTemplate();
-        productoDraft = Object.assign({}, productoDraft || {}, partial);
-        // sincronizar nombres alternativos usados en UI
-        if (productoDraft.title && !productoDraft.nombre) productoDraft.nombre = productoDraft.title;
-        if (productoDraft.descripcionTexto && !productoDraft.descripcion) productoDraft.descripcion = productoDraft.descripcionTexto;
-        if (productoDraft.etiquetas && Array.isArray(productoDraft.etiquetas) && (!productoDraft.etiquetasIds || !productoDraft.etiquetasIds.length)) productoDraft.etiquetasIds = productoDraft.etiquetas;
-        productoDraft.metadata = productoDraft.metadata || {};
-        productoDraft.metadata.lastStepSaved = current;
-        productoDraft.metadata.updatedAt = new Date().toISOString();
-        // validar reglas servidor-mirror para el paso actual
-        const v = validateServerConstraints(current);
-        if (!v.ok){ alert('Errores: ' + v.errors.join('\n')); return; }
-        saveDraftLocal();
-        // además guardar la estructura por paso en sessionStorage
-        try{
-          // El paso 2 no debe sobrescribir `producto.opciones`.
-          // En cambio guardamos los campos de precio en la key `producto.precio`.
-          if (current === 2) {
-            const priceAmountValue = Number((document.getElementById('price-amount')||{}).value || 0);
-            const ivaPct = Number((document.getElementById('price-iva')||{}).value || 0) || 21;
-            const prev = Number((document.getElementById('price-previous')||{}).value || 0);
-            const pricePartial = {
-              productoId: null,
-              montoCentavos: Math.round(priceAmountValue * 100),
-              precioAnteriorCentavos: prev ? Math.round(prev * 100) : null,
-              precioSinIvaCentavos: Math.round(computePriceWithoutIva(priceAmountValue, ivaPct) * 100),
-              moneda: (document.getElementById('price-currency')||{}).value || 'ARS',
-              ivaPorcentaje: ivaPct,
-              vigenciaDesde: new Date().toISOString(),
-              activo: true
-            };
-            // guardamos en la key correspondiente a paso 3 (producto.precio)
-            saveStepLocal(3, pricePartial);
-
-            // Además, guardar en la key `producto` los campos solicitados de paso 2
-            // nombre <- title, sku, slug. NO guardar marca por ahora.
-            try{
-              const productFields = {};
-              const nombreVal = (partial && (partial.title || partial.nombre)) || null;
-              if (nombreVal) productFields.nombre = nombreVal;
-              const skuVal = (partial && partial.sku) ? String(partial.sku).trim() : null;
-              if (skuVal) productFields.sku = skuVal;
-              const slugVal = (partial && partial.slug) ? String(partial.slug).trim() : null;
-              if (slugVal) productFields.slug = slugVal;
-              const condicionVal = (partial && partial.condicion) ? String(partial.condicion).trim() : null;
-              if (condicionVal) productFields.condicion = condicionVal;
-              // solo si hay algo para guardar, fusionar en la key producto
-              if (Object.keys(productFields).length) {
-                // mergear con el objeto `producto` existente en sessionStorage
-                const existingProducto = loadStepLocal(1) || JSON.parse(JSON.stringify(step1Template));
-                const mergedProducto = Object.assign({}, existingProducto, productFields);
-                sessionStorage.setItem(stepKey(1), JSON.stringify(mergedProducto));
-                productoDraft = productoDraft || {};
-                if (productFields.nombre) productoDraft.nombre = productFields.nombre;
-                if (productFields.sku) productoDraft.sku = productFields.sku;
-                if (productFields.slug) productoDraft.slug = productFields.slug;
-                if (productFields.condicion) productoDraft.condicion = productFields.condicion;
-                saveDraftLocal();
-              }
-            }catch(e){ console.warn('No se pudo guardar campos principales en producto:', e); }
-
-          } else if (current === 3) {
-            // Para el paso 3 queremos persistir únicamente los campos descriptivos
-            // en la key `producto` (no sobrescribir producto.precio).
-            try{
-              const descripcionVal = (partial && partial.descripcionTexto) ? String(partial.descripcionTexto).trim() : null;
-              const garantVal = (partial && partial.warranty) ? partial.warranty : null;
-              const devolVal = (partial && partial.returns) ? partial.returns : null;
-              const prodPatch = {};
-              if (descripcionVal) prodPatch.descripcion = descripcionVal;
-              if (garantVal) prodPatch.garantia = garantVal;
-              if (devolVal) prodPatch.politicaDevoluciones = devolVal;
-              if (Object.keys(prodPatch).length) {
-                // mergear descriptivos en `producto` sin eliminar otros campos
-                const existingProducto = loadStepLocal(1) || JSON.parse(JSON.stringify(step1Template));
-                const mergedProducto = Object.assign({}, existingProducto, prodPatch);
-                sessionStorage.setItem(stepKey(1), JSON.stringify(mergedProducto));
-                productoDraft = productoDraft || {};
-                if (prodPatch.descripcion) productoDraft.descripcion = prodPatch.descripcion;
-                if (prodPatch.garantia) productoDraft.garantia = prodPatch.garantia;
-                if (prodPatch.politicaDevoluciones) productoDraft.politicaDevoluciones = prodPatch.politicaDevoluciones;
-                saveDraftLocal();
-              }
-            }catch(e){ console.warn('No se pudo guardar campos descriptivos en producto:', e); }
-
-          } else if (current === 4) {
-            // Paso 4: guardar inventario en su key y además mapear campos físicos a `producto.fisicas`
-              try {
-              // guardar SOLO el campo de inventario (onHand) en la key `producto.inventario`
-              const invObj = {
-                productoId: null,
-                onHand: Number(partial && partial.stock != null ? partial.stock : 0),
-                reserved: null,
-                almacenId: null
-              };
-              saveStepLocal(4, invObj);
-              // sincronizar snapshot global de inventario
-              productoDraft.inventario = Object.assign({}, productoDraft.inventario || {}, invObj);
-              productoDraft.metadata = productoDraft.metadata || {};
-              productoDraft.metadata.updatedAt = new Date().toISOString();
-              saveDraftLocal();
-
-              // mapear dimensiones/peso a la estructura fisicas
-              const dims = (partial && partial.dimensions) || {};
-              const weightKg = partial && partial.weightKg != null ? Number(partial.weightKg) : null;
-              const fisicasPatch = {};
-              // inputs están en cm (cm -> mm = *10). Redondeamos a entero en mm.
-              if (dims.l != null) fisicasPatch.widthMm = Math.round(Number(dims.l) * 10);
-              if (dims.w != null) fisicasPatch.depthMm = Math.round(Number(dims.w) * 10);
-              if (dims.h != null) fisicasPatch.heightMm = Math.round(Number(dims.h) * 10);
-              // peso viene en kg en la UI; lo guardamos en gramos
-              if (weightKg != null) fisicasPatch.weightGrams = Math.round(weightKg * 1000);
-              // package fields (si vienen en partial) -> package* en mm/grams
-              try {
-                const pkgW = partial && partial.packageDimensions && partial.packageDimensions.l != null ? Number(partial.packageDimensions.l) : null;
-                const pkgD = partial && partial.packageDimensions && partial.packageDimensions.w != null ? Number(partial.packageDimensions.w) : null;
-                const pkgH = partial && partial.packageDimensions && partial.packageDimensions.h != null ? Number(partial.packageDimensions.h) : null;
-                const pkgWeightKg = partial && partial.packageWeightKg != null ? Number(partial.packageWeightKg) : null;
-                if (pkgW != null) fisicasPatch.packageWidthMm = Math.round(pkgW * 10);
-                if (pkgD != null) fisicasPatch.packageDepthMm = Math.round(pkgD * 10);
-                if (pkgH != null) fisicasPatch.packageHeightMm = Math.round(pkgH * 10);
-                if (pkgWeightKg != null) fisicasPatch.packageWeightGrams = Math.round(pkgWeightKg * 1000);
-              } catch(e) { /* ignore package mapping errors */ }
-
-              // mergear con `producto.fisicas` existente
-              const existingFis = loadStepLocal(5) || JSON.parse(JSON.stringify(step5Template));
-              const mergedFis = Object.assign({}, existingFis, fisicasPatch);
-              sessionStorage.setItem(stepKey(5), JSON.stringify(mergedFis));
-
-              // sincronizar snapshot global
-              productoDraft.fisicas = Object.assign({}, productoDraft.fisicas || {}, mergedFis);
-              productoDraft.metadata = productoDraft.metadata || {};
-              productoDraft.metadata.updatedAt = new Date().toISOString();
-              saveDraftLocal();
-            } catch(e) { console.warn('No se pudo guardar fisicas en producto.fisicas:', e); }
-          } else {
-            // comportamiento por defecto: guardar el partial en la key del paso
-            saveStepLocal(current, partial);
-          }
-        }catch(e){ console.warn('No se pudo guardar step local:', e); }
-      } catch(e){ console.error('Error guardando estado local del paso:', e); }
-
       if (current < 5){ current++; showStepContent(current); }
       else {
-        // último paso -> enviar todo al servidor
-        try {
-          await sendFinalProduct();
-        } catch(e){ console.error('Error enviando producto final:', e); }
+        // último paso -> recolectar y enviar (placeholder)
+        const payload = collectDraft();
+        console.log('Draft listo:', payload);
+        alert('Draft listo en consola (verificar).');
       }
     });
 
     function collectDraft(){
-      // devuelve snapshot JSON del producto tal como está en memoria + campos calculados
-      const snapshot = Object.assign({}, productoDraft || {});
-      // asegurar que los campos visibles y calculados estén sincronizados
-      try{
-        snapshot.features = Array.from(featuresList.querySelectorAll('.feature-item')).map(el=>({ key: el.dataset.key, keyText: el.dataset.keyText, value: el.dataset.value, valueText: el.dataset.valueText }));
-        snapshot.etiquetas = (tagsInput.value || '').split(',').map(s=>s.trim()).filter(Boolean);
-        snapshot.title = (titleInput.value||'').trim() || null;
-        snapshot.sku = (skuInput.value||'').trim() || null;
-        snapshot.marcaId = (marcaSelect && marcaSelect.value) || null;
-        snapshot.slug = (slugInput && slugInput.value) || null;
-        snapshot.price = snapshot.price || {};
-        snapshot.price.montoCentavos = Math.round((Number((priceAmount||{}).value||0)) * 100);
-        snapshot.price.moneda = (document.getElementById('price-currency')||{}).value || 'ARS';
-        snapshot.stock = Number((document.getElementById('stock')||{}).value || 0);
-        snapshot.descripcionTexto = (descText.value||'').trim() || null;
-        // shipping
+      const features = Array.from(featuresList.querySelectorAll('.feature-item')).map(el=>({
+        key: el.dataset.key, value: el.dataset.value
+      }));
+      const shipping = (function(){
         const container = document.getElementById('shipping-methods');
-        snapshot.shippingMethods = container ? Array.from(container.querySelectorAll('input[type=\"checkbox\"]:checked')).map(cb=>cb.value) : [];
-      }catch(e){ console.warn('collectDraft error', e); }
-      return snapshot;
-    }
-
-    // Validaciones espejo de reglas del servidor (por paso). Devuelve {ok:boolean, errors:[]}
-    function validateServerConstraints(step){
-      const errors = [];
-      try{
-        if (step === 2){
-          // validar nombre / título: no contener caracteres prohibidos (&, %)
-          const name = (titleInput.value || productoDraft.nombre || '').trim();
-          if (!name) errors.push('El nombre es obligatorio.');
-          const bad = /[&%]/;
-          if (bad.test(name)) errors.push('El nombre no puede contener los caracteres & ni %.');
-          if (name.length > 250) errors.push('El nombre es demasiado largo (máx 250 caracteres).');
+        if (container) {
+          return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
         }
-
-        if (step === 4){
-          const stock = Number((document.getElementById('stock')||{}).value || productoDraft.stock || 0);
-          if (isNaN(stock) || stock < 0) errors.push('Stock inválido (debe ser >= 0).');
-        }
-
-        if (step === 1){
-          // require that a subcategory has been selected (stored as categoriaId)
-          const sub = productoDraft.categoriaId || selectSub.value || null;
-          if (!sub) errors.push('Subcategoría (categoriaId) es obligatoria.');
-        }
-      }catch(e){ errors.push('Error validando datos: ' + (e.message || e)); }
-      return { ok: errors.length === 0, errors };
+        // fallback al campo antiguo por compatibilidad
+        const oldInput = (document.getElementById('shippingOptions') || {}).value || '';
+        return oldInput.split(',').map(s=>s.trim()).filter(Boolean);
+      })();
     }
 
     // select category -> populate subcategories
@@ -1493,34 +840,27 @@
 
    imagesInput.addEventListener('change', (ev) => {
      const files = Array.from(ev.target.files || []);
-    files.forEach(f => {
-      // evitar duplicados por name+size+lastModified
-      const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size && sf.lastModified === f.lastModified);
-      if (!exists) selectedFiles.push(f);
-      // leer DataURL para persistir preview en sessionStorage (producto.imagenes) y en productoDraft.images
-      try {
-        const reader = new FileReader();
-        reader.onload = function(e){
-          try{
-            const dataUrl = e.target.result;
-            productoDraft.images = productoDraft.images || [];
-            const already = productoDraft.images.some(i => (i.name === f.name && i.size === f.size && i.lastModified === f.lastModified) || (typeof i === 'string' && i === dataUrl));
-            if (!already) {
-              productoDraft.images.push({ name: f.name, size: f.size, lastModified: f.lastModified, dataUrl: dataUrl });
-              // mantener una key separada también (opcional)
-              try{ sessionStorage.setItem('producto.imagenes', JSON.stringify(productoDraft.images)); }catch(e){}
-              saveDraftLocal();
-            }
-          }catch(e){ console.warn('Error guardando preview en productoDraft.images', e); }
-        };
-        reader.readAsDataURL(f);
-      } catch(e) { console.warn('No se pudo leer archivo para preview:', e); }
-    });
-    renderPreviews();
+     files.forEach(f => {
+       // evitar duplicados por name+size+lastModified
+       const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size && sf.lastModified === f.lastModified);
+       if (!exists) selectedFiles.push(f);
+     });
+     renderPreviews();
    });
 
-    // features add/remove (handled above with select-based UI)
-    // NOTE: previous legacy handlers removed to avoid duplicate listeners and ReferenceError.
+    // features add/remove
+    addFeatBtn.addEventListener('click', ()=>{
+      const k = (featKey.value||'').trim();
+      const v = (featVal.value||'').trim();
+      if (!k) return;
+      const item = document.createElement('div'); item.className='feature-item'; item.dataset.key=k; item.dataset.value=v;
+      item.innerHTML = `<strong style="min-width:120px">${k}:</strong><span style="flex:1">${v}</span><button type="button" class="btn btn-ghost btn-remove">Quitar</button>`;
+      featuresList.appendChild(item);
+      featKey.value=''; featVal.value=''; featKey.focus();
+    });
+    featuresList.addEventListener('click', (e)=>{
+      if (e.target.classList.contains('btn-remove')) e.target.closest('.feature-item').remove();
+    });
 
     document.getElementById('btn-prev').addEventListener('click', ()=> {
       // si estamos en el primer paso, confirmar y resetear; si no, retroceder un paso
@@ -1618,7 +958,7 @@
     }
 
     // listeners extra para paso 4 (actualizar validación)
-    ['stock','weight','dim-l','dim-w','dim-h','package-weight','package-dim-l','package-dim-w','package-dim-h'].forEach(id=>{
+    ['stock','weight','dim-l','dim-w','dim-h'].forEach(id=>{
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('input', ()=>{ btnNext.disabled = !validForNext(); });
@@ -1651,11 +991,28 @@
       btnNext.disabled = !validForNext();
     }
 
-    
+    // --- Ajuste en collectDraft: incluir priceAnteriorCentavos, priceSinIvaCentavos y publicationOption ---
+    const origCollectDraft = collectDraft;
+    collectDraft = function(){
+      const priceAmountValue = Number((document.getElementById('price-amount')||{}).value || 0);
+      const currency = (document.getElementById('price-currency')||{}).value || 'ARS';
+      const precioAnterior = Number((document.getElementById('price-previous')||{}).value || 0);
+      const ivaPct = Number((document.getElementById('price-iva')||{}).value || 0) || 21;
+      
+      base.price = base.price || {};
+      base.price.montoCentavos = Math.round(priceAmountValue * 100);
+      base.price.moneda = currency;
+      base.price.precioAnteriorCentavos = precioAnterior ? Math.round(precioAnterior * 100) : null;
+      const calcSinIva = computePriceWithoutIva(priceAmountValue, ivaPct);
+      base.price.precioSinIvaCentavos = Math.round(calcSinIva * 100);
+      base.price.ivaPorcentaje = ivaPct;
 
-    // Rehidratar UI desde `productoDraft` si existe (persistido en sessionStorage)
-    try { initAllStepStorage(); } catch(e){ /* silent init */ }
-    try { rehydrateUIFromDraft(); } catch(e){ /* silent */ }
+      base.sku = (document.getElementById('sku')||{}).value || null;
+      base.marcaId = (document.getElementById('marcaId')||{}).value || 'OTRA';
+
+      const sel = getSelectedPublicationOption();
+      base.publicationOption = sel ? { key: sel.key, commissionPct: sel.commission } : null;
+    };
 
   })();
   </script>

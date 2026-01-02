@@ -1,7 +1,6 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoOpcionService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import jakarta.validation.Valid;

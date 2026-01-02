@@ -67,6 +67,9 @@ public class Producto extends BaseEntidadAuditada {
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductoOpcion> opciones = new ArrayList<>();
 
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductoEtiqueta> etiquetas = new ArrayList<>();
+
     // Atributos libres (JSON por categoría)
     @Column(name = "atributos_json", columnDefinition = "TEXT")
     private String atributosJson;

@@ -17,6 +17,7 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioProdu
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
 
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class ProductoAggregatorServiceImpl {
@@ -39,6 +40,20 @@ public class ProductoAggregatorServiceImpl {
         this.precioService = precioService;
         this.inventarioProductoService = inventarioProductoService;
         this.opcionService = opcionService;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoDetalleResponseDTO> buildDetallesAll() {
+        List<ProductoResponseDTO> productos = productoService.listarActivas();
+        if (productos == null || productos.isEmpty()) return new ArrayList<>();
+
+        List<ProductoDetalleResponseDTO> out = new ArrayList<>(productos.size());
+        for (ProductoResponseDTO p : productos) {
+            if (p == null || p.getId() == null) continue;
+            ProductoDetalleResponseDTO detalle = buildDetalleById(p.getId());
+            if (detalle != null) out.add(detalle);
+        }
+        return out;
     }
 
     @Transactional(readOnly = true)

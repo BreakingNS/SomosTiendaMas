@@ -197,16 +197,6 @@
               </div>
 
               <div class="field">
-                <label for="condicion">Condición</label>
-                <select id="condicion">
-                  <option value="">-- seleccionar --</option>
-                  <option value="NUEVO">NUEVO</option>
-                  <option value="USADO">USADO</option>
-                  <option value="REACONDICIONADO">REACONDICIONADO</option>
-                </select>
-              </div>
-
-              <div class="field">
                 <label for="slug">Slug (opcional)</label>
                 <input id="slug" type="text" placeholder="smart-tv-55-lg-oled-4k"/>
               </div>
@@ -305,32 +295,6 @@
                   </div>
                 </div>
                 <small style="color:var(--muted);font-size:13px;margin-top:6px">Ingresá medidas en centímetros. Útil para calcular volumetría / embalaje.</small>
-              </div>
-
-              <!-- Campos del paquete para envío -->
-              <div class="field" style="margin-top:12px;border-top:1px dashed var(--border);padding-top:12px">
-                <label style="font-weight:700">Dimensiones del paquete (envío)</label>
-                <div style="display:flex;gap:8px;margin-top:8px;">
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-l" style="font-size:12px;color:var(--muted);margin-bottom:6px">Largo paquete (cm)</label>
-                    <input id="package-dim-l" type="number" min="0" step="0.1" placeholder="Largo paquete (cm)"/>
-                  </div>
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-w" style="font-size:12px;color:var(--muted);margin-bottom:6px">Ancho paquete (cm)</label>
-                    <input id="package-dim-w" type="number" min="0" step="0.1" placeholder="Ancho paquete (cm)"/>
-                  </div>
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-dim-h" style="font-size:12px;color:var(--muted);margin-bottom:6px">Alto paquete (cm)</label>
-                    <input id="package-dim-h" type="number" min="0" step="0.1" placeholder="Alto paquete (cm)"/>
-                  </div>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
-                  <div style="flex:1;display:flex;flex-direction:column;">
-                    <label for="package-weight" style="font-size:12px;color:var(--muted);margin-bottom:6px">Peso paquete (kg)</label>
-                    <input id="package-weight" type="number" min="0" step="0.01" placeholder="Peso paquete (kg)" />
-                  </div>
-                </div>
-                <small style="color:var(--muted);font-size:13px;margin-top:6px">Medidas del paquete en centímetros; peso en kilogramos. Se guardarán en mm y gramos respectivamente.</small>
               </div>
 
               <div class="field">
@@ -813,34 +777,11 @@
         if (productoDraft.warranty) document.getElementById('warranty').value = productoDraft.warranty;
         if (productoDraft.returns) document.getElementById('returns').value = productoDraft.returns;
         if (productoDraft.stock != null) document.getElementById('stock').value = productoDraft.stock;
-        if (productoDraft.condicion) document.getElementById('condicion').value = productoDraft.condicion;
-        // Preferir valores almacenados en producto.fisicas (mm/grams) si existen, sino usar productoDraft.*
-        const storedFis = productoDraft.fisicas || loadStepLocal(5) || {};
-        if (storedFis && Object.keys(storedFis).length) {
-          // dimensiones producto (convertir mm -> cm)
-          if (storedFis.widthMm != null) document.getElementById('dim-l').value = (Number(storedFis.widthMm) / 10);
-          if (storedFis.depthMm != null) document.getElementById('dim-w').value = (Number(storedFis.depthMm) / 10);
-          if (storedFis.heightMm != null) document.getElementById('dim-h').value = (Number(storedFis.heightMm) / 10);
-          // peso producto (grams -> kg)
-          if (storedFis.weightGrams != null) document.getElementById('weight').value = (Number(storedFis.weightGrams) / 1000);
-          // package fields (mm -> cm, grams -> kg)
-          if (storedFis.packageWidthMm != null) document.getElementById('package-dim-l').value = (Number(storedFis.packageWidthMm) / 10);
-          if (storedFis.packageDepthMm != null) document.getElementById('package-dim-w').value = (Number(storedFis.packageDepthMm) / 10);
-          if (storedFis.packageHeightMm != null) document.getElementById('package-dim-h').value = (Number(storedFis.packageHeightMm) / 10);
-          if (storedFis.packageWeightGrams != null) document.getElementById('package-weight').value = (Number(storedFis.packageWeightGrams) / 1000);
-        } else {
-          if (productoDraft.weightKg != null) document.getElementById('weight').value = productoDraft.weightKg;
-          if (productoDraft.dimensions) {
-            if (productoDraft.dimensions.l != null) document.getElementById('dim-l').value = productoDraft.dimensions.l;
-            if (productoDraft.dimensions.w != null) document.getElementById('dim-w').value = productoDraft.dimensions.w;
-            if (productoDraft.dimensions.h != null) document.getElementById('dim-h').value = productoDraft.dimensions.h;
-          }
-          if (productoDraft.packageWeightKg != null) document.getElementById('package-weight').value = productoDraft.packageWeightKg;
-          if (productoDraft.packageDimensions) {
-            if (productoDraft.packageDimensions.l != null) document.getElementById('package-dim-l').value = productoDraft.packageDimensions.l;
-            if (productoDraft.packageDimensions.w != null) document.getElementById('package-dim-w').value = productoDraft.packageDimensions.w;
-            if (productoDraft.packageDimensions.h != null) document.getElementById('package-dim-h').value = productoDraft.packageDimensions.h;
-          }
+        if (productoDraft.weightKg != null) document.getElementById('weight').value = productoDraft.weightKg;
+        if (productoDraft.dimensions) {
+          if (productoDraft.dimensions.l != null) document.getElementById('dim-l').value = productoDraft.dimensions.l;
+          if (productoDraft.dimensions.w != null) document.getElementById('dim-w').value = productoDraft.dimensions.w;
+          if (productoDraft.dimensions.h != null) document.getElementById('dim-h').value = productoDraft.dimensions.h;
         }
         if (Array.isArray(productoDraft.features)){
           productoDraft.features.forEach(f => {
@@ -859,47 +800,23 @@
           });
         }
 
-        // Renderizar imágenes guardadas en productoDraft.images (pueden ser strings o objetos con dataUrl)
+        // Renderizar imágenes guardadas como URLs (si existen)
         if (Array.isArray(productoDraft.images) && productoDraft.images.length){
+          // crear thumbnails de sólo lectura (no File)
           imagesPreview.innerHTML = '';
-          // mostrar thumbnails desde dataUrl o URL
-          productoDraft.images.forEach((it, idx) => {
+          productoDraft.images.forEach((u, idx) => {
             try{
-              const url = (typeof it === 'string') ? it : (it.dataUrl || it.url || null);
-              if (!url) return;
               const wrap = document.createElement('div'); wrap.style.position='relative'; wrap.style.display='inline-block'; wrap.style.marginRight='8px';
-              const img = document.createElement('img'); img.src = url; img.style.width='80px'; img.style.height='80px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
+              const img = document.createElement('img'); img.src = u; img.style.width='80px'; img.style.height='80px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
               wrap.appendChild(img);
               const btnRemove = document.createElement('button'); btnRemove.type='button'; btnRemove.title='Quitar'; btnRemove.textContent='✕';
               btnRemove.style.position='absolute'; btnRemove.style.top='4px'; btnRemove.style.right='4px'; btnRemove.style.width='22px'; btnRemove.style.height='22px';
               btnRemove.style.border='none'; btnRemove.style.borderRadius='50%'; btnRemove.style.background='rgba(0,0,0,0.6)'; btnRemove.style.color='#fff';
-              btnRemove.addEventListener('click', ()=>{ productoDraft.images.splice(idx,1); try{ sessionStorage.setItem('producto.imagenes', JSON.stringify(productoDraft.images)); }catch(e){} saveDraftLocal(); rehydrateUIFromDraft(); });
+              btnRemove.addEventListener('click', ()=>{ productoDraft.images.splice(idx,1); saveDraftLocal(); rehydrateUIFromDraft(); });
               wrap.appendChild(btnRemove);
               imagesPreview.appendChild(wrap);
             }catch(e){/* ignore */}
           });
-
-          // Recrear selectedFiles a partir de dataUrls (async). Evitar duplicados.
-          (async function recreateSelectedFilesFromDraft(){
-            try{
-              const entries = productoDraft.images || [];
-              for (const it of entries){
-                try{
-                  if (!it || typeof it === 'string') continue;
-                  const already = selectedFiles.some(sf => sf.name === it.name && sf.size === it.size && sf.lastModified == it.lastModified);
-                  if (already) continue;
-                  if (it.dataUrl) {
-                    const res = await fetch(it.dataUrl);
-                    const blob = await res.blob();
-                    const file = new File([blob], it.name || ('img_' + Date.now()), { type: blob.type || 'application/octet-stream', lastModified: it.lastModified || Date.now() });
-                    selectedFiles.push(file);
-                  }
-                }catch(e){/* ignore per-file errors */}
-              }
-            }catch(e){ console.warn('Error recreando selectedFiles desde productoDraft.images', e); }
-            // actualizar previews para incluir any selectedFiles que no estaban en productoDraft.images (renderPreviews usa objectURL)
-            try{ renderPreviews(); }catch(e){}
-          })();
         }
         // actualizar UI dependiente
         updatePriceWithoutIvaAuto(); updatePublicationSummary(); btnNext.disabled = !validForNext();
@@ -961,7 +878,6 @@
           sku: (skuInput.value||'').trim() || null,
           marcaId: (marcaSelect && marcaSelect.value) || null,
           slug: (slugInput && slugInput.value) || null,
-          condicion: (document.getElementById('condicion')||{}).value || null,
           price: {
             montoCentavos: Math.round((Number((priceAmount||{}).value||0)) * 100),
             moneda: (document.getElementById('price-currency')||{}).value || 'ARS',
@@ -986,13 +902,6 @@
             l: Number((document.getElementById('dim-l')||{}).value || 0),
             w: Number((document.getElementById('dim-w')||{}).value || 0),
             h: Number((document.getElementById('dim-h')||{}).value || 0)
-          },
-          // datos del paquete para envío
-          packageWeightKg: Number((document.getElementById('package-weight')||{}).value || 0),
-          packageDimensions: {
-            l: Number((document.getElementById('package-dim-l')||{}).value || 0),
-            w: Number((document.getElementById('package-dim-w')||{}).value || 0),
-            h: Number((document.getElementById('package-dim-h')||{}).value || 0)
           },
           shippingMethods: Array.from((document.getElementById('shipping-methods')||{}).querySelectorAll('input[type=checkbox]:checked')||[]).map(cb=>cb.value),
           specialRequirements: (document.getElementById('specialRequirements')||{}).value || null
@@ -1252,8 +1161,6 @@
               if (skuVal) productFields.sku = skuVal;
               const slugVal = (partial && partial.slug) ? String(partial.slug).trim() : null;
               if (slugVal) productFields.slug = slugVal;
-              const condicionVal = (partial && partial.condicion) ? String(partial.condicion).trim() : null;
-              if (condicionVal) productFields.condicion = condicionVal;
               // solo si hay algo para guardar, fusionar en la key producto
               if (Object.keys(productFields).length) {
                 // mergear con el objeto `producto` existente en sessionStorage
@@ -1264,7 +1171,6 @@
                 if (productFields.nombre) productoDraft.nombre = productFields.nombre;
                 if (productFields.sku) productoDraft.sku = productFields.sku;
                 if (productFields.slug) productoDraft.slug = productFields.slug;
-                if (productFields.condicion) productoDraft.condicion = productFields.condicion;
                 saveDraftLocal();
               }
             }catch(e){ console.warn('No se pudo guardar campos principales en producto:', e); }
@@ -1295,20 +1201,9 @@
 
           } else if (current === 4) {
             // Paso 4: guardar inventario en su key y además mapear campos físicos a `producto.fisicas`
-              try {
-              // guardar SOLO el campo de inventario (onHand) en la key `producto.inventario`
-              const invObj = {
-                productoId: null,
-                onHand: Number(partial && partial.stock != null ? partial.stock : 0),
-                reserved: null,
-                almacenId: null
-              };
-              saveStepLocal(4, invObj);
-              // sincronizar snapshot global de inventario
-              productoDraft.inventario = Object.assign({}, productoDraft.inventario || {}, invObj);
-              productoDraft.metadata = productoDraft.metadata || {};
-              productoDraft.metadata.updatedAt = new Date().toISOString();
-              saveDraftLocal();
+            try {
+              // guardar el partial del inventario en su key (producto.inventario)
+              saveStepLocal(4, partial);
 
               // mapear dimensiones/peso a la estructura fisicas
               const dims = (partial && partial.dimensions) || {};
@@ -1320,17 +1215,6 @@
               if (dims.h != null) fisicasPatch.heightMm = Math.round(Number(dims.h) * 10);
               // peso viene en kg en la UI; lo guardamos en gramos
               if (weightKg != null) fisicasPatch.weightGrams = Math.round(weightKg * 1000);
-              // package fields (si vienen en partial) -> package* en mm/grams
-              try {
-                const pkgW = partial && partial.packageDimensions && partial.packageDimensions.l != null ? Number(partial.packageDimensions.l) : null;
-                const pkgD = partial && partial.packageDimensions && partial.packageDimensions.w != null ? Number(partial.packageDimensions.w) : null;
-                const pkgH = partial && partial.packageDimensions && partial.packageDimensions.h != null ? Number(partial.packageDimensions.h) : null;
-                const pkgWeightKg = partial && partial.packageWeightKg != null ? Number(partial.packageWeightKg) : null;
-                if (pkgW != null) fisicasPatch.packageWidthMm = Math.round(pkgW * 10);
-                if (pkgD != null) fisicasPatch.packageDepthMm = Math.round(pkgD * 10);
-                if (pkgH != null) fisicasPatch.packageHeightMm = Math.round(pkgH * 10);
-                if (pkgWeightKg != null) fisicasPatch.packageWeightGrams = Math.round(pkgWeightKg * 1000);
-              } catch(e) { /* ignore package mapping errors */ }
 
               // mergear con `producto.fisicas` existente
               const existingFis = loadStepLocal(5) || JSON.parse(JSON.stringify(step5Template));
@@ -1493,30 +1377,12 @@
 
    imagesInput.addEventListener('change', (ev) => {
      const files = Array.from(ev.target.files || []);
-    files.forEach(f => {
-      // evitar duplicados por name+size+lastModified
-      const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size && sf.lastModified === f.lastModified);
-      if (!exists) selectedFiles.push(f);
-      // leer DataURL para persistir preview en sessionStorage (producto.imagenes) y en productoDraft.images
-      try {
-        const reader = new FileReader();
-        reader.onload = function(e){
-          try{
-            const dataUrl = e.target.result;
-            productoDraft.images = productoDraft.images || [];
-            const already = productoDraft.images.some(i => (i.name === f.name && i.size === f.size && i.lastModified === f.lastModified) || (typeof i === 'string' && i === dataUrl));
-            if (!already) {
-              productoDraft.images.push({ name: f.name, size: f.size, lastModified: f.lastModified, dataUrl: dataUrl });
-              // mantener una key separada también (opcional)
-              try{ sessionStorage.setItem('producto.imagenes', JSON.stringify(productoDraft.images)); }catch(e){}
-              saveDraftLocal();
-            }
-          }catch(e){ console.warn('Error guardando preview en productoDraft.images', e); }
-        };
-        reader.readAsDataURL(f);
-      } catch(e) { console.warn('No se pudo leer archivo para preview:', e); }
-    });
-    renderPreviews();
+     files.forEach(f => {
+       // evitar duplicados por name+size+lastModified
+       const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size && sf.lastModified === f.lastModified);
+       if (!exists) selectedFiles.push(f);
+     });
+     renderPreviews();
    });
 
     // features add/remove (handled above with select-based UI)
@@ -1618,7 +1484,7 @@
     }
 
     // listeners extra para paso 4 (actualizar validación)
-    ['stock','weight','dim-l','dim-w','dim-h','package-weight','package-dim-l','package-dim-w','package-dim-h'].forEach(id=>{
+    ['stock','weight','dim-l','dim-w','dim-h'].forEach(id=>{
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('input', ()=>{ btnNext.disabled = !validForNext(); });

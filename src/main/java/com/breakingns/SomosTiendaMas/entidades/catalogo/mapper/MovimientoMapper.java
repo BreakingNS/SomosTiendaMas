@@ -6,7 +6,6 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.movimiento.Movimient
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.MovimientoInventario;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

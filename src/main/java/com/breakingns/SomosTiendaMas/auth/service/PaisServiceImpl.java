@@ -2,7 +2,6 @@ package com.breakingns.SomosTiendaMas.auth.service;
 
 import com.breakingns.SomosTiendaMas.auth.model.Pais;
 import com.breakingns.SomosTiendaMas.auth.repository.IPaisRepository;
-import com.breakingns.SomosTiendaMas.auth.service.IPaisService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

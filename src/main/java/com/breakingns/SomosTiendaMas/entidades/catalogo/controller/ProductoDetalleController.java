@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl.ProductoAggregatorServiceImpl;
@@ -21,5 +22,11 @@ public class ProductoDetalleController {
         var detalle = aggregator.buildDetalleById(id);
         if (detalle == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(detalle);
+    }
+
+    @GetMapping("/detalle")
+    public ResponseEntity<List<ProductoDetalleResponseDTO>> getTodosDetalle() {
+        var lista = aggregator.buildDetallesAll();
+        return ResponseEntity.ok(lista);
     }
 }
