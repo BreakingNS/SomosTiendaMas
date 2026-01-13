@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion;
 
 public final class OpcionMapper {

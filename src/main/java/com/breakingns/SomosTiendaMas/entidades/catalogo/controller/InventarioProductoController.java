@@ -1,7 +1,7 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.*;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioVarianteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,23 +11,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventario")
-public class InventarioProductoController {
+public class InventarioVarianteController {
 
-    private final IInventarioProductoService service;
+    private final IInventarioVarianteService service;
 
-    public InventarioProductoController(IInventarioProductoService service) {
+    public InventarioVarianteController(IInventarioVarianteService service) {
         this.service = service;
     }
 
     @PostMapping
-    public ResponseEntity<InventarioProductoDTO> crear(@RequestBody @Valid InventarioProductoDTO dto) {
-        InventarioProductoDTO creado = service.crear(dto);
+    public ResponseEntity<InventarioVarianteDTO> crear(@RequestBody @Valid InventarioVarianteDTO dto) {
+        InventarioVarianteDTO creado = service.crear(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @GetMapping("/producto/{productoId}")
-    public ResponseEntity<InventarioProductoDTO> obtenerPorProductoId(@PathVariable Long productoId) {
-        InventarioProductoDTO dto = service.obtenerPorProductoId(productoId);
+    public ResponseEntity<InventarioVarianteDTO> obtenerPorProductoId(@PathVariable Long productoId) {
+        InventarioVarianteDTO dto = service.obtenerPorProductoId(productoId);
         return ResponseEntity.ok(dto);
     }
 
@@ -56,23 +56,23 @@ public class InventarioProductoController {
     }
 
     @PostMapping("/producto/{productoId}/ajustar")
-    public ResponseEntity<InventarioProductoDTO> ajustarStock(
+    public ResponseEntity<InventarioVarianteDTO> ajustarStock(
             @PathVariable Long productoId,
             @RequestParam(required = false, defaultValue = "0") long deltaOnHand,
             @RequestParam(required = false, defaultValue = "0") long deltaReserved) {
-        InventarioProductoDTO dto = service.ajustarStock(productoId, deltaOnHand, deltaReserved);
+        InventarioVarianteDTO dto = service.ajustarStock(productoId, deltaOnHand, deltaReserved);
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping
-    public ResponseEntity<List<InventarioProductoDTO>> listarTodos() {
-        List<InventarioProductoDTO> list = service.listarTodos();
+    public ResponseEntity<List<InventarioVarianteDTO>> listarTodos() {
+        List<InventarioVarianteDTO> list = service.listarTodos();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/bajo-stock")
-    public ResponseEntity<List<InventarioProductoDTO>> listarBajoStock(@RequestParam(required = false) Long threshold) {
-        List<InventarioProductoDTO> list = service.listarBajoStock(threshold);
+    public ResponseEntity<List<InventarioVarianteDTO>> listarBajoStock(@RequestParam(required = false) Long threshold) {
+        List<InventarioVarianteDTO> list = service.listarBajoStock(threshold);
         return ResponseEntity.ok(list);
     }
 
@@ -82,3 +82,4 @@ public class InventarioProductoController {
         return ResponseEntity.noContent().build();
     }
 }
+*/

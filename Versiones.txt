@@ -238,3 +238,5 @@ beta 0.1.7.7: Modulo 3 implementado ProductoCentralizado, funciones para visuali
 beta 0.1.7.8: Modulo 3 previo a implementar Draft para la carga de productos.
 
 beta 0.1.7.9: Modulo 3 previo a agregar Variantes en Producto.
+
+beta 0.1.8.0: Modulo 3 previo a agregar Imagnes en Variantes de Producto.

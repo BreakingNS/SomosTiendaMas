@@ -9,12 +9,20 @@ import lombok.Setter;
 @Table(name = "opcion") // nombre claro y no ambigüo con producto_opcion
 @Getter @Setter
 public class Opcion extends BaseEntidadAuditada {
+
+    // -----------------------------
+    // Metadatos básicos
+    // -----------------------------
     @Column(nullable = false, length = 120)
     private String nombre;
 
+    // -----------------------------
+    // Configuración / orden
+    // -----------------------------
     @Column(name = "orden", nullable = false)
     private Integer orden = 0;
 
     @Column(name = "tipo", length = 60)
     private String tipo;
+
 }

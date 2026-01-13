@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.draft.DraftCreateResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.draft.DraftListItemDTO;
@@ -71,3 +71,4 @@ public class ProductDraftController {
         return ResponseEntity.ok(mapper.toResponse(committed));
     }
 }
+*/

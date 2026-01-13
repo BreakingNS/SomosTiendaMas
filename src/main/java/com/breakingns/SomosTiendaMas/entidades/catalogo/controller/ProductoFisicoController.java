@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.PhysicalPropertiesDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoFisicoService;
@@ -38,3 +38,4 @@ public class ProductoFisicoController {
         return ResponseEntity.noContent().build();
     }
 }
+    */

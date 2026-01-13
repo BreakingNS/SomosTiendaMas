@@ -1,4 +1,3 @@
-// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import jakarta.persistence.*;
@@ -12,10 +11,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Etiqueta extends BaseEntidadAuditada {
-
+    // -----------------------------
+    // Metadatos básicos
+    // -----------------------------
     @Column(nullable = false, length = 120)
     private String nombre;
 
+    // Slug canónico (URL amigable, único)
     @Column(nullable = false, length = 160, unique = true)
     private String slug;
 }

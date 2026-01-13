@@ -13,6 +13,7 @@ public interface MovimientoInventarioRepository extends JpaRepository<Movimiento
 
     // corregidos: usar el nombre real del campo en la entidad -> 'tipo'
     Optional<MovimientoInventario> findFirstByOrderRefAndTipoOrderByCreatedAtAsc(String orderRef, TipoMovimientoInventario tipo);
-    List<MovimientoInventario> findByProducto_Id(Long productoId);
+    // usar path anidado a través de `variante.producto` para evitar depender de un atributo directo `producto`
+    List<MovimientoInventario> findByVarianteProductoId(Long productoId);
     List<MovimientoInventario> findByOrderRefAndTipo(String orderRef, TipoMovimientoInventario tipo);
 }

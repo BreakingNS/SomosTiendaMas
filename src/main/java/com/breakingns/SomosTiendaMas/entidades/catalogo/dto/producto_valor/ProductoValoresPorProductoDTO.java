@@ -1,8 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_valor;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
-
 import java.util.List;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
 
 public class ProductoValoresPorProductoDTO {
     private Long productoId;

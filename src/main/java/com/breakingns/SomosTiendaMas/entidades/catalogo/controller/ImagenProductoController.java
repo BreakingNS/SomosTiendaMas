@@ -1,4 +1,5 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/*
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
@@ -84,3 +85,4 @@ public class ImagenProductoController {
         return ResponseEntity.ok().build();
     }
 }
+ */

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
 
@@ -12,7 +12,7 @@ public class ProductoDetalleResponseDTO {
 
     private ProductoResponseDTO producto;
     private List<ImagenProductoDTO> imagenes;
-    private PrecioProductoResponseDTO precio;
+    private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
     private List<OpcionResumenDTO> opciones;
 
@@ -35,11 +35,11 @@ public class ProductoDetalleResponseDTO {
         this.imagenes = imagenes;
     }
 
-    public PrecioProductoResponseDTO getPrecio() {
+    public PrecioVarianteResponseDTO getPrecio() {
         return precio;
     }
 
-    public void setPrecio(PrecioProductoResponseDTO precio) {
+    public void setPrecio(PrecioVarianteResponseDTO precio) {
         this.precio = precio;
     }
 

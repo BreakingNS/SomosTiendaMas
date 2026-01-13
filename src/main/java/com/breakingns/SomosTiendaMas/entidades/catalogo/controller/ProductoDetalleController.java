@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,3 +30,4 @@ public class ProductoDetalleController {
         return ResponseEntity.ok(lista);
     }
 }
+*/

@@ -6,15 +6,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
-
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioProductoService;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioVarianteService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteOpcionService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResumenDTO;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -24,22 +26,28 @@ public class ProductoAggregatorServiceImpl {
 
     private final IProductoService productoService;
     private final IImagenProductoService imagenService;
-    private final IPrecioProductoService precioService;
-    private final IInventarioProductoService inventarioProductoService;
+    private final IInventarioVarianteService inventarioVarianteService;
     private final IOpcionService opcionService;
+    private final IVarianteService varianteService;
+    private final IPrecioVarianteService precioVarianteService;
+    private final IVarianteOpcionService varianteOpcionService;
 
     public ProductoAggregatorServiceImpl(
             IProductoService productoService,
             IImagenProductoService imagenService,
-            IPrecioProductoService precioService,
-            IInventarioProductoService inventarioProductoService,
-            IOpcionService opcionService
+            IInventarioVarianteService inventarioVarianteService,
+            IOpcionService opcionService,
+            IVarianteService varianteService,
+            IPrecioVarianteService precioVarianteService,
+            IVarianteOpcionService varianteOpcionService
     ) {
         this.productoService = productoService;
         this.imagenService = imagenService;
-        this.precioService = precioService;
-        this.inventarioProductoService = inventarioProductoService;
+        this.inventarioVarianteService = inventarioVarianteService;
         this.opcionService = opcionService;
+        this.varianteService = varianteService;
+        this.precioVarianteService = precioVarianteService;
+        this.varianteOpcionService = varianteOpcionService;
     }
 
     @Transactional(readOnly = true)
@@ -64,14 +72,37 @@ public class ProductoAggregatorServiceImpl {
         ProductoResponseDTO producto = productoService.obtenerPorId(productoId);
         if (producto == null) return null;
 
-        // Imágenes
+        // Imágenes (migradas a variantes: listar imágenes de variante/producto)
         List<ImagenProductoDTO> imagenes = imagenService.listarPorProductoId(productoId);
 
-        // Precio vigente
-        PrecioProductoResponseDTO precio = precioService.obtenerVigentePorProductoId(productoId);
+        // Obtener variante default y usar sus datos (precio/stock) como fuente de verdad
+        var varianteDefault = varianteService.obtenerDefaultByProductoId(productoId);
 
-        // Stock / disponibilidad
-        DisponibilidadResponseDTO stock = inventarioProductoService.disponibilidad(productoId);
+        PrecioVarianteResponseDTO precio = null;
+        DisponibilidadResponseDTO stock = null;
+            if (varianteDefault != null) {
+            PrecioVarianteResponseDTO dtoPrecio = precioVarianteService.obtenerVigentePorVarianteId(varianteDefault.getId());
+            if (dtoPrecio != null) {
+                precio = dtoPrecio;
+            }
+            // intentar usar stock resuelto desde variante DTO si está poblado
+            if (varianteDefault.getStockResuelto() != null) {
+                DisponibilidadResponseDTO s = new DisponibilidadResponseDTO();
+                s.setVarianteId(varianteDefault.getId());
+                s.setDisponible(varianteDefault.getStockResuelto());
+                stock = s;
+            } else {
+                // fallback: consulta inventario por producto
+                    stock = inventarioVarianteService.disponibilidad(varianteDefault.getId());
+            }
+        } else {
+            // si no hay variante default, intentar obtener algún precio activo por producto
+            List<PrecioVarianteResponseDTO> activos = precioVarianteService.listarActivas();
+            if (activos != null) {
+                precio = activos.stream().filter(p -> productoId.equals(p.getProductoId())).findFirst().orElse(null);
+            }
+            stock = inventarioVarianteService.disponibilidad(productoId);
+        }
 
         // Opciones del producto (resumen)
         List<OpcionResumenDTO> opciones = opcionService.listarOpcionesPorProductoId(productoId);
@@ -83,6 +114,53 @@ public class ProductoAggregatorServiceImpl {
         dto.setPrecio(precio);
         dto.setStock(stock);
         dto.setOpciones(opciones);
+
+        // Poblar precio por variante en la lista de variantes del producto (si está presente)
+        try {
+            if (producto.getVariantes() != null && !producto.getVariantes().isEmpty()) {
+                for (var v : producto.getVariantes()) {
+                    try {
+                        if (v != null && v.getId() != null) {
+                            var p = precioVarianteService.obtenerVigentePorVarianteId(v.getId());
+                            if (p != null) {
+                                // poblar campo legacy y el objeto resumen compacto
+                                v.setPrecioCentavos(p.getMontoCentavos());
+                                PrecioVarianteResumenDTO r = new PrecioVarianteResumenDTO();
+                                r.setId(p.getId());
+                                r.setProductoId(p.getProductoId());
+                                r.setMontoCentavos(p.getMontoCentavos());
+                                r.setPrecioAnteriorCentavos(p.getPrecioAnteriorCentavos());
+                                r.setPrecioSinIvaCentavos(p.getPrecioSinIvaCentavos());
+                                r.setIvaPorcentaje(p.getIvaPorcentaje());
+                                r.setDescuentoPorcentaje(p.getDescuentoPorcentaje());
+                                r.setMoneda(p.getMoneda());
+                                r.setActivo(p.getActivo());
+                                r.setVigenciaDesde(p.getVigenciaDesde());
+                                r.setVigenciaHasta(p.getVigenciaHasta());
+                                v.setPrecio(r);
+                                // poblar disponibilidad por variante
+                                try {
+                                    DisponibilidadResponseDTO d = inventarioVarianteService.disponibilidad(v.getId());
+                                    v.setDisponible(d);
+                                } catch (Exception e) {
+                                    // noop
+                                }
+                                try {
+                                    var opc = varianteOpcionService.obtenerVarianteConOpcionesConValores(v.getId());
+                                    if (opc != null) v.setOpciones(opc.getOpciones());
+                                } catch (Exception ex) {
+                                    // noop
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // no fallar toda la respuesta si una variante falla; opcional: loggear
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // noop
+        }
 
         return dto;
     }

@@ -1,8 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
-
 import java.util.List;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
 
 public class ProductoConOpcionesDTO {
     private Long productoId;

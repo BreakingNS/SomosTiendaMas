@@ -2,7 +2,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
 import com.breakingns.SomosTiendaMas.config.UploadProperties;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ImagenProducto;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ImagenVariante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ImagenProductoRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
@@ -39,7 +39,7 @@ public class ImagenProductoService implements IImagenProductoService {
     @Override
     public ImagenProductoDTO crear(ImagenProductoDTO dto) {
         if (dto == null) throw new IllegalArgumentException("dto es null");
-        ImagenProducto e = new ImagenProducto();
+        ImagenVariante e = new ImagenVariante();
 
         if (dto.getProductoId() != null) {
             Producto p = productoRepo.findById(dto.getProductoId())
@@ -52,66 +52,66 @@ public class ImagenProductoService implements IImagenProductoService {
         e.setAlt(dto.getAlt());
 
         // calcular orden: siguiente disponible
-        List<ImagenProducto> actuales = imagenRepo.findByProductoIdOrderByOrdenAsc(dto.getProductoId());
+        List<ImagenVariante> actuales = imagenRepo.findByVarianteProductoIdOrderByOrdenAsc(dto.getProductoId());
         int nextOrden = 0;
         if (actuales != null && !actuales.isEmpty()) {
-            ImagenProducto last = actuales.get(actuales.size() - 1);
+            ImagenVariante last = actuales.get(actuales.size() - 1);
             nextOrden = (last.getOrden() == null ? 0 : last.getOrden()) + 1;
         }
         e.setOrden(nextOrden);
 
-        ImagenProducto saved = imagenRepo.save(e);
+        ImagenVariante saved = imagenRepo.save(e);
         return toDto(saved);
     }
 
     @Override
     public ImagenProductoDTO actualizar(Long id, ImagenProductoDTO dto) {
-        ImagenProducto e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
+        ImagenVariante e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
         if (dto.getUrl() != null) e.setUrl(dto.getUrl());
         if (dto.getAlt() != null) e.setAlt(dto.getAlt());
         if (dto.getOrden() != null) e.setOrden(dto.getOrden());
         // no cambiamos productoId aquí; si se necesita, manejarlo explícitamente
-        ImagenProducto updated = imagenRepo.save(e);
+        ImagenVariante updated = imagenRepo.save(e);
         return toDto(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ImagenProductoDTO obtenerPorId(Long id) {
-        ImagenProducto e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
+        ImagenVariante e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
         return toDto(e);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ImagenProductoDTO> listarPorProductoId(Long productoId) {
-        List<ImagenProducto> list = imagenRepo.findByProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        List<ImagenVariante> list = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
         List<ImagenProductoDTO> out = new ArrayList<>();
         if (list == null) return out;
-        for (ImagenProducto e : list) out.add(toDto(e));
+        for (ImagenVariante e : list) out.add(toDto(e));
         return out;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ImagenProductoDTO obtenerPrimeraPorProductoId(Long productoId) {
-        Optional<ImagenProducto> opt = imagenRepo.findFirstByProductoIdOrderByOrdenAsc(productoId);
+        Optional<ImagenVariante> opt = imagenRepo.findFirstByVarianteProductoIdOrderByOrdenAsc(productoId);
         return opt.map(this::toDto).orElse(null);
     }
 
     @Override
     public void eliminar(Long id) {
-        ImagenProducto e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
+        ImagenVariante e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
         e.setDeletedAt(LocalDateTime.now());
         imagenRepo.save(e);
     }
 
     @Override
     public void eliminarPorProductoId(Long productoId) {
-        List<ImagenProducto> list = imagenRepo.findByProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        List<ImagenVariante> list = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
         if (list == null || list.isEmpty()) return;
         LocalDateTime now = LocalDateTime.now();
-        for (ImagenProducto e : list) {
+        for (ImagenVariante e : list) {
             e.setDeletedAt(now);
         }
         imagenRepo.saveAll(list);
@@ -120,15 +120,15 @@ public class ImagenProductoService implements IImagenProductoService {
     @Override
     public void reordenarPorProducto(Long productoId, List<Long> imagenIdsOrdenados) {
         if (imagenIdsOrdenados == null || imagenIdsOrdenados.isEmpty()) return;
-        List<ImagenProducto> actuales = imagenRepo.findByProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        List<ImagenVariante> actuales = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
         // Mapear ids -> entidad rápida búsqueda
-        java.util.Map<Long, ImagenProducto> map = new java.util.HashMap<>();
-        for (ImagenProducto e : actuales) map.put(e.getId(), e);
+        java.util.Map<Long, ImagenVariante> map = new java.util.HashMap<>();
+        for (ImagenVariante e : actuales) map.put(e.getId(), e);
 
         int orden = 0;
-        List<ImagenProducto> toSave = new ArrayList<>();
+        List<ImagenVariante> toSave = new ArrayList<>();
         for (Long id : imagenIdsOrdenados) {
-            ImagenProducto e = map.get(id);
+            ImagenVariante e = map.get(id);
             if (e == null) continue; // ignorar ids que no pertenecen
             e.setOrden(orden++);
             toSave.add(e);
@@ -137,7 +137,7 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     // mapeo simple entidad -> DTO (adaptar si los nombres de campos difieren)
-    private ImagenProductoDTO toDto(ImagenProducto e) {
+    private ImagenProductoDTO toDto(ImagenVariante e) {
         if (e == null) return null;
         ImagenProductoDTO dto = new ImagenProductoDTO();
         dto.setId(e.getId());

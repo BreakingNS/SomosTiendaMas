@@ -25,6 +25,9 @@ public class ProductoCrearDTO {
     private String garantia;
     private String politicaDevoluciones;
 
+    @Size(max = 80)
+    private String sku;
+
     private Long marcaId;
     private Long categoriaId;
 

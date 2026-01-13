@@ -1,7 +1,7 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.*;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioVarianteService;
 import jakarta.validation.Valid;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,9 +17,9 @@ import java.util.List;
 @RequestMapping("/api")
 public class PrecioProductoController {
 
-    private final IPrecioProductoService service;
+    private final IPrecioVarianteService service;
 
-    public PrecioProductoController(IPrecioProductoService service) {
+    public PrecioProductoController(IPrecioVarianteService service) {
         this.service = service;
     }
 
@@ -92,3 +92,4 @@ public class PrecioProductoController {
         return ResponseEntity.ok(list);
     }
 }
+*/

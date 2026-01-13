@@ -1,7 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
 import java.util.List;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
 
 public interface IProductoValorService {
     OpcionValorResponseDTO asignarValor(Long productoId, Long valorId);

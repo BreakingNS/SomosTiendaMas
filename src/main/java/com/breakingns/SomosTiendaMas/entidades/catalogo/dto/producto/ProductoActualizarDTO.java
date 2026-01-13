@@ -16,6 +16,9 @@ public class ProductoActualizarDTO {
     @Size(max = 10000)
     private String descripcion;
 
+    @Size(max = 80)
+    private String sku; // opcional para actualizar sku histórico
+
     // campos nuevos
     @Size(max = 5000)
     private String garantia;

@@ -50,7 +50,7 @@ public class MovimientoInventarioService implements IMovimientoInventarioService
     @Override
     @Transactional(readOnly = true)
     public List<MovimientoResumenDTO> listarPorProductoId(Long productoId) {
-        List<MovimientoInventario> list = repo.findByProducto_Id(productoId);
+        List<MovimientoInventario> list = repo.findByVarianteProductoId(productoId);
         return MovimientoMapper.toResumenList(list);
     }
 

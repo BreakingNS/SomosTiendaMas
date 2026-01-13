@@ -403,7 +403,7 @@
 
           // Prioridad: nombreCategoriaPadre / nombreCategoriaHija (usar prod)
           const nombrePadre = prod?.nombreCategoriaPadre ?? prod?.categoriaPadreNombre ?? null;
-          const nombreHija = prod?.nombreCategoriaHija ?? prod?.categoriaNombre ?? null;
+          const nombreHija = prod?.nombreCategoriaHija ?? null;
  
           // Formatear: si viene en mayúsculas devolver con primera letra mayúscula
           function fmt(s) {

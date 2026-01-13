@@ -9,6 +9,9 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.CategoriaRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.MarcaRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.VarianteMapper;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -25,11 +28,23 @@ public class ProductoService implements IProductoService {
     private final ProductoRepository repo;
     private final MarcaRepository marcaRepo;
     private final CategoriaRepository categoriaRepo;
+    private final IVarianteService varianteService;
+    private final VarianteRepository varianteRepo;
+    //private final IPrecioVarianteService precioVarianteService;
 
-    public ProductoService(ProductoRepository repo, MarcaRepository marcaRepo, CategoriaRepository categoriaRepo) {
+    public ProductoService(ProductoRepository repo, 
+        MarcaRepository marcaRepo, 
+        CategoriaRepository categoriaRepo, 
+        IVarianteService varianteService, 
+        VarianteRepository varianteRepo
+        /*, IPrecioVarianteService precioVarianteService*/
+    ) {
         this.repo = repo;
         this.marcaRepo = marcaRepo;
         this.categoriaRepo = categoriaRepo;
+        this.varianteService = varianteService;
+        this.varianteRepo = varianteRepo;
+        //this.precioVarianteService = precioVarianteService;
     }
 
     @Override
@@ -50,10 +65,56 @@ public class ProductoService implements IProductoService {
 
         Producto entidad = ProductoMapper.toEntity(dto, marca, categoria);
         Producto saved = repo.save(entidad);
-        ProductoResponseDTO resp = ProductoMapper.toResponse(saved);
-        resp.setGarantia(saved.getGarantia());
-        resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
-        return resp;
+        // Crear variante default obligatoria
+        try {
+            com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO vdto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO();
+            vdto.setProductoId(saved.getId());
+            // copiar sku histórico si existe
+            if (saved.getSku() != null) vdto.setSku(saved.getSku());
+            // atributos por defecto: objeto vacío
+            String attributesJson = "{}";
+            vdto.setAttributesJson(attributesJson);
+            vdto.setAttributesHash(calculateSha256Hex(attributesJson));
+            vdto.setEsDefault(true);
+            vdto.setActivo(true);
+
+            var varianteDto = varianteService.crearVariante(vdto);
+
+            ProductoResponseDTO resp = ProductoMapper.toResponse(saved);
+            resp.setGarantia(saved.getGarantia());
+            resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
+            // poblar campos resueltos desde la variante default creada
+                if (varianteDto != null) {
+                resp.setSkuResuelto(varianteDto.getSkuResuelto());
+                // añadir variante resumen
+                com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO listDto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO();
+                listDto.setId(varianteDto.getId());
+                listDto.setProductoId(varianteDto.getProductoId());
+                listDto.setSkuResuelto(varianteDto.getSkuResuelto());
+                // price is provided by Variante DTO; do not set price on Producto list DTO
+                // stock moved to variant; do not set disponible on Producto list DTO
+                listDto.setEsDefault(varianteDto.getEsDefault());
+                listDto.setActivo(varianteDto.getActivo());
+                resp.setVariantes(java.util.List.of(listDto));
+            }
+
+            return resp;
+        } catch (Exception ex) {
+            // si falla la creación de variante default, propagar la excepción para que la transacción falle
+            throw new RuntimeException("Error creando variante default para producto: " + ex.getMessage(), ex);
+        }
+    }
+
+    private static String calculateSha256Hex(String input) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to calculate SHA-256", e);
+        }
     }
 
     @Override
@@ -86,6 +147,32 @@ public class ProductoService implements IProductoService {
         // asegurar que los campos de garantía y política de devoluciones estén presentes en el DTO
         dto.setGarantia(p.getGarantia());
         dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+        // Enriquecer con variantes y campos resueltos (default + lista)
+        try {
+            // default variante
+            var optDefault = varianteRepo.findDefaultByProductoId(p.getId());
+                if (optDefault.isPresent()) {
+                var def = optDefault.get();
+                String skuResuelto = (p.getSlug() != null && def.getSku() != null) ? p.getSlug() + "-" + def.getSku() : def.getSku();
+                dto.setSkuResuelto(skuResuelto);
+                // precio y stock resuelto quedan en Variante; no poblar en Producto
+            }
+
+            // lista de variantes (resumen)
+            var variantes = varianteRepo.findByProducto_Id(p.getId());
+            dto.setVariantes(VarianteMapper.toDtoList(variantes).stream().map(v -> {
+                var listDto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO();
+                listDto.setId(v.getId());
+                listDto.setProductoId(v.getProductoId());
+                listDto.setSkuResuelto(v.getSkuResuelto());
+                listDto.setEsDefault(v.getEsDefault());
+                listDto.setActivo(v.getActivo());
+                return listDto;
+            }).collect(Collectors.toList()));
+        } catch (Exception ex) {
+            // no fallar la respuesta por un problema en variantes/precios; opcional: loggear
+        }
+
         return enrichWithCategoria(dto, p);
     }
 
@@ -93,7 +180,11 @@ public class ProductoService implements IProductoService {
     @Transactional(readOnly = true)
     public ProductoResponseDTO obtenerPorSlug(String slug) {
         Producto p = repo.findBySlugAndDeletedAtIsNull(slug).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado por slug: " + slug));
-        return ProductoMapper.toResponse(p);
+        ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+        dto.setGarantia(p.getGarantia());
+        dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
+        // reutilizar obtenerPorId para enriquecer (carga ya hecha)
+        return obtenerPorId(p.getId());
     }
 
     @Override

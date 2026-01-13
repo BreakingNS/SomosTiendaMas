@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_valor.ProductoOpcionesValoresAsignarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_valor.ProductoValoresAsignarDTO;
@@ -105,3 +105,4 @@ public class ProductoValorController {
         return ResponseEntity.ok().build();
     }
 }
+*/

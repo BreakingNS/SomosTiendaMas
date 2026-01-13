@@ -3,7 +3,6 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 
@@ -20,11 +19,11 @@ public class ProductoDetalleDTO {
     private String metadataJson;
 
     // relaciones/embebidos
-    private List<Long> imagenIds;
-    private List<String> imagenUrls; // si tu mapper provee urls
-    private Long precioActualCentavos;
-    private Boolean precioActivo;
-    private long disponible; // desde InventarioProducto
+    // imágenes, precio y stock fueron movidos a `Variante`.
+    // Se eliminan campos de imagenes/stock a favor de variantes.
+    // campos "resueltos" durante la migración
+    private String skuResuelto;
+    
 
     // texto mostrable en la ficha
     private String garantia;

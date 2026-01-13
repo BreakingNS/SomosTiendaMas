@@ -1,4 +1,3 @@
-// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import jakarta.persistence.*;
@@ -15,12 +14,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductoEtiqueta extends BaseEntidadAuditada {
+        // -----------------------------
+        // Relaciones
+        // -----------------------------
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "producto_id", nullable = false)
+        private Producto producto;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "producto_id", nullable = false)
-    private Producto producto;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "etiqueta_id", nullable = false)
-    private Etiqueta etiqueta;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "etiqueta_id", nullable = false)
+        private Etiqueta etiqueta;
 }

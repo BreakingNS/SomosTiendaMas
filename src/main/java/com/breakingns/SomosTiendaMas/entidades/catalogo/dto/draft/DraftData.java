@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.draft;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.InventarioProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.InventarioVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.PhysicalPropertiesDTO;
 import lombok.*;
@@ -18,7 +18,7 @@ public class DraftData {
     private ProductoCrearDTO producto;
     private OpcionCrearDTO opcion;
     private List<ImagenProductoDTO> imagenes;
-    private PrecioProductoResponseDTO precio;
-    private InventarioProductoDTO inventario;
+    private PrecioVarianteResponseDTO precio;
+    private InventarioVarianteDTO inventario;
     private PhysicalPropertiesDTO propiedadesFisicas;
 }

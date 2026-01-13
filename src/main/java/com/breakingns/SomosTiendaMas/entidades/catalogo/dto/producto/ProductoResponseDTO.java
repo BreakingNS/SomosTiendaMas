@@ -1,10 +1,13 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto;
 
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.EstadoProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.VisibilidadProducto;
+
 import lombok.Builder;
 import lombok.Data;
+import java.util.List;
 
 import java.time.LocalDateTime;
 
@@ -16,8 +19,9 @@ public class ProductoResponseDTO {
     private String slug;
     private String descripcion;
     private Long marcaId;
+    private String marcaNombre;
     private Long categoriaId;
-
+    
     // nuevos campos para breadcrumb directo desde el producto
     private Long idCategoriaPadre;
     private Long idCategoriaHija;
@@ -44,4 +48,10 @@ public class ProductoResponseDTO {
     // nuevos campos para la ficha
     private String garantia;
     private String politicaDevoluciones;
+
+    // campos resueltos durante migración
+    private String skuResuelto;
+
+    // variantes resumen
+    private List<VarianteListaDTO> variantes;
 }

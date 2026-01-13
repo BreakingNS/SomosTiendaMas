@@ -1,4 +1,5 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+/* 
+/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.etiqueta.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IEtiquetaService;
@@ -55,3 +56,4 @@ public class EtiquetaController {
         return ResponseEntity.noContent().build();
     }
 }
+*/

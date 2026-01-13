@@ -1,19 +1,14 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoActualizarDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoResumenDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioProductoUIResumenDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.PrecioProducto;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteCrearDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteActualizarDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResumenDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.PrecioVariante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,7 +17,7 @@ public final class PrecioProductoMapper {
 
     private PrecioProductoMapper() {}
 
-    public static PrecioProductoResponseDTO toResponse(PrecioProducto p) {
+    public static PrecioVarianteResponseDTO toResponse(PrecioVariante p) {
         if (p == null) return null;
 
         BigDecimal descuento = null;
@@ -37,7 +32,7 @@ public final class PrecioProductoMapper {
                     .setScale(2, RoundingMode.HALF_EVEN);
         }
 
-        return PrecioProductoResponseDTO.builder()
+        return PrecioVarianteResponseDTO.builder()
                 .id(p.getId())
                 .productoId(p.getProducto() != null ? p.getProducto().getId() : null)
                 .montoCentavos(p.getMontoCentavos())
@@ -56,7 +51,7 @@ public final class PrecioProductoMapper {
                 .build();
     }
 
-    public static PrecioProductoResumenDTO toResumen(PrecioProducto p) {
+    public static PrecioVarianteResumenDTO toResumen(PrecioVariante p) {
         if (p == null) return null;
 
         BigDecimal descuento = null;
@@ -71,7 +66,7 @@ public final class PrecioProductoMapper {
                     .setScale(2, RoundingMode.HALF_EVEN);
         }
 
-        PrecioProductoResumenDTO r = new PrecioProductoResumenDTO();
+        PrecioVarianteResumenDTO r = new PrecioVarianteResumenDTO();
         r.setId(p.getId());
         r.setProductoId(p.getProducto() != null ? p.getProducto().getId() : null);
         r.setMontoCentavos(p.getMontoCentavos());
@@ -83,19 +78,19 @@ public final class PrecioProductoMapper {
         return r;
     }
 
-    public static List<PrecioProductoResponseDTO> toResponseList(List<PrecioProducto> list) {
+    public static List<PrecioVarianteResponseDTO> toResponseList(List<PrecioVariante> list) {
         if (list == null) return List.of();
         return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
     }
 
-    public static List<PrecioProductoResumenDTO> toResumenList(List<PrecioProducto> list) {
+    public static List<PrecioVarianteResumenDTO> toResumenList(List<PrecioVariante> list) {
         if (list == null) return List.of();
         return list.stream().map(PrecioProductoMapper::toResumen).collect(Collectors.toList());
     }
 
-    public static PrecioProducto fromCrear(PrecioProductoCrearDTO dto) {
+    public static PrecioVariante fromCrear(PrecioVarianteCrearDTO dto) {
         if (dto == null) return null;
-        PrecioProducto p = new PrecioProducto();
+        PrecioVariante p = new PrecioVariante();
         p.setMontoCentavos(dto.getMontoCentavos());
         p.setPrecioAnteriorCentavos(dto.getPrecioAnteriorCentavos());
         p.setPrecioSinIvaCentavos(dto.getPrecioSinIvaCentavos());
@@ -109,13 +104,13 @@ public final class PrecioProductoMapper {
         return p;
     }
 
-    public static PrecioProducto fromCrearWithProducto(PrecioProductoCrearDTO dto, Producto producto) {
-        PrecioProducto p = fromCrear(dto);
+    public static PrecioVariante fromCrearWithProducto(PrecioVarianteCrearDTO dto, Producto producto) {
+        PrecioVariante p = fromCrear(dto);
         if (p != null) p.setProducto(producto);
         return p;
     }
 
-    public static void applyActualizar(PrecioProductoActualizarDTO dto, PrecioProducto entidad) {
+    public static void applyActualizar(PrecioVarianteActualizarDTO dto, PrecioVariante entidad) {
         if (dto == null || entidad == null) return;
         if (dto.getMontoCentavos() != null) entidad.setMontoCentavos(dto.getMontoCentavos());
         if (dto.getPrecioAnteriorCentavos() != null) entidad.setPrecioAnteriorCentavos(dto.getPrecioAnteriorCentavos());

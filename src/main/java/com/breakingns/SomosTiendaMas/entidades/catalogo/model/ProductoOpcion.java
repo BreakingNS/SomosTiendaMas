@@ -14,24 +14,32 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductoOpcion extends BaseEntidadAuditada {
+        // -----------------------------
+        // Relaciones
+        // -----------------------------
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "producto_id", nullable = false)
+        private Producto producto;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "producto_id", nullable = false)
-    private Producto producto;
+        @ManyToOne(fetch = FetchType.LAZY, optional = false)
+        @JoinColumn(name = "opcion_id", nullable = false)
+        private Opcion opcion;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "opcion_id", nullable = false)
-    private Opcion opcion;
+        // -----------------------------
+        // Configuración de la opción en el producto
+        // -----------------------------
+        @Column(name = "orden", nullable = false)
+        private Integer orden = 0;
 
-    @Column(name = "orden", nullable = false)
-    private Integer orden = 0;
+        @Column(name = "requerido", nullable = false)
+        private boolean requerido = false;
 
-    @Column(name = "requerido", nullable = false)
-    private boolean requerido = false;
+        @Column(name = "activo", nullable = false)
+        private boolean activo = true;
 
-    @Column(name = "activo", nullable = false)
-    private boolean activo = true;
-
-    @Column(name = "metadata_json", columnDefinition = "TEXT")
-    private String metadataJson;
+        // -----------------------------
+        // Campos libres / metadata
+        // -----------------------------
+        @Column(name = "metadata_json", columnDefinition = "TEXT")
+        private String metadataJson;
 }

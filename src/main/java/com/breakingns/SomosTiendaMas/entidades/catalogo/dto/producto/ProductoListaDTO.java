@@ -12,9 +12,11 @@ public class ProductoListaDTO {
     private Long marcaId;
     private Long categoriaId;
     private String sku;
-    private Long precioCentavos; // opcional, si quieres mostrar precio en lista
-    private long disponible;     // opcional, resumen de inventario
+    // disponible movido a variantes (no pertenece al DTO de producto)
 
     // nuevo
     private CondicionProducto condicion;
+    // campos resueltos para migración
+    private String skuResuelto;
+    
 }

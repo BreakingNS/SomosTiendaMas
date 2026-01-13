@@ -1,9 +1,9 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorActualizarDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.OpcionValor;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorActualizarDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorCrearDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionValorResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion;
 
 import java.util.List;

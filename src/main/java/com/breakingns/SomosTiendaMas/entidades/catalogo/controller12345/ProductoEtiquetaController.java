@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.catalogo.controller12345;
+/*package com.breakingns.SomosTiendaMas.entidades.catalogo.controller12345;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoEtiquetaService;
 import jakarta.validation.constraints.NotNull;
@@ -27,3 +27,4 @@ public class ProductoEtiquetaController {
         return ResponseEntity.noContent().build();
     }
 }
+*/

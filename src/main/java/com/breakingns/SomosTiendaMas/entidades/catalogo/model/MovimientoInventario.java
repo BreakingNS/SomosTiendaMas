@@ -1,4 +1,3 @@
-// VISTO BUENO
 package com.breakingns.SomosTiendaMas.entidades.catalogo.model;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.TipoMovimientoInventario;
@@ -8,7 +7,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "movimiento_inventario", indexes = {
-        @Index(name = "ix_mov_producto", columnList = "producto_id"),
+        @Index(name = "ix_mov_variante", columnList = "variante_id"),
         @Index(name = "ix_mov_order_ref", columnList = "order_ref")
 })
 @Getter
@@ -16,8 +15,8 @@ import lombok.Setter;
 public class MovimientoInventario extends BaseEntidadAuditada {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "producto_id", nullable = false)
-    private Producto producto;
+    @JoinColumn(name = "variante_id", nullable = false)
+    private Variante variante;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 24)
@@ -36,4 +35,14 @@ public class MovimientoInventario extends BaseEntidadAuditada {
 
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
+
+    // conveniencia: exponer producto por compatibilidad con servicios/mappers
+    public Producto getProducto() {
+        return this.variante != null ? this.variante.getProducto() : null;
+    }
+
+    public void setProducto(Producto producto) {
+        if (this.variante == null) this.variante = new Variante();
+        this.variante.setProducto(producto);
+    }
 }

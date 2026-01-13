@@ -1,7 +1,8 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.*;
 import java.util.List;
+
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.*;
 
 public interface IOpcionValorService {
     OpcionValorResponseDTO crear(OpcionValorCrearDTO dto);
