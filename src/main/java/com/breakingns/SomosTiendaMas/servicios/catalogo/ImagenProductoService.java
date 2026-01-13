@@ -1,7 +1,7 @@
 /*
 package com.breakingns.SomosTiendaMas.servicios.catalogo;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ImagenProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.VarianteProducto;
@@ -40,7 +40,7 @@ public class ImagenProductoService {
         this.storage = storage;
     }
 
-    public ImagenProductoDTO uploadForProducto(Long productoId, MultipartFile file, String alt, Integer orden) {
+    public ImagenVarianteDTO uploadForProducto(Long productoId, MultipartFile file, String alt, Integer orden) {
         Producto prod = productoRepo.findById(productoId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Producto no encontrado"));
         String url = save(file, "productos/" + productoId);
@@ -53,7 +53,7 @@ public class ImagenProductoService {
         return toDto(img);
     }
 
-    public ImagenProductoDTO uploadForVariante(Long varianteId, MultipartFile file, String alt, Integer orden) {
+    public ImagenVarianteDTO uploadForVariante(Long varianteId, MultipartFile file, String alt, Integer orden) {
         VarianteProducto var = varianteRepo.findById(varianteId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Variante no encontrada"));
         String url = save(file, "variantes/" + varianteId);
@@ -66,12 +66,12 @@ public class ImagenProductoService {
         return toDto(img);
     }
 
-    public List<ImagenProductoDTO> listByProducto(Long productoId) {
+    public List<ImagenVarianteDTO> listByProducto(Long productoId) {
         return imagenRepo.findByProductoIdOrderByOrdenAsc(productoId)
                 .stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public List<ImagenProductoDTO> listByVariante(Long varianteId) {
+    public List<ImagenVarianteDTO> listByVariante(Long varianteId) {
         return imagenRepo.findByVarianteIdOrderByOrdenAsc(varianteId)
                 .stream().map(this::toDto).collect(Collectors.toList());
     }
@@ -83,7 +83,7 @@ public class ImagenProductoService {
         imagenRepo.delete(img);
     }
 
-    public ImagenProductoDTO updateOrden(Long imagenId, Integer orden) {
+    public ImagenVarianteDTO updateOrden(Long imagenId, Integer orden) {
         if (orden == null) throw new ResponseStatusException(BAD_REQUEST, "Orden requerido");
         ImagenProducto img = imagenRepo.findById(imagenId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Imagen no encontrada"));
@@ -91,7 +91,7 @@ public class ImagenProductoService {
         return toDto(imagenRepo.save(img));
     }
 
-    public ImagenProductoDTO updateAlt(Long imagenId, String alt) {
+    public ImagenVarianteDTO updateAlt(Long imagenId, String alt) {
         ImagenProducto img = imagenRepo.findById(imagenId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Imagen no encontrada"));
         img.setAlt(alt);
@@ -118,8 +118,8 @@ public class ImagenProductoService {
                 .orElse(0);
     }
 
-    private ImagenProductoDTO toDto(ImagenProducto i) {
-        return ImagenProductoDTO.builder()
+    private ImagenVarianteDTO toDto(ImagenProducto i) {
+        return ImagenVarianteDTO.builder()
                 .id(i.getId())
                 .productoId(i.getProducto() != null ? i.getProducto().getId() : null)
                 .varianteId(i.getVariante() != null ? i.getVariante().getId() : null)

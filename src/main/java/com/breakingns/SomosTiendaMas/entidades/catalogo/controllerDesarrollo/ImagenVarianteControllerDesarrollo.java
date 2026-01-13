@@ -1,8 +1,7 @@
-/*
-/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+package com.breakingns.SomosTiendaMas.entidades.catalogo.controllerDesarrollo;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,29 +13,29 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
-public class ImagenProductoController {
+@RequestMapping("/dev/api")
+public class ImagenVarianteControllerDesarrollo {
 
-    private final IImagenProductoService service;
+    private final IImagenVarianteService service;
 
-    public ImagenProductoController(IImagenProductoService service) {
+    public ImagenVarianteControllerDesarrollo(IImagenVarianteService service) {
         this.service = service;
     }
 
-    // Crear imagen asociada a un producto
-    @PostMapping(value = "/productos/{productoId}/imagenes/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<ImagenVarianteDTO>> uploadParaProducto(
-            @PathVariable Long productoId,
+    // Crear imagen asociada a una variante
+    @PostMapping(value = "/variantes/{varianteId}/imagenes/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<ImagenVarianteDTO>> uploadParaVariante(
+            @PathVariable Long varianteId,
             @RequestParam("files") MultipartFile[] files,
             UriComponentsBuilder uriBuilder) {
 
-        // Implementá service.uploadAndCreate(productoId, files)
-        List<ImagenVarianteDTO> created = service.uploadAndCreate(productoId, files);
-        URI location = uriBuilder.path("/api/productos/{productoId}/imagenes").buildAndExpand(productoId).toUri();
+        // Implementá service.uploadAndCreate(varianteId, files)
+        List<ImagenVarianteDTO> created = service.uploadAndCreate(varianteId, files);
+        URI location = uriBuilder.path("/api/variantes/{varianteId}/imagenes").buildAndExpand(varianteId).toUri();
         return ResponseEntity.created(location).body(created);
     }
 
-    // Crear imagen independiente (si prefieres enviar productoId en body)
+    // Crear imagen independiente (si prefieres enviar varianteId en body)
     @PostMapping("/imagenes")
     public ResponseEntity<ImagenVarianteDTO> crear(@Valid @RequestBody ImagenVarianteDTO dto, UriComponentsBuilder uriBuilder) {
         ImagenVarianteDTO created = service.crear(dto);
@@ -55,14 +54,14 @@ public class ImagenProductoController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @GetMapping("/productos/{productoId}/imagenes")
-    public ResponseEntity<List<ImagenVarianteDTO>> listarPorProducto(@PathVariable Long productoId) {
-        return ResponseEntity.ok(service.listarPorProductoId(productoId));
+    @GetMapping("/variantes/{varianteId}/imagenes")
+    public ResponseEntity<List<ImagenVarianteDTO>> listarPorVariante(@PathVariable Long varianteId) {
+        return ResponseEntity.ok(service.listarPorVarianteId(varianteId));
     }
 
-    @GetMapping("/productos/{productoId}/imagenes/primera")
-    public ResponseEntity<ImagenVarianteDTO> obtenerPrimeraPorProducto(@PathVariable Long productoId) {
-        ImagenVarianteDTO dto = service.obtenerPrimeraPorProductoId(productoId);
+    @GetMapping("/variantes/{varianteId}/imagenes/primera")
+    public ResponseEntity<ImagenVarianteDTO> obtenerPrimeraPorVariante(@PathVariable Long varianteId) {
+        ImagenVarianteDTO dto = service.obtenerPrimeraPorVarianteId(varianteId);
         if (dto == null) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(dto);
     }
@@ -73,16 +72,15 @@ public class ImagenProductoController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/productos/{productoId}/imagenes")
-    public ResponseEntity<Void> eliminarPorProducto(@PathVariable Long productoId) {
-        service.eliminarPorProductoId(productoId);
+    @DeleteMapping("/variantes/{varianteId}/imagenes")
+    public ResponseEntity<Void> eliminarPorVariante(@PathVariable Long varianteId) {
+        service.eliminarPorVarianteId(varianteId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/productos/{productoId}/imagenes/reordenar")
-    public ResponseEntity<Void> reordenar(@PathVariable Long productoId, @RequestBody List<Long> imagenIdsOrdenados) {
-        service.reordenarPorProducto(productoId, imagenIdsOrdenados);
+    @PostMapping("/variantes/{varianteId}/imagenes/reordenar")
+    public ResponseEntity<Void> reordenar(@PathVariable Long varianteId, @RequestBody List<Long> imagenIdsOrdenados) {
+        service.reordenarPorVariante(varianteId, imagenIdsOrdenados);
         return ResponseEntity.ok().build();
     }
 }
- */

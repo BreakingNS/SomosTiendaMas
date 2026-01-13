@@ -1,7 +1,7 @@
 /* 
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller12345;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.servicios.catalogo.ImagenProductoService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ public class ImagenProductoController {
     }
 
     @PostMapping(path = "/producto/{productoId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ImagenProductoDTO> uploadForProducto(
+    public ResponseEntity<ImagenVarianteDTO> uploadForProducto(
             @PathVariable Long productoId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "alt", required = false) String alt,
@@ -32,7 +32,7 @@ public class ImagenProductoController {
     }
 
     @PostMapping(path = "/variante/{varianteId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ImagenProductoDTO> uploadForVariante(
+    public ResponseEntity<ImagenVarianteDTO> uploadForVariante(
             @PathVariable Long varianteId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "alt", required = false) String alt,
@@ -42,12 +42,12 @@ public class ImagenProductoController {
     }
 
     @GetMapping("/producto/{productoId}")
-    public List<ImagenProductoDTO> listByProducto(@PathVariable Long productoId) {
+    public List<ImagenVarianteDTO> listByProducto(@PathVariable Long productoId) {
         return service.listByProducto(productoId);
     }
 
     @GetMapping("/variante/{varianteId}")
-    public List<ImagenProductoDTO> listByVariante(@PathVariable Long varianteId) {
+    public List<ImagenVarianteDTO> listByVariante(@PathVariable Long varianteId) {
         return service.listByVariante(varianteId);
     }
 
@@ -58,12 +58,12 @@ public class ImagenProductoController {
     }
 
     @PatchMapping("/{imagenId}/orden")
-    public ImagenProductoDTO updateOrden(@PathVariable Long imagenId, @RequestBody Map<String, Integer> body) {
+    public ImagenVarianteDTO updateOrden(@PathVariable Long imagenId, @RequestBody Map<String, Integer> body) {
         return service.updateOrden(imagenId, body.get("orden"));
     }
 
     @PatchMapping("/{imagenId}/alt")
-    public ImagenProductoDTO updateAlt(@PathVariable Long imagenId, @RequestBody Map<String, String> body) {
+    public ImagenVarianteDTO updateAlt(@PathVariable Long imagenId, @RequestBody Map<String, String> body) {
         return service.updateAlt(imagenId, body.get("alt"));
     }
 }

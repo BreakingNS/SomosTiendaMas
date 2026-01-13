@@ -1,6 +1,6 @@
 /* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
@@ -32,11 +32,11 @@ public class ProductoMvcController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado");
         }
 
-        List<ImagenProductoDTO> imagenes = imagenService.listarPorProductoId(id);
+        List<ImagenVarianteDTO> imagenes = imagenService.listarPorProductoId(id);
 
         // garantia adicional: ordenar por 'orden' y poner nulls al final
         imagenes.sort(java.util.Comparator.comparing(
-            ImagenProductoDTO::getOrden,
+            ImagenVarianteDTO::getOrden,
             java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())
         ));
 
@@ -51,9 +51,9 @@ public class ProductoMvcController {
         if (producto == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado");
         }
-        List<ImagenProductoDTO> imagenes = imagenService.listarPorProductoId(id);
+        List<ImagenVarianteDTO> imagenes = imagenService.listarPorProductoId(id);
         imagenes.sort(java.util.Comparator.comparing(
-            ImagenProductoDTO::getOrden,
+            ImagenVarianteDTO::getOrden,
             java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())
         ));
         model.addAttribute("producto", producto);

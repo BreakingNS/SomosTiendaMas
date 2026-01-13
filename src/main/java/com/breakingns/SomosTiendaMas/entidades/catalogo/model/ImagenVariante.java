@@ -5,9 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "imagen_producto", indexes = {
-        @Index(name = "ix_img_variante", columnList = "variante_id")
-})
+@Table(name = "imagen_variante")
 @Getter
 @Setter
 public class ImagenVariante extends BaseEntidadAuditada {

@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centraliza
 import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
-//import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+//import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 //import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 //import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.OpcionConValoresDTO;
@@ -12,7 +12,7 @@ public class ProductoDetalleConOpcionesDTO {
 
     private ProductoResponseDTO producto;
     private List<OpcionConValoresDTO> opciones;/*
-    private List<ImagenProductoDTO> imagenes;
+    private List<ImagenVarianteDTO> imagenes;
     private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
     private PhysicalPropertiesDTO physical;*/
@@ -23,8 +23,8 @@ public class ProductoDetalleConOpcionesDTO {
     public List<OpcionConValoresDTO> getOpciones() { return opciones; }
     public void setOpciones(List<OpcionConValoresDTO> opciones) { this.opciones = opciones; }
     /* 
-    public List<ImagenProductoDTO> getImagenes() { return imagenes; }
-    public void setImagenes(List<ImagenProductoDTO> imagenes) { this.imagenes = imagenes; }
+    public List<ImagenVarianteDTO> getImagenes() { return imagenes; }
+    public void setImagenes(List<ImagenVarianteDTO> imagenes) { this.imagenes = imagenes; }
 
     public PrecioVarianteResponseDTO getPrecio() { return precio; }
     public void setPrecio(PrecioVarianteResponseDTO precio) { this.precio = precio; }

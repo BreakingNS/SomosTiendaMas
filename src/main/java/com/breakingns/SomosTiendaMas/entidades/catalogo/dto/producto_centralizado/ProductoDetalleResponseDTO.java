@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centraliza
 import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
@@ -11,7 +11,7 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumen
 public class ProductoDetalleResponseDTO {
 
     private ProductoResponseDTO producto;
-    private List<ImagenProductoDTO> imagenes;
+    private List<ImagenVarianteDTO> imagenes;
     private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
     private List<OpcionResumenDTO> opciones;
@@ -27,11 +27,11 @@ public class ProductoDetalleResponseDTO {
         this.producto = producto;
     }
 
-    public List<ImagenProductoDTO> getImagenes() {
+    public List<ImagenVarianteDTO> getImagenes() {
         return imagenes;
     }
 
-    public void setImagenes(List<ImagenProductoDTO> imagenes) {
+    public void setImagenes(List<ImagenVarianteDTO> imagenes) {
         this.imagenes = imagenes;
     }
 

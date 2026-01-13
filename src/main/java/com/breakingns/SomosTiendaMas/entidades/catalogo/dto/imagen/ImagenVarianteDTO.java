@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImagenProductoDTO {
+public class ImagenVarianteDTO {
     private Long id;
-    private Long productoId;
+    private Long varianteId;
     private String url;
     private String alt;
     private Integer orden;

@@ -5,17 +5,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteOpcionService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResumenDTO;
 
 import java.util.List;
@@ -25,21 +26,23 @@ import java.util.ArrayList;
 public class ProductoAggregatorServiceImpl {
 
     private final IProductoService productoService;
-    private final IImagenProductoService imagenService;
+    private final IImagenVarianteService imagenService;
     private final IInventarioVarianteService inventarioVarianteService;
     private final IOpcionService opcionService;
     private final IVarianteService varianteService;
     private final IPrecioVarianteService precioVarianteService;
     private final IVarianteOpcionService varianteOpcionService;
+    private final IImagenVarianteService imagenVarianteService;
 
     public ProductoAggregatorServiceImpl(
             IProductoService productoService,
-            IImagenProductoService imagenService,
-            IInventarioVarianteService inventarioVarianteService,
-            IOpcionService opcionService,
-            IVarianteService varianteService,
-            IPrecioVarianteService precioVarianteService,
-            IVarianteOpcionService varianteOpcionService
+            IImagenVarianteService imagenService,
+                IInventarioVarianteService inventarioVarianteService,
+                IOpcionService opcionService,
+                IVarianteService varianteService,
+                IPrecioVarianteService precioVarianteService,
+                IVarianteOpcionService varianteOpcionService,
+                IImagenVarianteService imagenVarianteService
     ) {
         this.productoService = productoService;
         this.imagenService = imagenService;
@@ -48,6 +51,7 @@ public class ProductoAggregatorServiceImpl {
         this.varianteService = varianteService;
         this.precioVarianteService = precioVarianteService;
         this.varianteOpcionService = varianteOpcionService;
+        this.imagenVarianteService = imagenVarianteService;
     }
 
     @Transactional(readOnly = true)
@@ -73,7 +77,7 @@ public class ProductoAggregatorServiceImpl {
         if (producto == null) return null;
 
         // Imágenes (migradas a variantes: listar imágenes de variante/producto)
-        List<ImagenProductoDTO> imagenes = imagenService.listarPorProductoId(productoId);
+        List<ImagenVarianteDTO> imagenes = imagenService.listarPorVarianteId(productoId);
 
         // Obtener variante default y usar sus datos (precio/stock) como fuente de verdad
         var varianteDefault = varianteService.obtenerDefaultByProductoId(productoId);
@@ -148,6 +152,12 @@ public class ProductoAggregatorServiceImpl {
                                 try {
                                     var opc = varianteOpcionService.obtenerVarianteConOpcionesConValores(v.getId());
                                     if (opc != null) v.setOpciones(opc.getOpciones());
+                                } catch (Exception ex) {
+                                    // noop
+                                }
+                                try {
+                                    var imgs = imagenVarianteService.listarPorVarianteId(v.getId());
+                                    if (imgs != null) v.setImagenes(imgs);
                                 } catch (Exception ex) {
                                     // noop
                                 }

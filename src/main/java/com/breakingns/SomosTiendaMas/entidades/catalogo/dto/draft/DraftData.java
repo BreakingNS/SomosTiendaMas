@@ -1,6 +1,6 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.draft;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.InventarioVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
@@ -17,7 +17,7 @@ import java.util.List;
 public class DraftData {
     private ProductoCrearDTO producto;
     private OpcionCrearDTO opcion;
-    private List<ImagenProductoDTO> imagenes;
+    private List<ImagenVarianteDTO> imagenes;
     private PrecioVarianteResponseDTO precio;
     private InventarioVarianteDTO inventario;
     private PhysicalPropertiesDTO propiedadesFisicas;

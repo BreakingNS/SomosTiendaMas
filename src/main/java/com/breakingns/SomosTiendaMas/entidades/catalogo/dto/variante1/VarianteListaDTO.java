@@ -5,6 +5,7 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVariant
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
 import java.util.List;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante_opcion.OpcionConValoresDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 
 @Data
 public class VarianteListaDTO {
@@ -17,4 +18,5 @@ public class VarianteListaDTO {
     private Boolean esDefault;
     private Boolean activo;
     private List<OpcionConValoresDTO> opciones;
+    private List<ImagenVarianteDTO> imagenes;
 }

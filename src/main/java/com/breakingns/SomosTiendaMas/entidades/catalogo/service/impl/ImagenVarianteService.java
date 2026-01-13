@@ -1,12 +1,12 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
 import com.breakingns.SomosTiendaMas.config.UploadProperties;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenProductoDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ImagenVariante;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ImagenProductoRepository;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ImagenVarianteRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,27 +24,27 @@ import java.nio.file.Paths;
 
 @Service
 @Transactional
-public class ImagenProductoService implements IImagenProductoService {
+public class ImagenVarianteService implements IImagenVarianteService {
 
-    private final ImagenProductoRepository imagenRepo;
-    private final ProductoRepository productoRepo;
+    private final ImagenVarianteRepository imagenRepo;
+    private final VarianteRepository varianteRepo;
     private final UploadProperties uploadProps;
 
-    public ImagenProductoService(ImagenProductoRepository imagenRepo, ProductoRepository productoRepo, UploadProperties uploadProps) {
+    public ImagenVarianteService(ImagenVarianteRepository imagenRepo, VarianteRepository varianteRepo, UploadProperties uploadProps) {
         this.imagenRepo = imagenRepo;
-        this.productoRepo = productoRepo;
+        this.varianteRepo = varianteRepo;
         this.uploadProps = uploadProps;
     }
 
     @Override
-    public ImagenProductoDTO crear(ImagenProductoDTO dto) {
+    public ImagenVarianteDTO crear(ImagenVarianteDTO dto) {
         if (dto == null) throw new IllegalArgumentException("dto es null");
         ImagenVariante e = new ImagenVariante();
 
-        if (dto.getProductoId() != null) {
-            Producto p = productoRepo.findById(dto.getProductoId())
-                    .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + dto.getProductoId()));
-            e.setProducto(p);
+        if (dto.getVarianteId() != null) {
+            Variante p = varianteRepo.findById(dto.getVarianteId())
+                    .orElseThrow(() -> new EntityNotFoundException("Variante no encontrado: " + dto.getVarianteId()));
+            e.setVariante(p);
         }
 
         // campos comunes — adaptar nombres si tu DTO/entidad difieren
@@ -52,7 +52,7 @@ public class ImagenProductoService implements IImagenProductoService {
         e.setAlt(dto.getAlt());
 
         // calcular orden: siguiente disponible
-        List<ImagenVariante> actuales = imagenRepo.findByVarianteProductoIdOrderByOrdenAsc(dto.getProductoId());
+        List<ImagenVariante> actuales = imagenRepo.findByVariante_IdOrderByOrdenAsc(dto.getVarianteId());
         int nextOrden = 0;
         if (actuales != null && !actuales.isEmpty()) {
             ImagenVariante last = actuales.get(actuales.size() - 1);
@@ -65,28 +65,28 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     @Override
-    public ImagenProductoDTO actualizar(Long id, ImagenProductoDTO dto) {
+    public ImagenVarianteDTO actualizar(Long id, ImagenVarianteDTO dto) {
         ImagenVariante e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
         if (dto.getUrl() != null) e.setUrl(dto.getUrl());
         if (dto.getAlt() != null) e.setAlt(dto.getAlt());
         if (dto.getOrden() != null) e.setOrden(dto.getOrden());
-        // no cambiamos productoId aquí; si se necesita, manejarlo explícitamente
+        // no cambiamos varianteId aquí; si se necesita, manejarlo explícitamente
         ImagenVariante updated = imagenRepo.save(e);
         return toDto(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ImagenProductoDTO obtenerPorId(Long id) {
+    public ImagenVarianteDTO obtenerPorId(Long id) {
         ImagenVariante e = imagenRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Imagen no encontrada: " + id));
         return toDto(e);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ImagenProductoDTO> listarPorProductoId(Long productoId) {
-        List<ImagenVariante> list = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
-        List<ImagenProductoDTO> out = new ArrayList<>();
+    public List<ImagenVarianteDTO> listarPorVarianteId(Long varianteId) {
+        List<ImagenVariante> list = imagenRepo.findByVariante_IdAndDeletedAtIsNullOrderByOrdenAsc(varianteId);
+        List<ImagenVarianteDTO> out = new ArrayList<>();
         if (list == null) return out;
         for (ImagenVariante e : list) out.add(toDto(e));
         return out;
@@ -94,8 +94,8 @@ public class ImagenProductoService implements IImagenProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ImagenProductoDTO obtenerPrimeraPorProductoId(Long productoId) {
-        Optional<ImagenVariante> opt = imagenRepo.findFirstByVarianteProductoIdOrderByOrdenAsc(productoId);
+    public ImagenVarianteDTO obtenerPrimeraPorVarianteId(Long varianteId) {
+        Optional<ImagenVariante> opt = imagenRepo.findFirstByVariante_IdOrderByOrdenAsc(varianteId);
         return opt.map(this::toDto).orElse(null);
     }
 
@@ -107,8 +107,8 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     @Override
-    public void eliminarPorProductoId(Long productoId) {
-        List<ImagenVariante> list = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+    public void eliminarPorVarianteId(Long varianteId) {
+        List<ImagenVariante> list = imagenRepo.findByVariante_IdAndDeletedAtIsNullOrderByOrdenAsc(varianteId);
         if (list == null || list.isEmpty()) return;
         LocalDateTime now = LocalDateTime.now();
         for (ImagenVariante e : list) {
@@ -118,9 +118,9 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     @Override
-    public void reordenarPorProducto(Long productoId, List<Long> imagenIdsOrdenados) {
+    public void reordenarPorVariante(Long varianteId, List<Long> imagenIdsOrdenados) {
         if (imagenIdsOrdenados == null || imagenIdsOrdenados.isEmpty()) return;
-        List<ImagenVariante> actuales = imagenRepo.findByVarianteProductoIdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
+        List<ImagenVariante> actuales = imagenRepo.findByVariante_IdAndDeletedAtIsNullOrderByOrdenAsc(varianteId);
         // Mapear ids -> entidad rápida búsqueda
         java.util.Map<Long, ImagenVariante> map = new java.util.HashMap<>();
         for (ImagenVariante e : actuales) map.put(e.getId(), e);
@@ -137,11 +137,11 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     // mapeo simple entidad -> DTO (adaptar si los nombres de campos difieren)
-    private ImagenProductoDTO toDto(ImagenVariante e) {
+    private ImagenVarianteDTO toDto(ImagenVariante e) {
         if (e == null) return null;
-        ImagenProductoDTO dto = new ImagenProductoDTO();
+        ImagenVarianteDTO dto = new ImagenVarianteDTO();
         dto.setId(e.getId());
-        dto.setProductoId(e.getProducto() != null ? e.getProducto().getId() : null);
+        dto.setVarianteId(e.getVariante() != null ? e.getVariante().getId() : null);
         // normalizar url: si no empieza con '/' o 'http' añadir prefijo urlBase
         String url = e.getUrl();
         if (url != null && !url.startsWith("/") && !url.startsWith("http")) {
@@ -160,12 +160,12 @@ public class ImagenProductoService implements IImagenProductoService {
     }
 
     @Override
-    public List<ImagenProductoDTO> uploadAndCreate(Long productoId, MultipartFile[] files) {
-        List<ImagenProductoDTO> out = new ArrayList<>();
+    public List<ImagenVarianteDTO> uploadAndCreate(Long varianteId, MultipartFile[] files) {
+        List<ImagenVarianteDTO> out = new ArrayList<>();
         if (files == null || files.length == 0) return out;
 
         // carpeta base según UploadProperties (usa la ruta configurada en UploadProperties)
-        Path baseDir = uploadProps.getRoot().resolve(Paths.get("productos", String.valueOf(productoId)));
+        Path baseDir = uploadProps.getRoot().resolve(Paths.get("variantes", String.valueOf(varianteId)));
 
         try {
             Files.createDirectories(baseDir);
@@ -186,15 +186,15 @@ public class ImagenProductoService implements IImagenProductoService {
             }
 
             // URL pública relativa usando urlBase de UploadProperties
-            String publicUrl = uploadProps.getUrlBase() + "/productos/" + productoId + "/" + safeName;
+            String publicUrl = uploadProps.getUrlBase() + "/variantes/" + varianteId + "/" + safeName;
 
 
-            ImagenProductoDTO dto = new ImagenProductoDTO();
-            dto.setProductoId(productoId);
+            ImagenVarianteDTO dto = new ImagenVarianteDTO();
+            dto.setVarianteId(varianteId);
             dto.setUrl(publicUrl);
             dto.setAlt(original);
 
-            ImagenProductoDTO created = crear(dto);
+            ImagenVarianteDTO created = crear(dto);
             out.add(created);
         }
 
