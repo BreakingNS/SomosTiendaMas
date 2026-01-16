@@ -11,9 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+// REVIEW: se va a utilizar solo VarianteFisicoServiceImpl y no ProductoFisicoServiceImpl, por lo que este controlador queda obsoleto
+@Deprecated(since="2026-01-15", forRemoval=true)
+
 @Service
 public class ProductoFisicoServiceImpl implements IProductoFisicoService {
-
+    
     private final ProductoFisicoRepository productoFisicoRepository;
     private final ProductoRepository productoRepository;
 

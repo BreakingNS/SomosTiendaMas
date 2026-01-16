@@ -242,3 +242,5 @@ beta 0.1.7.9: Modulo 3 previo a agregar Variantes en Producto.
 beta 0.1.8.0: Modulo 3 previo a agregar Imagenes en Variantes de Producto.
 
 beta 0.1.8.1: Modulo 3 previo a agregar Fisicas en Variantes y Producto (fallback).
+
+beta 0.1.8.2: Modulo 3 previo a centralizar todo en Variante (Precio, Imagenes, Inventario, Fisico).

@@ -18,6 +18,8 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteOpcionS
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResumenDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteFisicoService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.PhysicalPropertiesDTO;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public class ProductoAggregatorServiceImpl {
     private final IPrecioVarianteService precioVarianteService;
     private final IVarianteOpcionService varianteOpcionService;
     private final IImagenVarianteService imagenVarianteService;
+    private final IVarianteFisicoService varianteFisicoService;
 
     public ProductoAggregatorServiceImpl(
             IProductoService productoService,
@@ -42,7 +45,8 @@ public class ProductoAggregatorServiceImpl {
                 IVarianteService varianteService,
                 IPrecioVarianteService precioVarianteService,
                 IVarianteOpcionService varianteOpcionService,
-                IImagenVarianteService imagenVarianteService
+                IImagenVarianteService imagenVarianteService,
+                IVarianteFisicoService varianteFisicoService
     ) {
         this.productoService = productoService;
         this.imagenService = imagenService;
@@ -52,6 +56,7 @@ public class ProductoAggregatorServiceImpl {
         this.precioVarianteService = precioVarianteService;
         this.varianteOpcionService = varianteOpcionService;
         this.imagenVarianteService = imagenVarianteService;
+        this.varianteFisicoService = varianteFisicoService;
     }
 
     @Transactional(readOnly = true)
@@ -114,10 +119,15 @@ public class ProductoAggregatorServiceImpl {
         // Armar DTO agregado
         ProductoDetalleResponseDTO dto = new ProductoDetalleResponseDTO();
         dto.setProducto(producto);
+        // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
+        // @Deprecated(since="2026-01-15", forRemoval=true)
+        /*
         dto.setImagenes(imagenes);
         dto.setPrecio(precio);
         dto.setStock(stock);
+        */
         dto.setOpciones(opciones);
+        
 
         // Poblar precio por variante en la lista de variantes del producto (si está presente)
         try {
@@ -158,6 +168,12 @@ public class ProductoAggregatorServiceImpl {
                                 try {
                                     var imgs = imagenVarianteService.listarPorVarianteId(v.getId());
                                     if (imgs != null) v.setImagenes(imgs);
+                                } catch (Exception ex) {
+                                    // noop
+                                }
+                                try {
+                                    PhysicalPropertiesDTO phys = varianteFisicoService.obtenerPorVarianteId(v.getId());
+                                    if (phys != null) v.setPhysical(phys);
                                 } catch (Exception ex) {
                                     // noop
                                 }

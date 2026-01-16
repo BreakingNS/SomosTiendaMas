@@ -35,4 +35,7 @@ public class ProductoCrearDTO {
 
     // nuevo: condición del producto (opcional)
     private CondicionProducto condicion;
+
+    // opcional: datos de la variante default a crear junto al producto
+    private com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO varianteDefault;
 }

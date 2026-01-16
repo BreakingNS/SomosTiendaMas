@@ -8,6 +8,7 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizad
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesValoresDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl.ProductoAggregatorServiceImpl;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoOpcionService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoFisicoService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleConOpcionesDTO;
 
 @RestController
@@ -16,10 +17,12 @@ public class ProductoDetalleControllerDesarrollo {
 
     private final ProductoAggregatorServiceImpl aggregator;
     private final IProductoOpcionService opcionService;
+    private final IProductoFisicoService productoFisicoService;
 
-    public ProductoDetalleControllerDesarrollo(ProductoAggregatorServiceImpl aggregator, IProductoOpcionService opcionService) {
+    public ProductoDetalleControllerDesarrollo(ProductoAggregatorServiceImpl aggregator, IProductoOpcionService opcionService, IProductoFisicoService productoFisicoService) {
         this.aggregator = aggregator;
         this.opcionService = opcionService;
+        this.productoFisicoService = productoFisicoService;
     }
 
     @GetMapping("/{id}/detalle")
@@ -35,13 +38,17 @@ public class ProductoDetalleControllerDesarrollo {
         
         // construir respuesta combinada
         ProductoDetalleConOpcionesDTO out = new ProductoDetalleConOpcionesDTO();
-        
+
         out.setProducto(detalle.getProducto());
-        /*
+        // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
+        // @Deprecated(since="2026-01-15", forRemoval=true)
+        /* 
         out.setImagenes(detalle.getImagenes());
         out.setPrecio(detalle.getPrecio());
         out.setStock(detalle.getStock());
-        out.setPhysical(detalle.getPhysical());
+        //obtener físicas desde la tabla producto_fisico
+        var physical = productoFisicoService.obtenerPorProductoId(id); 
+        out.setPhysical(physical);
         */
         out.setOpciones(opcionesDto.getOpciones());
         

@@ -12,12 +12,14 @@ public class ProductoDetalleResponseDTO {
 
     private ProductoResponseDTO producto;
     private List<ImagenVarianteDTO> imagenes;
+    private List<OpcionResumenDTO> opciones;
+    // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
+    // @Deprecated(since="2026-01-15", forRemoval=true)
+    /* 
     private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
-    private List<OpcionResumenDTO> opciones;
-
-    // Nuevo: propiedades físicas opcionales
     private PhysicalPropertiesDTO physical;
+    */
 
     public ProductoResponseDTO getProducto() {
         return producto;
@@ -35,6 +37,15 @@ public class ProductoDetalleResponseDTO {
         this.imagenes = imagenes;
     }
 
+    public List<OpcionResumenDTO> getOpciones() {
+        return opciones;
+    }
+
+    public void setOpciones(List<OpcionResumenDTO> opciones) {
+        this.opciones = opciones;
+    }
+
+    /*
     public PrecioVarianteResponseDTO getPrecio() {
         return precio;
     }
@@ -50,15 +61,7 @@ public class ProductoDetalleResponseDTO {
     public void setStock(DisponibilidadResponseDTO stock) {
         this.stock = stock;
     }
-
-    public List<OpcionResumenDTO> getOpciones() {
-        return opciones;
-    }
-
-    public void setOpciones(List<OpcionResumenDTO> opciones) {
-        this.opciones = opciones;
-    }
-
+     
     public PhysicalPropertiesDTO getPhysical() {
         return physical;
     }
@@ -66,4 +69,5 @@ public class ProductoDetalleResponseDTO {
     public void setPhysical(PhysicalPropertiesDTO physical) {
         this.physical = physical;
     }
+    */
 }

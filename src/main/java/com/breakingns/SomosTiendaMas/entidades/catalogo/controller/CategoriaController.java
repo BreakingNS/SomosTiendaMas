@@ -1,5 +1,4 @@
-/* 
-/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.categoria.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.ICategoriaService;
@@ -65,4 +64,3 @@ public class CategoriaController {
         return ResponseEntity.noContent().build();
     }
 }
-*/

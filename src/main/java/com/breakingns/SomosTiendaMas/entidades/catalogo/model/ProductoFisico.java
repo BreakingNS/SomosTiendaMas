@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+// REVIEW: se va a utilizar solo VarianteFisico y no ProductoFisico, por lo que este controlador queda obsoleto
+@Deprecated(since="2026-01-15", forRemoval=true)
+
 @Entity
-@Table(name = "product_physical", indexes = {
-        @Index(name = "ix_product_physical_producto", columnList = "producto_id")
+@Table(name = "producto_fisico", indexes = {
+        @Index(name = "ix_producto_fisico_producto", columnList = "producto_id")
 })
 @Getter
 @Setter

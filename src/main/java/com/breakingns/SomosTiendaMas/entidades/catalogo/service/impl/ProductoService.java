@@ -65,18 +65,34 @@ public class ProductoService implements IProductoService {
 
         Producto entidad = ProductoMapper.toEntity(dto, marca, categoria);
         Producto saved = repo.save(entidad);
-        // Crear variante default obligatoria
+        // Crear variante default obligatoria. Si el DTO de producto incluye `varianteDefault`, usarlo.
         try {
-            com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO vdto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO();
+            com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO vdto = dto.getVarianteDefault();
+            if (vdto == null) vdto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO();
+
+            // asegurar productoId
             vdto.setProductoId(saved.getId());
-            // copiar sku histórico si existe
-            if (saved.getSku() != null) vdto.setSku(saved.getSku());
-            // atributos por defecto: objeto vacío
-            String attributesJson = "{}";
-            vdto.setAttributesJson(attributesJson);
-            vdto.setAttributesHash(calculateSha256Hex(attributesJson));
-            vdto.setEsDefault(true);
-            vdto.setActivo(true);
+
+            // asegurar sku: priorizar el sku enviado en la variante; si no existe, usar sku del producto; si sigue null, generar uno
+            if (vdto.getSku() == null || vdto.getSku().isBlank()) {
+                if (saved.getSku() != null && !saved.getSku().isBlank()) {
+                    vdto.setSku(saved.getSku());
+                } else {
+                    // generar SKU temporal único
+                    String gen = "VAR-" + java.util.UUID.randomUUID().toString().replaceAll("-","" ).substring(0,8).toUpperCase();
+                    vdto.setSku(gen);
+                }
+            }
+
+            // atributos por defecto si no vienen
+            if (vdto.getAttributesJson() == null) vdto.setAttributesJson("{}");
+            if (vdto.getAttributesHash() == null || vdto.getAttributesHash().isBlank()) {
+                vdto.setAttributesHash(calculateSha256Hex(vdto.getAttributesJson()));
+            }
+
+            // asegurar flags
+            if (vdto.getEsDefault() == null) vdto.setEsDefault(true);
+            if (vdto.getActivo() == null) vdto.setActivo(true);
 
             var varianteDto = varianteService.crearVariante(vdto);
 
@@ -84,15 +100,13 @@ public class ProductoService implements IProductoService {
             resp.setGarantia(saved.getGarantia());
             resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
             // poblar campos resueltos desde la variante default creada
-                if (varianteDto != null) {
+            if (varianteDto != null) {
                 resp.setSkuResuelto(varianteDto.getSkuResuelto());
                 // añadir variante resumen
                 com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO listDto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO();
                 listDto.setId(varianteDto.getId());
                 listDto.setProductoId(varianteDto.getProductoId());
-                listDto.setSkuResuelto(varianteDto.getSkuResuelto());
-                // price is provided by Variante DTO; do not set price on Producto list DTO
-                // stock moved to variant; do not set disponible on Producto list DTO
+                listDto.setSkuResuelto(varianteDto.getSkuResuelto() == null ? "---" : varianteDto.getSkuResuelto());
                 listDto.setEsDefault(varianteDto.getEsDefault());
                 listDto.setActivo(varianteDto.getActivo());
                 resp.setVariantes(java.util.List.of(listDto));

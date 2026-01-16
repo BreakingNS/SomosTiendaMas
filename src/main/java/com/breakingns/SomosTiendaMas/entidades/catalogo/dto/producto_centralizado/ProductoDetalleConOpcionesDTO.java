@@ -3,19 +3,22 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centraliza
 import java.util.List;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
-//import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
-//import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
-//import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.PhysicalPropertiesDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.OpcionConValoresDTO;
 
 public class ProductoDetalleConOpcionesDTO {
 
     private ProductoResponseDTO producto;
-    private List<OpcionConValoresDTO> opciones;/*
+    private List<OpcionConValoresDTO> opciones;
     private List<ImagenVarianteDTO> imagenes;
     private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
-    private PhysicalPropertiesDTO physical;*/
+    // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
+    // @Deprecated(since="2026-01-15", forRemoval=true)
+    // private PhysicalPropertiesDTO physical;
 
     public ProductoResponseDTO getProducto() { return producto; }
     public void setProducto(ProductoResponseDTO producto) { this.producto = producto; }
@@ -31,7 +34,7 @@ public class ProductoDetalleConOpcionesDTO {
 
     public DisponibilidadResponseDTO getStock() { return stock; }
     public void setStock(DisponibilidadResponseDTO stock) { this.stock = stock; }
-
+    
     public PhysicalPropertiesDTO getPhysical() { return physical; }
     public void setPhysical(PhysicalPropertiesDTO physical) { this.physical = physical; }
     */

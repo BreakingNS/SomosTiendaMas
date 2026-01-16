@@ -278,15 +278,19 @@
     
     function buildApiUrl() {
       const q = getQueryParam();
-      if (!q) {
-        // fallback a ejemplo público si no hay params (cambiar si lo deseas)
-        return 'https://api.ejemplo.com/productos/iphone-12';
+      // si el query param existe, usarlo (id o slug)
+      if (q) {
+        if (q.type === 'id') return '/dev/api/productos/' + encodeURIComponent(q.value) + '/detalle';
+        return '/dev/api/productos/slug/' + encodeURIComponent(q.value) + '/detalle';
       }
-      if (q.type === 'id') {
-        // usar endpoint centralizado que devuelve producto + imagenes + precio + stock + opciones
-        return '/api/productos/' + encodeURIComponent(q.value) + '/detalle';
-      }
-      return '/api/productos/slug/' + encodeURIComponent(q.value) + '/detalle';
+
+      // si no se detectó mediante getQueryParam, intentar leer directamente from location.search
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get('id');
+      if (idParam) return '/dev/api/productos/' + encodeURIComponent(idParam) + '/detalle';
+
+      // último recurso: fallback a localhost sin id específico
+      return 'https://localhost:8443/dev/api/productos/11/detalle';
     }
     
     // Cargar y renderizar las imágenes del producto (versión robusta: busca en varios endpoints y usa la primera imagen)
