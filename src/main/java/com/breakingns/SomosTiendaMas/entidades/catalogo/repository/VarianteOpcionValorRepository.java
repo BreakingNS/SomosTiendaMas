@@ -25,4 +25,5 @@ public interface VarianteOpcionValorRepository extends JpaRepository<VarianteOpc
     void deleteByOpcion_Id(Long opcionId);
 
     List<VarianteOpcionValor> findByOpcion_IdAndDeletedAtIsNull(Long opcionId);
+    List<VarianteOpcionValor> findByVariante_IdInAndDeletedAtIsNull(List<Long> varianteIds);
 }

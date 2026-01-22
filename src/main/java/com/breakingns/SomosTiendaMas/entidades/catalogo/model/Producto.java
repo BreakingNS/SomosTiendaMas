@@ -91,9 +91,10 @@ public class Producto extends BaseEntidadAuditada {
     // -----------------------------
     // Opciones, etiquetas y atributos estructurados
     // -----------------------------
+    /* 
     @OneToMany(mappedBy = "producto", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     private List<ProductoOpcion> opciones = new ArrayList<>();
-
+    */
     @OneToMany(mappedBy = "producto", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
     private List<ProductoEtiqueta> etiquetas = new ArrayList<>();
 

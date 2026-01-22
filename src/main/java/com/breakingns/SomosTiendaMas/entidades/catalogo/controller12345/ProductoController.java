@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.controller12345;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCrearDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCentralizadoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
@@ -34,7 +34,7 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductoResponseDTO> crear(@RequestBody @Valid ProductoCrearDTO dto) {
+    public ResponseEntity<ProductoCentralizadoResponseDTO> crear(@RequestBody @Valid ProductoCrearDTO dto) {
         Marca marca = dto.getMarcaId() != null ? marcaRepository.findById(dto.getMarcaId()).orElse(null) : null;
         Categoria categoria = dto.getCategoriaId() != null ? categoriaRepository.findById(dto.getCategoriaId()).orElse(null) : null;
         Producto p = ProductoMapper.toEntity(dto, marca, categoria);
@@ -43,7 +43,7 @@ public class ProductoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid ProductoActualizarDTO dto) {
+    public ResponseEntity<ProductoCentralizadoResponseDTO> actualizar(@PathVariable Long id, @RequestBody @Valid ProductoActualizarDTO dto) {
         Producto cambios = new Producto();
         cambios.setNombre(dto.getNombre());
         cambios.setSlug(dto.getSlug());
@@ -63,14 +63,14 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> obtener(@PathVariable Long id) {
+    public ResponseEntity<ProductoCentralizadoResponseDTO> obtener(@PathVariable Long id) {
         Producto p = productoService.obtener(id).orElseThrow();
         return ResponseEntity.ok(ProductoMapper.toResponse(p));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> listar() {
-        List<ProductoResponseDTO> list = productoService.listar().stream()
+    public ResponseEntity<List<ProductoCentralizadoResponseDTO>> listar() {
+        List<ProductoCentralizadoResponseDTO> list = productoService.listar().stream()
                 .map(ProductoMapper::toResponse).toList();
         return ResponseEntity.ok(list);
     }

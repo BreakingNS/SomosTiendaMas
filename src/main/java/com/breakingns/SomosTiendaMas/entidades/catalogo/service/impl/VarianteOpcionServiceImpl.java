@@ -8,7 +8,6 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.model.VarianteValor;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante_opcion.VarianteConOpcionesDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante_opcion.VarianteOpcionesAsignarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.VarianteOpcionMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoOpcion;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteOpcionService;
 import org.springframework.stereotype.Service;
@@ -25,23 +24,20 @@ import org.slf4j.LoggerFactory;
 public class VarianteOpcionServiceImpl implements IVarianteOpcionService {
     private final VarianteValorRepository varianteValorRepo;
     private final VarianteRepository varianteRepo;
-    private final OpcionRepository opcionRepo;
     private final OpcionValorRepository opcionValorRepo;
-    private final ProductoOpcionRepository productoOpcionRepo;
+    private final VarianteOpcionRepository varianteOpcionRepo;
 
     private static final Logger log = LoggerFactory.getLogger(VarianteOpcionServiceImpl.class);
 
 
-    public VarianteOpcionServiceImpl(ProductoOpcionRepository productoOpcionRepo,
-                                     VarianteValorRepository varianteValorRepo,
+    public VarianteOpcionServiceImpl(VarianteValorRepository varianteValorRepo,
                                      VarianteRepository varianteRepo,
-                                     OpcionRepository opcionRepo,
-                                     OpcionValorRepository opcionValorRepo) {
-        this.productoOpcionRepo = productoOpcionRepo;
+                                     OpcionValorRepository opcionValorRepo,
+                                     VarianteOpcionRepository varianteOpcionRepo) {
         this.varianteValorRepo = varianteValorRepo;
         this.varianteRepo = varianteRepo;
-        this.opcionRepo = opcionRepo;
         this.opcionValorRepo = opcionValorRepo;
+        this.varianteOpcionRepo = varianteOpcionRepo;
     }
 
     @Override
@@ -53,10 +49,15 @@ public class VarianteOpcionServiceImpl implements IVarianteOpcionService {
         // validar que las opciones solicitadas estén declaradas para el producto padre
         Set<Long> opcionIds = new HashSet<>();
         for (var s : dto.opciones) opcionIds.add(s.opcionId);
+        // validar que las opciones solicitadas estén declaradas para el producto padre
+        List<Long> missing = new ArrayList<>();
         for (Long opcionId : opcionIds) {
-            boolean existe = productoOpcionRepo.existsByProducto_IdAndOpcion_IdAndDeletedAtIsNull(
-                    variante.getProducto().getId(), opcionId);
-            if (!existe) throw new IllegalArgumentException("Alguna opcion no pertenece al producto");
+            boolean existe = varianteOpcionRepo.existsByVariante_Producto_IdAndOpcion_IdAndDeletedAtIsNull(
+                variante.getProducto().getId(), opcionId);
+            if (!existe) missing.add(opcionId);
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("Alguna opcion no pertenece al producto: productoId=" + variante.getProducto().getId() + " opcionIds=" + missing);
         }
 
         List<VarianteValor> toSavePv = new ArrayList<>();
@@ -84,7 +85,7 @@ public class VarianteOpcionServiceImpl implements IVarianteOpcionService {
     public VarianteConOpcionesDTO obtenerVarianteConOpciones(Long varianteId) {
         if (varianteId == null) throw new IllegalArgumentException("varianteId required");
         var variante = varianteRepo.findById(varianteId).orElseThrow(() -> new NoSuchElementException("Variante no encontrado"));
-        var relaciones = productoOpcionRepo.findByProducto_IdAndDeletedAtIsNullOrderByOrdenAsc(variante.getProducto().getId());
+        var relaciones = varianteOpcionRepo.findByVariante_Producto_IdAndDeletedAtIsNullOrderByOrdenAsc(variante.getProducto().getId());
         var opciones = relaciones.stream()
             .map(productOpcion -> VarianteOpcionMapper.toResumenFromRelacion(productOpcion))
             .collect(Collectors.toList());
@@ -97,7 +98,7 @@ public class VarianteOpcionServiceImpl implements IVarianteOpcionService {
         var variantes = varianteRepo.findAll();
         List<VarianteConOpcionesDTO> salida = new ArrayList<>();
         for (var p : variantes) {
-                var relaciones = productoOpcionRepo.findByProducto_IdAndDeletedAtIsNullOrderByOrdenAsc(p.getProducto().getId());
+                var relaciones = varianteOpcionRepo.findByVariante_Producto_IdAndDeletedAtIsNullOrderByOrdenAsc(p.getProducto().getId());
                 var opciones = relaciones.stream()
                     .map(productOpcion -> VarianteOpcionMapper.toResumenFromRelacion(productOpcion))
                     .collect(Collectors.toList());
@@ -141,8 +142,8 @@ public class VarianteOpcionServiceImpl implements IVarianteOpcionService {
 
         // procesar incoming: validar existencia en producto y crear/ajustar valores
         for (var sel : dto.opciones) {
-            boolean pertenece = productoOpcionRepo.existsByProducto_IdAndOpcion_IdAndDeletedAtIsNull(variante.getProducto().getId(), sel.opcionId);
-            if (!pertenece) throw new IllegalArgumentException("Alguna opcion no pertenece al producto");
+            boolean pertenece = varianteOpcionRepo.existsByVariante_Producto_IdAndOpcion_IdAndDeletedAtIsNull(variante.getProducto().getId(), sel.opcionId);
+            if (!pertenece) throw new IllegalArgumentException("Alguna opcion no pertenece al producto: productoId=" + variante.getProducto().getId() + " opcionId=" + sel.opcionId);
 
             if (sel.opcionValorIds != null && !sel.opcionValorIds.isEmpty()) {
                 var valores = opcionValorRepo.findAllById(sel.opcionValorIds);

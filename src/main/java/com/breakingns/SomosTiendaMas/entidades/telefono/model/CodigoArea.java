@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.telefono.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "codigos_area")
+@Table(name = "dir_codigos_area")
 public class CodigoArea {
 
     @Id

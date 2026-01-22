@@ -6,8 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventario_producto", indexes = {
-    @Index(name = "idx_inventario_variante_variante_id", columnList = "variante_id")
+@Table(name = "variante_inventario", indexes = {
+    @Index(name = "ix_variante_inventario_variante_id", columnList = "variante_id")
 })
 @Getter
 @Setter

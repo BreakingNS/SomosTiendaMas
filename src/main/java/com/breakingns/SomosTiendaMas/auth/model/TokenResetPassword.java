@@ -18,7 +18,7 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
-@Table(name = "tokens_reset_password")
+@Table(name = "token_reset_password")
 public class TokenResetPassword {
 
     @Id

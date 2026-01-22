@@ -2,7 +2,6 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centraliza
 
 import java.util.List;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.DisponibilidadResponseDTO;
@@ -11,17 +10,19 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.Opci
 
 public class ProductoDetalleConOpcionesDTO {
 
-    private ProductoResponseDTO producto;
+    private ProductoCentralizadoResponseDTO producto;
     private List<OpcionConValoresDTO> opciones;
+    // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
+    // @Deprecated(since="2026-01-15", forRemoval=true)
+    /*
+    private PhysicalPropertiesDTO physical;
     private List<ImagenVarianteDTO> imagenes;
     private PrecioVarianteResponseDTO precio;
     private DisponibilidadResponseDTO stock;
-    // REVIEW: se deja de utilizar fisicar para producto, solo para variantes.
-    // @Deprecated(since="2026-01-15", forRemoval=true)
-    // private PhysicalPropertiesDTO physical;
+    */
 
-    public ProductoResponseDTO getProducto() { return producto; }
-    public void setProducto(ProductoResponseDTO producto) { this.producto = producto; }
+    public ProductoCentralizadoResponseDTO getProducto() { return producto; }
+    public void setProducto(ProductoCentralizadoResponseDTO producto) { this.producto = producto; }
 
     public List<OpcionConValoresDTO> getOpciones() { return opciones; }
     public void setOpciones(List<OpcionConValoresDTO> opciones) { this.opciones = opciones; }

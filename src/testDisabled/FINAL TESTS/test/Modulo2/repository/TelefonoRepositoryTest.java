@@ -380,7 +380,7 @@ public class TelefonoRepositoryTest {
         assertTrue(status >= 400, "Debería fallar por faltar datos obligatorios (status=" + status + ")");
     }
 
-    // 9b. No permitir guardar teléfono con característica inválida (no existe en codigos_area).
+    // 9b. No permitir guardar teléfono con característica inválida (no existe en dir_codigos_area).
     @Test
     void noPermitirGuardarTelefonoConCaracteristicaInvalida() throws Exception {
         Usuario usuario = usuarioRepository.findByUsername("usuario123").orElseThrow();

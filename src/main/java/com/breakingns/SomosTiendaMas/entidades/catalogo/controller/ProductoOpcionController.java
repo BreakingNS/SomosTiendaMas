@@ -1,3 +1,5 @@
+// TODO: borrar este archivo
+/*
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_opcion.ProductoConOpcionesDTO;
@@ -56,4 +58,4 @@ public class ProductoOpcionController {
         service.modificarOpciones(productoId, dto, user != null ? user : "system");
         return ResponseEntity.ok().build();
     }
-}
+}*/

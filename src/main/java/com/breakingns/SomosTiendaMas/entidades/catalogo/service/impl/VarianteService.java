@@ -104,6 +104,27 @@ public class VarianteService implements IVarianteService {
         return opt.map(VarianteMapper::toDto).orElse(null);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<VarianteDTO> listarPorProductoId(Long productoId) {
+        if (productoId == null) return java.util.Collections.emptyList();
+        var list = varianteRepo.findByProducto_Id(productoId);
+        var out = new java.util.ArrayList<VarianteDTO>();
+        for (Variante v : list) {
+            if (v.getDeletedAt() == null) {
+                out.add(VarianteMapper.toDto(v));
+            }
+        }
+        return out;
+    }
+
+    @Override
+    public void eliminarPermanente(Long id) {
+        Variante v = varianteRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + id));
+        // eliminar físicamente; puede lanzar excepción por constraints si existen dependencias
+        varianteRepo.delete(v);
+    }
+
     // helper para calcular SHA-256 hex de un texto
     private String calculateSha256Hex(String text) {
         if (text == null) return null;

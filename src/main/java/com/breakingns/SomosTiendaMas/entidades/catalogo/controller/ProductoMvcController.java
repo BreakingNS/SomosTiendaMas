@@ -1,7 +1,7 @@
 /* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCentralizadoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenProductoService;
 
@@ -27,7 +27,7 @@ public class ProductoMvcController {
 
     @GetMapping("/producto/{id}")
     public String mostrarProducto(@PathVariable Long id, Model model) {
-        ProductoResponseDTO producto = productoService.obtenerPorId(id);
+        ProductoCentralizadoResponseDTO producto = productoService.obtenerPorId(id);
         if (producto == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado");
         }
@@ -47,7 +47,7 @@ public class ProductoMvcController {
 
     @GetMapping("/producto/{id}/test-imagenes")
     public String testImagenes(@PathVariable Long id, Model model) {
-        ProductoResponseDTO producto = productoService.obtenerPorId(id);
+        ProductoCentralizadoResponseDTO producto = productoService.obtenerPorId(id);
         if (producto == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado");
         }

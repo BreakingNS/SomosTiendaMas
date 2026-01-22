@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.CondicionProducto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
@@ -48,7 +49,16 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
-    public ProductoResponseDTO crear(ProductoCrearDTO dto) {
+    public ProductoCentralizadoResponseDTO crear(ProductoCrearDTO dto) {
+        return crearConVarianteDefault(dto, true);
+    }
+
+    @Override
+    public ProductoCentralizadoResponseDTO crearSoloProducto(ProductoCrearDTO dto) {
+        return crearConVarianteDefault(dto, false);
+    }
+
+    private ProductoCentralizadoResponseDTO crearConVarianteDefault(ProductoCrearDTO dto, boolean crearVarianteDefault) {
         if (dto == null) throw new IllegalArgumentException("dto es null");
         if (dto.getSlug() != null && repo.findBySlugAndDeletedAtIsNull(dto.getSlug()).isPresent()) {
             throw new IllegalStateException("Slug ya existe");
@@ -65,6 +75,16 @@ public class ProductoService implements IProductoService {
 
         Producto entidad = ProductoMapper.toEntity(dto, marca, categoria);
         Producto saved = repo.save(entidad);
+        
+        ProductoCentralizadoResponseDTO resp = ProductoMapper.toResponse(saved);
+        resp.setGarantia(saved.getGarantia());
+        resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
+
+        if (!crearVarianteDefault) {
+            // Retornar solo el producto sin variante
+            return resp;
+        }
+
         // Crear variante default obligatoria. Si el DTO de producto incluye `varianteDefault`, usarlo.
         try {
             com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO vdto = dto.getVarianteDefault();
@@ -96,12 +116,9 @@ public class ProductoService implements IProductoService {
 
             var varianteDto = varianteService.crearVariante(vdto);
 
-            ProductoResponseDTO resp = ProductoMapper.toResponse(saved);
-            resp.setGarantia(saved.getGarantia());
-            resp.setPoliticaDevoluciones(saved.getPoliticaDevoluciones());
             // poblar campos resueltos desde la variante default creada
             if (varianteDto != null) {
-                resp.setSkuResuelto(varianteDto.getSkuResuelto());
+                //resp.setSkuResuelto(varianteDto.getSkuResuelto());
                 // añadir variante resumen
                 com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO listDto = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteListaDTO();
                 listDto.setId(varianteDto.getId());
@@ -109,7 +126,7 @@ public class ProductoService implements IProductoService {
                 listDto.setSkuResuelto(varianteDto.getSkuResuelto() == null ? "---" : varianteDto.getSkuResuelto());
                 listDto.setEsDefault(varianteDto.getEsDefault());
                 listDto.setActivo(varianteDto.getActivo());
-                resp.setVariantes(java.util.List.of(listDto));
+                //resp.setVariantes(java.util.List.of(listDto));
             }
 
             return resp;
@@ -132,7 +149,7 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
-    public ProductoResponseDTO actualizar(Long id, ProductoActualizarDTO dto) {
+    public ProductoCentralizadoResponseDTO actualizar(Long id, ProductoActualizarDTO dto) {
         Producto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
 
         Marca marca = null;
@@ -146,7 +163,7 @@ public class ProductoService implements IProductoService {
 
         ProductoMapper.applyActualizar(dto, p, marca, categoria);
         Producto updated = repo.save(p);
-        ProductoResponseDTO resp = ProductoMapper.toResponse(updated);
+        ProductoCentralizadoResponseDTO resp = ProductoMapper.toResponse(updated);
         resp.setGarantia(updated.getGarantia());
         resp.setPoliticaDevoluciones(updated.getPoliticaDevoluciones());
         return resp;
@@ -154,10 +171,10 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoResponseDTO obtenerPorId(Long id) {
+    public ProductoCentralizadoResponseDTO obtenerPorId(Long id) {
         Producto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
         if (p.getDeletedAt() != null) throw new EntityNotFoundException("Producto eliminado: " + id);
-        ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+        ProductoCentralizadoResponseDTO dto = ProductoMapper.toResponse(p);
         // asegurar que los campos de garantía y política de devoluciones estén presentes en el DTO
         dto.setGarantia(p.getGarantia());
         dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
@@ -166,12 +183,12 @@ public class ProductoService implements IProductoService {
             // default variante
             var optDefault = varianteRepo.findDefaultByProductoId(p.getId());
                 if (optDefault.isPresent()) {
-                var def = optDefault.get();
-                String skuResuelto = (p.getSlug() != null && def.getSku() != null) ? p.getSlug() + "-" + def.getSku() : def.getSku();
-                dto.setSkuResuelto(skuResuelto);
+                // var def = optDefault.get();
+                // String skuResuelto = (p.getSlug() != null && def.getSku() != null) ? p.getSlug() + "-" + def.getSku() : def.getSku();
+                // dto.setSkuResuelto(skuResuelto);
                 // precio y stock resuelto quedan en Variante; no poblar en Producto
             }
-
+            /* 
             // lista de variantes (resumen)
             var variantes = varianteRepo.findByProducto_Id(p.getId());
             dto.setVariantes(VarianteMapper.toDtoList(variantes).stream().map(v -> {
@@ -182,7 +199,7 @@ public class ProductoService implements IProductoService {
                 listDto.setEsDefault(v.getEsDefault());
                 listDto.setActivo(v.getActivo());
                 return listDto;
-            }).collect(Collectors.toList()));
+            }).collect(Collectors.toList()));*/
         } catch (Exception ex) {
             // no fallar la respuesta por un problema en variantes/precios; opcional: loggear
         }
@@ -192,9 +209,9 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoResponseDTO obtenerPorSlug(String slug) {
+    public ProductoCentralizadoResponseDTO obtenerPorSlug(String slug) {
         Producto p = repo.findBySlugAndDeletedAtIsNull(slug).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado por slug: " + slug));
-        ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+        ProductoCentralizadoResponseDTO dto = ProductoMapper.toResponse(p);
         dto.setGarantia(p.getGarantia());
         dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
         // reutilizar obtenerPorId para enriquecer (carga ya hecha)
@@ -203,11 +220,11 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponseDTO> listarActivas() {
+    public List<ProductoCentralizadoResponseDTO> listarActivas() {
         return repo.findAllByDeletedAtIsNull()
                 .stream()
                 .map(p -> {
-                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    ProductoCentralizadoResponseDTO dto = ProductoMapper.toResponse(p);
                     dto.setGarantia(p.getGarantia());
                     dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
                     return enrichWithCategoria(dto, p);
@@ -217,11 +234,11 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponseDTO> listarPorCategoriaId(Long categoriaId) {
+    public List<ProductoCentralizadoResponseDTO> listarPorCategoriaId(Long categoriaId) {
         return repo.findByCategoria_IdAndDeletedAtIsNull(categoriaId)
                 .stream()
                 .map(p -> {
-                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    ProductoCentralizadoResponseDTO dto = ProductoMapper.toResponse(p);
                     dto.setGarantia(p.getGarantia());
                     dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
                     return enrichWithCategoria(dto, p);
@@ -231,11 +248,11 @@ public class ProductoService implements IProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponseDTO> listarPorMarcaId(Long marcaId) {
+    public List<ProductoCentralizadoResponseDTO> listarPorMarcaId(Long marcaId) {
         return repo.findByMarca_IdAndDeletedAtIsNull(marcaId)
                 .stream()
                 .map(p -> {
-                    ProductoResponseDTO dto = ProductoMapper.toResponse(p);
+                    ProductoCentralizadoResponseDTO dto = ProductoMapper.toResponse(p);
                     dto.setGarantia(p.getGarantia());
                     dto.setPoliticaDevoluciones(p.getPoliticaDevoluciones());
                     return enrichWithCategoria(dto, p);
@@ -250,15 +267,22 @@ public class ProductoService implements IProductoService {
         repo.save(p);
     }
 
+    @Override
+    public void eliminarPermanente(Long id) {
+        Producto p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
+        // Atención: puede lanzar excepción si existen FK (variantes, etc.).
+        repo.delete(p);
+    }
+
     // nuevo: listar por condición
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponseDTO> listarPorCondicion(CondicionProducto condicion) {
+    public List<ProductoCentralizadoResponseDTO> listarPorCondicion(CondicionProducto condicion) {
         return repo.findByCondicionAndDeletedAtIsNull(condicion).stream().map(ProductoMapper::toResponse).collect(Collectors.toList());
     }
 
     // Helper: intenta completar id/nombre de categoría padre/hija en el DTO.
-    private ProductoResponseDTO enrichWithCategoria(ProductoResponseDTO dto, Producto p) {
+    private ProductoCentralizadoResponseDTO enrichWithCategoria(ProductoCentralizadoResponseDTO dto, Producto p) {
         try {
             // primer intento: usar lo que ya tenga el DTO
             if ((dto.getNombreCategoriaHija() != null && !dto.getNombreCategoriaHija().isBlank())

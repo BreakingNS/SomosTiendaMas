@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.precio.PrecioVarianteResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.PrecioProductoMapper;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.VariantePrecioMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.PrecioVariante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.PrecioVarianteRepository;
@@ -44,7 +44,7 @@ public class PrecioVarianteService implements IPrecioVarianteService {
         Variante variante = varianteRepo.findById(dto.getVarianteId())
                 .orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + dto.getVarianteId()));
 
-        PrecioVariante entidad = PrecioProductoMapper.fromCrear(dto);
+        PrecioVariante entidad = VariantePrecioMapper.fromCrear(dto);
         // asignar producto y variante desde la variante encontrada
         entidad.setProducto(variante.getProducto());
         entidad.setVariante(variante);
@@ -76,7 +76,7 @@ public class PrecioVarianteService implements IPrecioVarianteService {
         }
 
         PrecioVariante saved = repo.save(entidad);
-        return PrecioProductoMapper.toResponse(saved);
+        return VariantePrecioMapper.toResponse(saved);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class PrecioVarianteService implements IPrecioVarianteService {
 
         boolean activating = dto.getActivo() != null && dto.getActivo() && !Boolean.TRUE.equals(existing.getActivo());
         // aplicar cambios básicos
-        PrecioProductoMapper.applyActualizar(dto, existing);
+        VariantePrecioMapper.applyActualizar(dto, existing);
 
         // determinar tasa de IVA a usar (dto > existente > default)
         Integer ivaPct = dto.getIvaPorcentaje() != null ? dto.getIvaPorcentaje()
@@ -117,7 +117,7 @@ public class PrecioVarianteService implements IPrecioVarianteService {
         }
 
         PrecioVariante updated = repo.save(existing);
-        return PrecioProductoMapper.toResponse(updated);
+        return VariantePrecioMapper.toResponse(updated);
     }
 
     @Override
@@ -125,14 +125,14 @@ public class PrecioVarianteService implements IPrecioVarianteService {
     public PrecioVarianteResponseDTO obtenerPorId(Long id) {
         PrecioVariante p = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("Precio no encontrado: " + id));
         if (p.getDeletedAt() != null) throw new EntityNotFoundException("Precio eliminado: " + id);
-        return PrecioProductoMapper.toResponse(p);
+        return VariantePrecioMapper.toResponse(p);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PrecioVarianteResponseDTO obtenerVigentePorVarianteId(Long varianteId) {
         return repo.findFirstByVarianteIdAndActivoTrueOrderByVigenciaDesdeDesc(varianteId)
-                .map(PrecioProductoMapper::toResponse)
+                .map(VariantePrecioMapper::toResponse)
                 .orElse(null);
     }
 
@@ -140,7 +140,7 @@ public class PrecioVarianteService implements IPrecioVarianteService {
     @Transactional(readOnly = true)
     public List<PrecioVarianteResponseDTO> listarPorVarianteId(Long varianteId) {
         List<PrecioVariante> list = repo.findByVarianteIdOrderByVigenciaDesdeDesc(varianteId);
-        return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
+        return list.stream().map(VariantePrecioMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -148,14 +148,14 @@ public class PrecioVarianteService implements IPrecioVarianteService {
     public List<PrecioVarianteResponseDTO> buscarVigentesPorVarianteIdEnFecha(Long varianteId, LocalDateTime fecha) {
         if (fecha == null) fecha = LocalDateTime.now();
         List<PrecioVariante> list = repo.findByVarianteIdAndVigenciaDesdeLessThanEqualAndVigenciaHastaGreaterThanEqual(varianteId, fecha, fecha);
-        return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
+        return list.stream().map(VariantePrecioMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PrecioVarianteResponseDTO> listarActivas() {
         List<PrecioVariante> list = repo.findAllByDeletedAtIsNull();
-        return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
+        return list.stream().map(VariantePrecioMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override

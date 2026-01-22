@@ -2,18 +2,18 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.OpcionResumenDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoOpcion;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.VarianteOpcion;
 
 public final class VarianteOpcionMapper {
 
     private VarianteOpcionMapper() {}
 
-    public static OpcionResponseDTO toResponseFromRelacion(ProductoOpcion po) {
+    public static OpcionResponseDTO toResponseFromRelacion(VarianteOpcion po) {
         if (po == null) return null;
         var o = po.getOpcion();
         return OpcionResponseDTO.builder()
                 .id(o.getId())
-                .productoId(po.getProducto() != null ? po.getProducto().getId() : null)
+                .productoId(po.getVariante() != null && po.getVariante().getProducto() != null ? po.getVariante().getProducto().getId() : null)
                 .nombre(o.getNombre())
                 .orden(po.getOrden() != null ? po.getOrden() : o.getOrden())
                 .tipo(o.getTipo())
@@ -23,7 +23,7 @@ public final class VarianteOpcionMapper {
                 .build();
     }
 
-    public static OpcionResumenDTO toResumenFromRelacion(ProductoOpcion po) {
+    public static OpcionResumenDTO toResumenFromRelacion(VarianteOpcion po) {
         if (po == null) return null;
         OpcionResumenDTO r = new OpcionResumenDTO();
         r.setId(po.getOpcion().getId());

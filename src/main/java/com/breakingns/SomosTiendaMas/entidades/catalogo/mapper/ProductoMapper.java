@@ -1,6 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.mapper;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Categoria;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Marca;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
@@ -43,7 +44,7 @@ public class ProductoMapper {
         if (dto.getCondicion() != null) p.setCondicion(dto.getCondicion());
     }
 
-    public static ProductoResponseDTO toResponse(Producto p) {
+    public static ProductoCentralizadoResponseDTO toResponse(Producto p) {
         if (p == null) return null; 
         // intentamos extraer info de categoría / padre si ya está cargada
         Long idCategoriaPadre = null;
@@ -59,7 +60,7 @@ public class ProductoMapper {
             }
         }
         
-        return ProductoResponseDTO.builder()
+        return ProductoCentralizadoResponseDTO.builder()
             .id(p.getId())
             .nombre(p.getNombre())
             .slug(p.getSlug())

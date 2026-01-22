@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import jakarta.persistence.PrePersist;
 
 @Entity
-@Table(name = "precio_producto", indexes = {
-        @Index(name = "ix_precio_variante_variante", columnList = "variante_id"),
-        @Index(name = "ix_precio_producto_vigencia", columnList = "vigencia_desde, vigencia_hasta")
+@Table(name = "variante_precio", indexes = {
+        @Index(name = "ix_variante_precio_variante", columnList = "variante_id"),
+        @Index(name = "ix_variante_precio_vigencia", columnList = "vigencia_desde, vigencia_hasta")
 })
 @Getter
 @Setter

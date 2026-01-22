@@ -2,6 +2,7 @@ package com.breakingns.SomosTiendaMas.auth.model;
 
 import java.util.List;
 
+import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(name = "dir_municipios")
 @Getter @Setter
 public class Municipio {
     @Id

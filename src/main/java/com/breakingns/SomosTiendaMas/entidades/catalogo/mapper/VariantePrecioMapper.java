@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public final class PrecioProductoMapper {
+public final class VariantePrecioMapper {
 
-    private PrecioProductoMapper() {}
+    private VariantePrecioMapper() {}
 
     public static PrecioVarianteResponseDTO toResponse(PrecioVariante p) {
         if (p == null) return null;
@@ -80,12 +80,12 @@ public final class PrecioProductoMapper {
 
     public static List<PrecioVarianteResponseDTO> toResponseList(List<PrecioVariante> list) {
         if (list == null) return List.of();
-        return list.stream().map(PrecioProductoMapper::toResponse).collect(Collectors.toList());
+        return list.stream().map(VariantePrecioMapper::toResponse).collect(Collectors.toList());
     }
 
     public static List<PrecioVarianteResumenDTO> toResumenList(List<PrecioVariante> list) {
         if (list == null) return List.of();
-        return list.stream().map(PrecioProductoMapper::toResumen).collect(Collectors.toList());
+        return list.stream().map(VariantePrecioMapper::toResumen).collect(Collectors.toList());
     }
 
     public static PrecioVariante fromCrear(PrecioVarianteCrearDTO dto) {

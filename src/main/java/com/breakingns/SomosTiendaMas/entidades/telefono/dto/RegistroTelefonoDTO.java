@@ -18,7 +18,7 @@ public class RegistroTelefonoDTO {
     private String numero;
 
     @NotBlank
-    private String caracteristica; // Debe existir en tabla codigos_area
+    private String caracteristica; // Debe existir en tabla dir_codigos_area
     
     private Boolean activo;      // default true
     private Boolean favorito;    // solo aplica a usuario (default false)

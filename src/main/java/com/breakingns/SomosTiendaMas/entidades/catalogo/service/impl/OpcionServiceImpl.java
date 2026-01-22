@@ -3,15 +3,12 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.OpcionMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.OpcionValorMapper;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.ProductoOpcionMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.OpcionValor;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.model.ProductoOpcion;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.OpcionRepository;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.OpcionValorRepository;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoOpcionRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteOpcionValorRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -25,19 +22,19 @@ import java.util.stream.Collectors;
 @Transactional
 public class OpcionServiceImpl implements IOpcionService {
 
-    private final ProductoRepository productoRepo;
     private final OpcionRepository opcionRepo;
     private final OpcionValorRepository valorRepo;
-    private final ProductoOpcionRepository productoOpcionRepo;
+    private final VarianteRepository varianteRepo;
+    private final VarianteOpcionValorRepository varianteOpcionValorRepo;
 
-    public OpcionServiceImpl(ProductoRepository productoRepo,
-                                     OpcionRepository opcionRepo,
+    public OpcionServiceImpl(OpcionRepository opcionRepo,
                                      OpcionValorRepository valorRepo,
-                                     ProductoOpcionRepository productoOpcionRepo) {
-        this.productoRepo = productoRepo;
+                                     VarianteRepository varianteRepo,
+                                     VarianteOpcionValorRepository varianteOpcionValorRepo) {
         this.opcionRepo = opcionRepo;
         this.valorRepo = valorRepo;
-        this.productoOpcionRepo = productoOpcionRepo;
+        this.varianteRepo = varianteRepo;
+        this.varianteOpcionValorRepo = varianteOpcionValorRepo;
     }
 
     @Override
@@ -69,13 +66,13 @@ public class OpcionServiceImpl implements IOpcionService {
                 .orElseThrow(() -> new EntityNotFoundException("Opción no encontrada: " + opcionId));
         return OpcionMapper.toResponse(e);
     }
-
+    /* 
     @Override
     @Transactional(readOnly = true)
     public List<OpcionResumenDTO> listarOpcionesPorProductoId(Long productoId) {
         List<ProductoOpcion> rels = productoOpcionRepo.findByProducto_IdAndDeletedAtIsNullOrderByOrdenAsc(productoId);
         return rels.stream().map(ProductoOpcionMapper::toResumenFromRelacion).collect(Collectors.toList());
-    }
+    }*/
 
     @Override
     public void eliminarOpcion(Long opcionId) {
@@ -146,7 +143,7 @@ public class OpcionServiceImpl implements IOpcionService {
         List<Opcion> list = opcionRepo.findByDeletedAtIsNullOrderByOrdenAsc();
         return list.stream().map(OpcionMapper::toResumen).collect(Collectors.toList());
     }
-
+    /* 
     @Override
     public OpcionResponseDTO asignarOpcionAProducto(Long productoId, Long opcionId) {
         Producto p = productoRepo.findById(productoId)
@@ -174,7 +171,7 @@ public class OpcionServiceImpl implements IOpcionService {
                 .orElseThrow(() -> new EntityNotFoundException("Relación no encontrada"));
         rel.setDeletedAt(LocalDateTime.now());
         productoOpcionRepo.save(rel);
-    }
+    }*/
 
     @Override
     @Transactional(readOnly = true)
@@ -205,6 +202,48 @@ public class OpcionServiceImpl implements IOpcionService {
             salida.add(dto);
         }
         return salida;
+    }
+
+    @Override
+    public List<OpcionResumenDTO> listarOpcionesPorProductoId(Long productoId) {
+        if (productoId == null) return List.of();
+
+        // obtener variantes del producto
+        List<com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante> variantes = varianteRepo.findByProducto_Id(productoId);
+        if (variantes == null || variantes.isEmpty()) return List.of();
+
+        List<Long> varianteIds = variantes.stream().map(com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante::getId).collect(Collectors.toList());
+
+        List<com.breakingns.SomosTiendaMas.entidades.catalogo.model.VarianteOpcionValor> rels = varianteOpcionValorRepo.findByVariante_IdInAndDeletedAtIsNull(varianteIds);
+        if (rels == null || rels.isEmpty()) return List.of();
+
+        // Collect unique opciones
+        java.util.Map<Long, com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion> map = new java.util.HashMap<>();
+        for (com.breakingns.SomosTiendaMas.entidades.catalogo.model.VarianteOpcionValor r : rels) {
+            com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion o = r.getOpcion();
+            if (o == null) continue;
+            if (o.getDeletedAt() != null) continue;
+            map.putIfAbsent(o.getId(), o);
+        }
+
+        if (map.isEmpty()) return List.of();
+
+        List<com.breakingns.SomosTiendaMas.entidades.catalogo.model.Opcion> opciones = new java.util.ArrayList<>(map.values());
+        opciones.sort((a,b) -> Integer.compare(a.getOrden() == null ? 0 : a.getOrden(), b.getOrden() == null ? 0 : b.getOrden()));
+
+        return opciones.stream().map(OpcionMapper::toResumen).collect(Collectors.toList());
+    }
+
+    @Override
+    public OpcionResponseDTO asignarOpcionAProducto(Long productoId, Long opcionId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'asignarOpcionAProducto'");
+    }
+
+    @Override
+    public void desasignarOpcionDeProducto(Long productoId, Long opcionId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'desasignarOpcionDeProducto'");
     }
 
 }

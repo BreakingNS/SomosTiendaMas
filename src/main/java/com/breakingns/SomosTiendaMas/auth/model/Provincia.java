@@ -1,5 +1,6 @@
 package com.breakingns.SomosTiendaMas.auth.model;
 
+import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(name = "dir_provincias")
 @Getter @Setter
 public class Provincia {
     @Id

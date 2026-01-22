@@ -5,9 +5,9 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.ReservaSt
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.InventarioVarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.InventarioVariante;
 
-public final class InventarioMapper {
+public final class VarianteInventarioMapper {
 
-    private InventarioMapper() {}
+    private VarianteInventarioMapper() {}
 
     public static DisponibilidadResponseDTO toDisponibilidad(Long productoId, long disponible) {
         return new DisponibilidadResponseDTO(productoId, disponible);

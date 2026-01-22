@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
-@Table(name = "direccion_empresa", indexes = {
+@Table(name = "empresa_direccion", indexes = {
         @Index(name = "ix_dir_empresa_perfil", columnList = "perfil_empresa_id")
 })
 public class DireccionEmpresa {

@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.service.impl;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.inventario.*;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.InventarioMapper;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.mapper.VarianteInventarioMapper;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.InventarioVariante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.InventarioVarianteRepository;
@@ -35,10 +35,10 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         Variante variante = varianteRepo.findById(dto.getVarianteId())
             .orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + dto.getVarianteId()));
 
-        InventarioVariante entidad = InventarioMapper.fromDto(dto);
+        InventarioVariante entidad = VarianteInventarioMapper.fromDto(dto);
         entidad.setVariante(variante);
         InventarioVariante saved = repo.save(entidad);
-        return InventarioMapper.toDto(saved);
+        return VarianteInventarioMapper.toDto(saved);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         if (varianteId == null) throw new IllegalArgumentException("varianteId es requerido");
         InventarioVariante inv = repo.findByVarianteId(varianteId)
             .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado para variante: " + varianteId));
-        return InventarioMapper.toDto(inv);
+        return VarianteInventarioMapper.toDto(inv);
     }
 
     // helper para normalizar Integer/Long/primitive a long (seguro ante null)
@@ -120,14 +120,14 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         inv.setReserved((int) newReserved);
 
         InventarioVariante saved = repo.save(inv);
-        return InventarioMapper.toDto(saved);
+        return VarianteInventarioMapper.toDto(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<InventarioVarianteDTO> listarTodos() {
         return repo.findAll().stream()
-                .map(InventarioMapper::toDto)
+                .map(VarianteInventarioMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -137,7 +137,7 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         int th = threshold != null ? threshold.intValue() : 0;
         return repo.findAll().stream()
                 .filter(i -> (i.getOnHand() != null ? i.getOnHand() : 0) < th)
-                .map(InventarioMapper::toDto)
+                .map(VarianteInventarioMapper::toDto)
                 .collect(Collectors.toList());
     }
 

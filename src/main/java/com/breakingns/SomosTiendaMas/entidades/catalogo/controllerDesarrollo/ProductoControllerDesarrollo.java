@@ -3,7 +3,9 @@ package com.breakingns.SomosTiendaMas.entidades.catalogo.controllerDesarrollo;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoActualizarDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoListaDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.ProductoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_public.ProductoPublicDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_public.ProductoCentralizadoPublicDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// NOTE: Controlador de desarrollo para pruebas internas (CRUD básico).
 @RestController
 @RequestMapping("/dev/api/productos")
 public class ProductoControllerDesarrollo {
@@ -25,7 +28,7 @@ public class ProductoControllerDesarrollo {
         this.productoService = productoService;
     }
 
-    private ProductoListaDTO toLista(ProductoResponseDTO r) {
+    private ProductoListaDTO toLista(ProductoCentralizadoResponseDTO r) {
         if (r == null) return null;
         ProductoListaDTO dto = new ProductoListaDTO();
         dto.setId(r.getId());
@@ -34,8 +37,7 @@ public class ProductoControllerDesarrollo {
         dto.setMarcaId(r.getMarcaId());
         dto.setCategoriaId(r.getIdCategoriaHija());
         dto.setSku(r.getSku());
-            dto.setCondicion(r.getCondicion());
-            dto.setSkuResuelto(r.getSkuResuelto());
+        dto.setCondicion(r.getCondicion());
         return dto;
     }
 
@@ -51,17 +53,66 @@ public class ProductoControllerDesarrollo {
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerPorId(@PathVariable Long id) {
         try {
-            ProductoResponseDTO r = productoService.obtenerPorId(id);
+            ProductoCentralizadoResponseDTO r = productoService.obtenerPorId(id);
             return ResponseEntity.ok(r);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
         }
     }
 
+    @GetMapping("/{id}/public")
+    public ResponseEntity<ProductoPublicDTO> obtenerPublicPorId(@PathVariable Long id) {
+        try {
+            ProductoCentralizadoResponseDTO r = productoService.obtenerPorId(id);
+            if (r == null) return ResponseEntity.notFound().build();
+
+            ProductoPublicDTO out = new ProductoPublicDTO();
+            out.setNombre(r.getNombre());
+            out.setSlug(r.getSlug());
+            out.setDescripcion(r.getDescripcion());
+            out.setMarcaNombre(r.getMarcaNombre());
+            out.setNombreCategoriaPadre(r.getNombreCategoriaPadre());
+            out.setNombreCategoriaHija(r.getNombreCategoriaHija());
+            out.setSku(r.getSku());
+            out.setCondicion(r.getCondicion() != null ? r.getCondicion().name() : null);
+            out.setGarantia(r.getGarantia());
+            out.setPoliticaDevoluciones(r.getPoliticaDevoluciones());
+
+            return ResponseEntity.ok(out);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @GetMapping("/{id}/public-centralizado")
+    public ResponseEntity<ProductoCentralizadoPublicDTO> obtenerPublicCentralizadoPorId(@PathVariable Long id) {
+        try {
+            ProductoCentralizadoResponseDTO r = productoService.obtenerPorId(id);
+            if (r == null) return ResponseEntity.notFound().build();
+
+            ProductoCentralizadoPublicDTO out = new ProductoCentralizadoPublicDTO();
+            out.setId(r.getId());
+            out.setNombre(r.getNombre());
+            out.setSlug(r.getSlug());
+            out.setDescripcion(r.getDescripcion());
+            out.setMarcaNombre(r.getMarcaNombre());
+            out.setNombreCategoriaPadre(r.getNombreCategoriaPadre());
+            out.setNombreCategoriaHija(r.getNombreCategoriaHija());
+            out.setSku(r.getSku());
+            out.setCondicion(r.getCondicion() != null ? r.getCondicion().name() : null);
+            out.setGarantia(r.getGarantia());
+            out.setPoliticaDevoluciones(r.getPoliticaDevoluciones());
+            
+            return ResponseEntity.ok(out);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
     @GetMapping("/slug/{slug}")
     public ResponseEntity<?> obtenerPorSlug(@PathVariable String slug) {
         try {
-            ProductoResponseDTO r = productoService.obtenerPorSlug(slug);
+            ProductoCentralizadoResponseDTO r = productoService.obtenerPorSlug(slug);
             return ResponseEntity.ok(r);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
@@ -70,7 +121,11 @@ public class ProductoControllerDesarrollo {
 
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody ProductoCrearDTO dto) {
-        ProductoResponseDTO created = productoService.crear(dto);
+        // Este controlador solo crea el producto (sin variantes). Limpiamos
+        // cualquier variante por defecto que venga en el DTO y usamos
+        // el servicio especializado crearSoloProducto.
+        dto.setVarianteDefault(null);
+        ProductoCentralizadoResponseDTO created = productoService.crearSoloProducto(dto);
         URI location = URI.create("/dev/api/productos/" + created.getId());
         return ResponseEntity.created(location).body(created);
     }
@@ -78,7 +133,7 @@ public class ProductoControllerDesarrollo {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoActualizarDTO dto) {
         try {
-            ProductoResponseDTO updated = productoService.actualizar(id, dto);
+            ProductoCentralizadoResponseDTO updated = productoService.actualizar(id, dto);
             return ResponseEntity.ok(updated);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
@@ -92,6 +147,20 @@ public class ProductoControllerDesarrollo {
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
+        }
+    }
+
+    // REVIEW: modificar para que solo lo usen los admins
+    // Endpoint temporal para borrado físico (uso solo para pruebas; restringir a admins luego)
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<?> eliminarPermanente(@PathVariable Long id) {
+        try {
+            productoService.eliminarPermanente(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar permanentemente: " + ex.getMessage());
         }
     }
 }

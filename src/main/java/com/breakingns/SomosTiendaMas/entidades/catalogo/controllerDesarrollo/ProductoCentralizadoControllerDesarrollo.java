@@ -1,7 +1,7 @@
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controllerDesarrollo;
 
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductCreateDTO;
-import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoDetalleResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IProductoCentralizadoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,18 @@ public class ProductoCentralizadoControllerDesarrollo {
     }
 
     @PostMapping
-    public ResponseEntity<ProductoDetalleResponseDTO> crear(@Valid @RequestBody ProductCreateDTO dto) {
-        ProductoDetalleResponseDTO created = service.crear(dto);
-        URI loc = URI.create("/dev/api/productos/" + (created != null ? created.getProducto().getId() : ""));
+    public ResponseEntity<ProductoCentralizadoResponseFullDTO> crear(@Valid @RequestBody ProductoCentralizadoCrearDTO dto) {
+        ProductoCentralizadoResponseFullDTO created = service.crear(dto);
+        URI loc = URI.create("/dev/api/productos/centralizado/" + (created != null && created.getProducto() != null ? created.getProducto().getId() : ""));
         return ResponseEntity.created(loc).body(created);
     }
+
+    @GetMapping("/{id}/detalle")
+    public ResponseEntity<ProductoCentralizadoResponseFullDTO> getDetalle(@PathVariable("id") Long id) {
+        if (id == null) return ResponseEntity.badRequest().build();
+        ProductoCentralizadoResponseFullDTO detalle = service.obtenerPorId(id);
+        if (detalle == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(detalle);
+    }
+
 }

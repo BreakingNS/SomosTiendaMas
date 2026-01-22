@@ -265,7 +265,7 @@ public class TelefonoServiceTest {
 
     // 1) Registrar teléfono para usuario (MÓVIL/WORK/HOME) OK: crea teléfono asociado a usuario y persiste.
     @Test
-    void registrarTelefono_Usuario_OK() throws Exception {
+    void registrarUsuario_Telefono_OK() throws Exception {
         Usuario usuario = usuarioRepository.findByUsername("usuario123").orElseThrow();
 
         // llamar al service directamente
@@ -285,7 +285,7 @@ public class TelefonoServiceTest {
     
     // 2) Registrar teléfono para empresa OK: crea teléfono asociado a perfilEmpresa y persiste.
     @Test
-    void registrarTelefono_Empresa_OK() throws Exception {
+    void registrarEmpresa_Telefono_OK() throws Exception {
         Usuario usuario = usuarioRepository.findByUsername("usuario123").orElseThrow();
         
         PerfilEmpresa empresa = new PerfilEmpresa();

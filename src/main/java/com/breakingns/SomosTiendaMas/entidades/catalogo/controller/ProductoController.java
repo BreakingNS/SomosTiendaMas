@@ -1,3 +1,4 @@
+/*
 package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto.*;
@@ -24,40 +25,40 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductoResponseDTO> crear(@Valid @RequestBody ProductoCrearDTO dto, UriComponentsBuilder uriBuilder) {
-        ProductoResponseDTO created = service.crear(dto);
+    public ResponseEntity<ProductoCentralizadoResponseDTO> crear(@Valid @RequestBody ProductoCrearDTO dto, UriComponentsBuilder uriBuilder) {
+        ProductoCentralizadoResponseDTO created = service.crear(dto);
         URI location = uriBuilder.path("/api/productos/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoActualizarDTO dto) {
-        ProductoResponseDTO updated = service.actualizar(id, dto);
+    public ResponseEntity<ProductoCentralizadoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ProductoActualizarDTO dto) {
+        ProductoCentralizadoResponseDTO updated = service.actualizar(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ProductoCentralizadoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
     @GetMapping("/slug/{slug}")
-    public ResponseEntity<ProductoResponseDTO> obtenerPorSlug(@PathVariable String slug) {
+    public ResponseEntity<ProductoCentralizadoResponseDTO> obtenerPorSlug(@PathVariable String slug) {
         return ResponseEntity.ok(service.obtenerPorSlug(slug));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> listarActivas() {
+    public ResponseEntity<List<ProductoCentralizadoResponseDTO>> listarActivas() {
         return ResponseEntity.ok(service.listarActivas());
     }
 
     @GetMapping("/categoria/{categoriaId}")
-    public ResponseEntity<List<ProductoResponseDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
+    public ResponseEntity<List<ProductoCentralizadoResponseDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
         return ResponseEntity.ok(service.listarPorCategoriaId(categoriaId));
     }
 
     @GetMapping("/marca/{marcaId}")
-    public ResponseEntity<List<ProductoResponseDTO>> listarPorMarca(@PathVariable Long marcaId) {
+    public ResponseEntity<List<ProductoCentralizadoResponseDTO>> listarPorMarca(@PathVariable Long marcaId) {
         return ResponseEntity.ok(service.listarPorMarcaId(marcaId));
     }
 
@@ -77,4 +78,4 @@ public class ProductoController {
     }
 
     //-------------
-}
+}*/
