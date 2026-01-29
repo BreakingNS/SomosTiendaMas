@@ -8,6 +8,7 @@ public interface IVarianteService {
     VarianteDTO obtenerPorId(Long id);
     VarianteDTO obtenerDefaultByProductoId(Long productoId);
     java.util.List<VarianteDTO> listarPorProductoId(Long productoId);
+    java.util.List<VarianteDTO> listarTodas();
     void eliminarPermanente(Long id);
     VarianteDTO actualizar(Long id, VarianteCrearDTO dto);
     void eliminar(Long id);

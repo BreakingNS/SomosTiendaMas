@@ -136,6 +136,47 @@ public class ImagenVarianteService implements IImagenVarianteService {
         if (!toSave.isEmpty()) imagenRepo.saveAll(toSave);
     }
 
+    @Override
+    public void reordenarPorProducto(Long productoId, List<Long> imagenIdsOrdenados) {
+        if (productoId == null || imagenIdsOrdenados == null) return;
+
+        // obtener todas las imágenes activas y filtrar por productoId
+        List<ImagenVariante> todas = imagenRepo.findAllByDeletedAtIsNullOrderByVariante_IdAscOrdenAsc();
+        java.util.Map<Long, ImagenVariante> map = new java.util.HashMap<>();
+        java.util.List<ImagenVariante> pertenecientes = new ArrayList<>();
+        for (ImagenVariante iv : todas) {
+            if (iv.getVariante() != null && iv.getVariante().getProducto() != null
+                    && productoId.equals(iv.getVariante().getProducto().getId())) {
+                map.put(iv.getId(), iv);
+                pertenecientes.add(iv);
+            }
+        }
+
+        if (map.isEmpty()) return;
+
+        int orden = 0;
+        List<ImagenVariante> toSave = new ArrayList<>();
+
+        // Priorizar el orden dado por imagenIdsOrdenados (sólo para las imágenes que correspondan)
+        for (Long id : imagenIdsOrdenados) {
+            ImagenVariante e = map.get(id);
+            if (e == null) continue;
+            e.setOrden(orden++);
+            toSave.add(e);
+            map.remove(id);
+        }
+
+        // Añadir las que quedaron fuera del listado al final, manteniendo su orden previo
+        pertenecientes.sort((a, b) -> Integer.compare(a.getOrden() == null ? 0 : a.getOrden(), b.getOrden() == null ? 0 : b.getOrden()));
+        for (ImagenVariante e : pertenecientes) {
+            if (!map.containsKey(e.getId())) continue; // ya procesada
+            e.setOrden(orden++);
+            toSave.add(e);
+        }
+
+        if (!toSave.isEmpty()) imagenRepo.saveAll(toSave);
+    }
+
     // mapeo simple entidad -> DTO (adaptar si los nombres de campos difieren)
     private ImagenVarianteDTO toDto(ImagenVariante e) {
         if (e == null) return null;

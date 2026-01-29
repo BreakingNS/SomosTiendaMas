@@ -22,14 +22,15 @@ public class ImagenVarianteControllerDesarrollo {
         this.service = service;
     }
 
-    // Crear imagen asociada a una variante
-    @PostMapping(value = "/variantes/{varianteId}/imagenes/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<ImagenVarianteDTO>> uploadParaVariante(
+    /**
+     * Upload + procesamiento (alias simple)
+     * POST /dev/api/imagenes/variantes/{id}
+     */
+    @PostMapping(value = "/imagenes/variantes/{varianteId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<ImagenVarianteDTO>> uploadParaVarianteSimple(
             @PathVariable Long varianteId,
             @RequestParam("files") MultipartFile[] files,
             UriComponentsBuilder uriBuilder) {
-
-        // Implementá service.uploadAndCreate(varianteId, files)
         List<ImagenVarianteDTO> created = service.uploadAndCreate(varianteId, files);
         URI location = uriBuilder.path("/api/variantes/{varianteId}/imagenes").buildAndExpand(varianteId).toUri();
         return ResponseEntity.created(location).body(created);
@@ -66,9 +67,16 @@ public class ImagenVarianteControllerDesarrollo {
         return ResponseEntity.ok(dto);
     }
 
-    @DeleteMapping("/imagenes/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        service.eliminar(id);
+    /**
+     * Eliminar imagen específica de una variante
+     * DELETE /dev/api/imagenes/variantes/{id}/{imagenId}
+     */
+    @DeleteMapping("/imagenes/variantes/{varianteId}/{imagenId}")
+    public ResponseEntity<Void> eliminarPorVarianteYImagen(
+            @PathVariable Long varianteId,
+            @PathVariable Long imagenId) {
+        // varianteId solo para consistencia de ruta
+        service.eliminar(imagenId);
         return ResponseEntity.noContent().build();
     }
 
@@ -78,9 +86,22 @@ public class ImagenVarianteControllerDesarrollo {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/variantes/{varianteId}/imagenes/reordenar")
-    public ResponseEntity<Void> reordenar(@PathVariable Long varianteId, @RequestBody List<Long> imagenIdsOrdenados) {
+    /**
+     * Reordenar imágenes por variante
+     * PATCH /dev/api/imagenes/variantes/{id}/orden
+     * Body: [1,3,2]
+     */
+    @PatchMapping("/imagenes/variantes/{varianteId}/orden")
+    public ResponseEntity<Void> reordenarPorVariante(
+            @PathVariable Long varianteId,
+            @RequestBody List<Long> imagenIdsOrdenados) {
         service.reordenarPorVariante(varianteId, imagenIdsOrdenados);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/productos/{productoId}/imagenes/reordenar")
+    public ResponseEntity<Void> reordenar(@PathVariable Long productoId, @RequestBody List<Long> imagenIdsOrdenados) {
+        service.reordenarPorProducto(productoId, imagenIdsOrdenados);
         return ResponseEntity.ok().build();
     }
 }

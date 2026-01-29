@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class ReservaStockRequestDTO {
-    @NotNull
+    // varianteId proviene de la ruta; no validarlo aquí para permitir que el controlador lo asigne
     private Long varianteId;
 
     @Min(1)

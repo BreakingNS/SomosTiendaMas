@@ -6,6 +6,7 @@ import java.util.List;
 public interface IMovimientoInventarioService {
     MovimientoResponseDTO crear(MovimientoCrearDTO dto);
     MovimientoResponseDTO obtenerPorId(Long id);
+    List<MovimientoResumenDTO> listarPorVarianteId(Long varianteId);
     List<MovimientoResumenDTO> listarPorProductoId(Long productoId);
     List<MovimientoResumenDTO> listarPorOrderRef(String orderRef);
     List<MovimientoResumenDTO> filtrar(MovimientoFiltroDTO filtro);

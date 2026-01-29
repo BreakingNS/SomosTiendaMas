@@ -15,6 +15,7 @@ public interface IImagenVarianteService {
     void eliminar(Long id); // soft-delete
     void eliminarPorVarianteId(Long varianteId); // soft-delete por variante
     void reordenarPorVariante(Long varianteId, List<Long> imagenIdsOrdenados);
+    void reordenarPorProducto(Long productoId, List<Long> imagenIdsOrdenados);
 
     // nuevo: subir archivos, guardarlos y crear las filas correspondientes
     List<ImagenVarianteDTO> uploadAndCreate(Long varianteId, MultipartFile[] files);

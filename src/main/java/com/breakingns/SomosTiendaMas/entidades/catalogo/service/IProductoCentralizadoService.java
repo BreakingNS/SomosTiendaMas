@@ -22,4 +22,9 @@ public interface IProductoCentralizadoService {
      * Obtiene el producto con todas sus variantes y sub-recursos en formato completo (mismo que crear).
      */
     ProductoCentralizadoResponseFullDTO obtenerPorId(Long productoId);
+
+    /**
+     * Obtiene el producto con variantes en forma simple (sin `varianteOpciones`, usa `attributesJson`).
+     */
+    com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO obtenerSimplePorId(Long productoId);
 }

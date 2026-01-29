@@ -11,6 +11,9 @@ public class MovimientoCrearDTO {
     @NotNull
     private Long productoId;
 
+    // Opcional: asociar movimiento a una variante específica
+    private Long varianteId;
+
     @NotNull
     private TipoMovimientoInventario tipo;
 

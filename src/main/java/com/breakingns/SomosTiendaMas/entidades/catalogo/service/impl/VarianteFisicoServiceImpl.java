@@ -39,22 +39,22 @@ public class VarianteFisicoServiceImpl implements IVarianteFisicoService {
         Variante variante = varianteRepository.findById(varianteId)
                 .orElseThrow(() -> new IllegalArgumentException("Variante no encontrado: " + varianteId));
 
-        VarianteFisico entidad = varianteFisicoRepository.findByVariante_Id(varianteId)
+        VarianteFisico entidad = varianteFisicoRepository.findByVariante_IdAndDeletedAtIsNull(varianteId)
                 .orElseGet(() -> {
                     VarianteFisico p = new VarianteFisico();
                     p.setVariante(variante);
                     return p;
                 });
 
-        // Mapear campos del DTO a la entidad
-        entidad.setWeightGrams(dto.getWeightGrams());
-        entidad.setWidthMm(dto.getWidthMm());
-        entidad.setHeightMm(dto.getHeightMm());
-        entidad.setDepthMm(dto.getDepthMm());
-        entidad.setPackageWeightGrams(dto.getPackageWeightGrams());
-        entidad.setPackageWidthMm(dto.getPackageWidthMm());
-        entidad.setPackageHeightMm(dto.getPackageHeightMm());
-        entidad.setPackageDepthMm(dto.getPackageDepthMm());
+        // Mapear campos del DTO a la entidad — solo sobrescribir si el campo viene no-nulo
+        if (dto.getWeightGrams() != null) entidad.setWeightGrams(dto.getWeightGrams());
+        if (dto.getWidthMm() != null) entidad.setWidthMm(dto.getWidthMm());
+        if (dto.getHeightMm() != null) entidad.setHeightMm(dto.getHeightMm());
+        if (dto.getDepthMm() != null) entidad.setDepthMm(dto.getDepthMm());
+        if (dto.getPackageWeightGrams() != null) entidad.setPackageWeightGrams(dto.getPackageWeightGrams());
+        if (dto.getPackageWidthMm() != null) entidad.setPackageWidthMm(dto.getPackageWidthMm());
+        if (dto.getPackageHeightMm() != null) entidad.setPackageHeightMm(dto.getPackageHeightMm());
+        if (dto.getPackageDepthMm() != null) entidad.setPackageDepthMm(dto.getPackageDepthMm());
 
         VarianteFisico saved = varianteFisicoRepository.save(entidad);
         return toDto(saved);

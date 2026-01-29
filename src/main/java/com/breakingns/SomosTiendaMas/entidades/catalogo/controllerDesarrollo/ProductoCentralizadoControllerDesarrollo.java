@@ -34,4 +34,12 @@ public class ProductoCentralizadoControllerDesarrollo {
         return ResponseEntity.ok(detalle);
     }
 
+    @GetMapping("/{id}/detalle-simple")
+    public ResponseEntity<com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO> getDetalleSimple(@PathVariable("id") Long id) {
+        if (id == null) return ResponseEntity.badRequest().build();
+        var detalle = service.obtenerSimplePorId(id);
+        if (detalle == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(detalle);
+    }
+
 }

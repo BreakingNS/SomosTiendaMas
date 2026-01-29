@@ -47,9 +47,10 @@ public class VarianteOpcionControllerDesarrollo {
         return ResponseEntity.ok(service.obtenerTodosConOpcionesConValores());
     }
 
-    @PutMapping("/{varianteId}/opciones")
+    // Mapeo renombrado para evitar conflicto con VarianteControllerDesarrollo
+    @PutMapping("/{varianteId}/opciones/modificar")
     public ResponseEntity<Void> modificarOpciones(@PathVariable Long varianteId,
-                                                  @RequestBody VarianteOpcionesAsignarDTO dto,
+                                                  @RequestBody VarianteOpcionesModificarDTO dto,
                                                   @RequestHeader(value = "X-User", required = false) String user) {
         service.modificarOpciones(varianteId, dto, user != null ? user : "system");
         return ResponseEntity.ok().build();

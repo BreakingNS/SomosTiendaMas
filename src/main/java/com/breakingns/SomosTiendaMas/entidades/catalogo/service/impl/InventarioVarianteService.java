@@ -7,12 +7,18 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Variante;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.InventarioVarianteRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IInventarioVarianteService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IMovimientoInventarioService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.movimiento.MovimientoCrearDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.TipoMovimientoInventario;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.MovimientoInventarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.model.MovimientoInventario;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.TipoMovimientoInventario;
 
 @Service
 @Transactional
@@ -20,10 +26,16 @@ public class InventarioVarianteService implements IInventarioVarianteService {
 
     private final InventarioVarianteRepository repo;
     private final VarianteRepository varianteRepo;
+    private final IMovimientoInventarioService movimientoService;
+    private final MovimientoInventarioRepository movimientoRepo;
 
-    public InventarioVarianteService(InventarioVarianteRepository repo, VarianteRepository varianteRepo) {
+    public InventarioVarianteService(InventarioVarianteRepository repo, VarianteRepository varianteRepo,
+                                     IMovimientoInventarioService movimientoService,
+                                     MovimientoInventarioRepository movimientoRepo) {
         this.repo = repo;
         this.varianteRepo = varianteRepo;
+        this.movimientoService = movimientoService;
+        this.movimientoRepo = movimientoRepo;
     }
 
     @Override
@@ -68,6 +80,7 @@ public class InventarioVarianteService implements IInventarioVarianteService {
     @Override
     public ReservaStockResponseDTO reservarStock(ReservaStockRequestDTO request) {
         if (request == null) throw new IllegalArgumentException("request null");
+        if (request.getVarianteId() == null) throw new IllegalArgumentException("varianteId es requerido");
         Variante v = varianteRepo.findById(request.getVarianteId())
             .orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + request.getVarianteId()));
         InventarioVariante inv = repo.findByVarianteId(v.getId())
@@ -88,6 +101,20 @@ public class InventarioVarianteService implements IInventarioVarianteService {
             // si reserved es Long/long en la entidad: inv.setReserved(newReserved);
             inv.setReserved((int) newReserved); // <-- adapta según el tipo real de tu entidad
             repo.save(inv);
+            // crear movimiento de tipo RESERVA para trazabilidad
+            try {
+                MovimientoCrearDTO m = new MovimientoCrearDTO();
+                Long productoId = v.getProducto() != null ? v.getProducto().getId() : null;
+                m.setProductoId(productoId);
+                m.setVarianteId(v.getId());
+                m.setCantidad(qty);
+                m.setTipo(com.breakingns.SomosTiendaMas.entidades.catalogo.enums.TipoMovimientoInventario.RESERVA);
+                m.setOrderRef(request.getOrderRef());
+                m.setMetadataJson("{\"source\":\"reservarStock\"}");
+                movimientoService.crear(m);
+            } catch (Exception ex) {
+                // no detener el flujo por fallo en trazabilidad; loguear si hay logger (omitido aquí)
+            }
             disponible = Math.max(0L, onHand - newReserved);
         }
         return new ReservaStockResponseDTO(request.getVarianteId(), ok, disponible);
@@ -95,12 +122,89 @@ public class InventarioVarianteService implements IInventarioVarianteService {
 
     @Override
     public OperacionSimpleResponseDTO liberarReserva(LiberacionReservaRequestDTO request) {
-        throw new UnsupportedOperationException("Liberación por orderRef no implementada en este servicio. Usa MovimientoInventarioService o adapta repo.");
+        if (request == null) throw new IllegalArgumentException("request null");
+        if (request.getOrderRef() == null) throw new IllegalArgumentException("orderRef es requerido");
+
+        List<MovimientoInventario> reservas = movimientoRepo.findByOrderRefAndTipo(request.getOrderRef(), TipoMovimientoInventario.RESERVA);
+        if (reservas == null || reservas.isEmpty()) {
+            return new OperacionSimpleResponseDTO(false, "No se encontraron reservas para orderRef: " + request.getOrderRef());
+        }
+
+        for (MovimientoInventario mov : reservas) {
+            if (mov.getVariante() == null) continue;
+            Long varId = mov.getVariante().getId();
+            // obtener la fila con lock para serializar confirmaciones concurrentes
+            InventarioVariante inv = repo.findByVarianteIdForUpdate(varId).orElse(null);
+            if (inv == null) continue;
+            long reserved = safeNumber(inv.getReserved());
+            long cantidad = safeNumber(mov.getCantidad());
+            long newReserved = Math.max(0L, reserved - cantidad);
+            inv.setReserved((int) newReserved);
+            repo.save(inv);
+
+            // registrar movimiento de liberación
+            try {
+                MovimientoCrearDTO m2 = new MovimientoCrearDTO();
+                Long productoId = mov.getProducto() != null ? mov.getProducto().getId() : null;
+                m2.setProductoId(productoId);
+                m2.setVarianteId(varId);
+                m2.setCantidad(cantidad);
+                m2.setTipo(TipoMovimientoInventario.LIBERACION);
+                m2.setOrderRef(request.getOrderRef());
+                m2.setMetadataJson("{\"source\":\"liberarReserva\"}");
+                movimientoService.crear(m2);
+            } catch (Exception ex) {
+                // ignorar error de trazabilidad
+            }
+        }
+
+        return new OperacionSimpleResponseDTO(true, "Reservas liberadas para orderRef: " + request.getOrderRef());
     }
 
     @Override
     public OperacionSimpleResponseDTO confirmarVenta(ConfirmacionVentaRequestDTO request) {
-        throw new UnsupportedOperationException("Confirmación de venta por orderRef no implementada en este servicio. Usa MovimientoInventarioService o adapta repo.");
+        if (request == null) throw new IllegalArgumentException("request null");
+        if (request.getOrderRef() == null) throw new IllegalArgumentException("orderRef es requerido");
+
+        List<MovimientoInventario> reservas = movimientoRepo.findByOrderRefAndTipo(request.getOrderRef(), TipoMovimientoInventario.RESERVA);
+        if (reservas == null || reservas.isEmpty()) {
+            return new OperacionSimpleResponseDTO(false, "No se encontraron reservas para orderRef: " + request.getOrderRef());
+        }
+
+        for (MovimientoInventario mov : reservas) {
+            if (mov.getVariante() == null) continue;
+            Long varId = mov.getVariante().getId();
+            InventarioVariante inv = repo.findByVarianteId(varId).orElse(null);
+            if (inv == null) continue;
+
+            long onHand = safeNumber(inv.getOnHand());
+            long reserved = safeNumber(inv.getReserved());
+            long cantidad = safeNumber(mov.getCantidad());
+
+            long newReserved = Math.max(0L, reserved - cantidad);
+            long newOnHand = Math.max(0L, onHand - cantidad);
+
+            inv.setReserved((int) newReserved);
+            inv.setOnHand((int) newOnHand);
+            repo.save(inv);
+
+            // registrar movimiento de salida por venta
+            try {
+                MovimientoCrearDTO m2 = new MovimientoCrearDTO();
+                Long productoId = mov.getProducto() != null ? mov.getProducto().getId() : null;
+                m2.setProductoId(productoId);
+                m2.setVarianteId(varId);
+                m2.setCantidad(cantidad);
+                m2.setTipo(TipoMovimientoInventario.SALIDA_VENTA);
+                m2.setOrderRef(request.getOrderRef());
+                m2.setMetadataJson("{\"source\":\"confirmarVenta\"}");
+                movimientoService.crear(m2);
+            } catch (Exception ex) {
+                // ignorar error de trazabilidad
+            }
+        }
+
+        return new OperacionSimpleResponseDTO(true, "Venta confirmada para orderRef: " + request.getOrderRef());
     }
 
     @Override
@@ -118,6 +222,33 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         // adaptar cast según el tipo real en la entidad (Integer vs Long vs int)
         inv.setOnHand((int) newOnHand);
         inv.setReserved((int) newReserved);
+
+        // Crear movimientos de inventario para trazabilidad (mismo contexto transaccional)
+        Long productoId = null;
+        if (inv.getVariante() != null && inv.getVariante().getProducto() != null) {
+            productoId = inv.getVariante().getProducto().getId();
+        }
+
+        if (productoId != null && movimientoService != null) {
+            if (deltaOnHand != 0) {
+                MovimientoCrearDTO m = new MovimientoCrearDTO();
+                m.setProductoId(productoId);
+                m.setVarianteId(varianteId);
+                m.setCantidad(Math.abs(deltaOnHand));
+                m.setTipo(deltaOnHand > 0 ? TipoMovimientoInventario.ENTRADA_AJUSTE : TipoMovimientoInventario.SALIDA_VENTA);
+                m.setMetadataJson("{\"source\":\"ajustarStock\",\"varianteId\":" + varianteId + "}");
+                movimientoService.crear(m);
+            }
+            if (deltaReserved != 0) {
+                MovimientoCrearDTO m2 = new MovimientoCrearDTO();
+                m2.setProductoId(productoId);
+                m2.setVarianteId(varianteId);
+                m2.setCantidad(Math.abs(deltaReserved));
+                m2.setTipo(deltaReserved > 0 ? TipoMovimientoInventario.RESERVA : TipoMovimientoInventario.LIBERACION);
+                m2.setMetadataJson("{\"source\":\"ajustarStock\",\"varianteId\":" + varianteId + "}");
+                movimientoService.crear(m2);
+            }
+        }
 
         InventarioVariante saved = repo.save(inv);
         return VarianteInventarioMapper.toDto(saved);

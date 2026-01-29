@@ -84,40 +84,55 @@ public class PrecioVarianteService implements IPrecioVarianteService {
         PrecioVariante existing = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Precio no encontrado: " + id));
 
-        boolean activating = dto.getActivo() != null && dto.getActivo() && !Boolean.TRUE.equals(existing.getActivo());
-        // aplicar cambios básicos
-        VariantePrecioMapper.applyActualizar(dto, existing);
+        // cierre del precio existente para mantener historial
+        LocalDateTime now = LocalDateTime.now();
+        if (Boolean.TRUE.equals(existing.getActivo())) {
+            existing.setActivo(false);
+            existing.setDeletedAt(now);
+        }
+        if (existing.getVigenciaHasta() == null) {
+            existing.setVigenciaHasta(now);
+        }
+        repo.save(existing);
 
-        // determinar tasa de IVA a usar (dto > existente > default)
+        // crear nuevo registro de precio con datos del DTO y referenciando la variante/producto
+        PrecioVariante nuevo = new PrecioVariante();
+        nuevo.setVariante(existing.getVariante());
+        nuevo.setProducto(existing.getProducto());
+
+        Long monto = dto.getMontoCentavos() != null ? dto.getMontoCentavos() : existing.getMontoCentavos();
+        nuevo.setMontoCentavos(monto);
+        // precio anterior para referencia
+        nuevo.setPrecioAnteriorCentavos(existing.getMontoCentavos());
+
         Integer ivaPct = dto.getIvaPorcentaje() != null ? dto.getIvaPorcentaje()
                 : (existing.getIvaPorcentaje() != null ? existing.getIvaPorcentaje() : this.defaultIvaPct);
-        existing.setIvaPorcentaje(ivaPct);
+        nuevo.setIvaPorcentaje(ivaPct);
 
-        // calcular precioSinIva si quedó nulo
-        if (dto.getPrecioSinIvaCentavos() == null) {
-            Long monto = dto.getMontoCentavos() != null ? dto.getMontoCentavos() : existing.getMontoCentavos();
-            if (monto != null) {
-                existing.setPrecioSinIvaCentavos(calcularPrecioSinIvaCentavos(monto, ivaPct));
+        Long precioSinIva = dto.getPrecioSinIvaCentavos() != null ? dto.getPrecioSinIvaCentavos()
+                : (monto != null ? calcularPrecioSinIvaCentavos(monto, ivaPct) : null);
+        nuevo.setPrecioSinIvaCentavos(precioSinIva);
+
+        nuevo.setMoneda(dto.getMoneda() != null ? dto.getMoneda() : existing.getMoneda());
+        nuevo.setVigenciaDesde(dto.getVigenciaDesde() != null ? dto.getVigenciaDesde() : now);
+        nuevo.setVigenciaHasta(dto.getVigenciaHasta());
+        nuevo.setActivo(dto.getActivo() != null ? dto.getActivo() : Boolean.TRUE);
+        nuevo.setCreadoPor(dto.getCreadoPor() != null ? dto.getCreadoPor() : existing.getCreadoPor());
+
+        // si se marca activo, desactivar otros activos por variante (robusto)
+        if (Boolean.TRUE.equals(nuevo.getActivo()) && nuevo.getVariante() != null) {
+            List<PrecioVariante> activos = repo.findByVarianteIdAndActivoTrueOrderByVigenciaDesdeDesc(nuevo.getVariante().getId());
+            for (PrecioVariante p : activos) {
+                if (p.getId().equals(existing.getId())) continue; // ya cerrado
+                p.setActivo(false);
+                if (p.getVigenciaHasta() == null) p.setVigenciaHasta(now);
+                p.setDeletedAt(now);
             }
+            if (!activos.isEmpty()) repo.saveAll(activos);
         }
 
-        // si se activa este precio, desactivar los demás activos para el mismo producto
-        if (activating && existing.getVariante() != null) {
-            List<PrecioVariante> activos = repo.findByVarianteIdAndActivoTrueOrderByVigenciaDesdeDesc(existing.getVariante().getId());
-            if (!activos.isEmpty()) {
-                LocalDateTime now = LocalDateTime.now();
-                for (PrecioVariante p : activos) {
-                    if (!p.getId().equals(existing.getId())) {
-                        p.setActivo(false);
-                      if (p.getVigenciaHasta() == null) p.setVigenciaHasta(now);
-                    }
-                }
-                repo.saveAll(activos);
-            }
-        }
-
-        PrecioVariante updated = repo.save(existing);
-        return VariantePrecioMapper.toResponse(updated);
+        PrecioVariante saved = repo.save(nuevo);
+        return VariantePrecioMapper.toResponse(saved);
     }
 
     @Override

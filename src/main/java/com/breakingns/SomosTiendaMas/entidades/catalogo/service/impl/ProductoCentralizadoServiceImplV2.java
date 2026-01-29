@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoCrearDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullDTO;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.VarianteCentralizadaResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteDTO;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.variante1.VarianteCrearDTO;
@@ -38,6 +39,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @Transactional
@@ -135,6 +141,47 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 						}
 					}
 					VarianteConOpcionesValoresDTO opciones = varianteOpcionService.obtenerVarianteConOpcionesConValores(vd.getId());
+					// construir attributesJson a partir de opciones (solo nombre -> valores)
+					try {
+						if (opciones != null && opciones.getOpciones() != null && !opciones.getOpciones().isEmpty()) {
+							Map<String, Object> map = new LinkedHashMap<>();
+							for (var o : opciones.getOpciones()) {
+								if (o == null) continue;
+								var nombre = o.getNombre();
+								if (nombre == null) continue;
+								if (o.getValores() == null || o.getValores().isEmpty()) {
+									map.put(nombre, new ArrayList<>());
+								} else if (o.getValores().size() == 1) {
+									map.put(nombre, o.getValores().get(0).getValor());
+								} else {
+									java.util.List<String> vals = new java.util.ArrayList<>();
+									for (var vv : o.getValores()) {
+										vals.add(vv.getValor());
+									}
+									map.put(nombre, vals);
+								}
+							}
+							ObjectMapper mapper = new ObjectMapper();
+							String attrsJson = mapper.writeValueAsString(map);
+							String hash = sha256Hex(attrsJson);
+							// persistir en variante mediante el servicio de variantes
+							try {
+								VarianteCrearDTO update = new VarianteCrearDTO();
+								update.setAttributesJson(attrsJson);
+								update.setAttributesHash(hash);
+								varianteService.actualizar(vd.getId(), update);
+								// actualizar el objeto local vd para reflejar cambios en la respuesta
+								vd.setAttributesJson(attrsJson);
+								vd.setAttributesHash(hash);
+								vr.setAttributesJson(attrsJson);
+								vr.setAttributesHash(hash);
+							} catch (Exception ex) {
+								log.warn("[V2] No se pudo actualizar attributes para variante {}: {}", vd.getId(), ex.getMessage());
+							}
+						}
+					} catch (Exception ex) {
+						log.warn("[V2] Error construyendo attributesJson para variante {}: {}", vd.getId(), ex.getMessage());
+					}
 					vr.setVarianteOpciones(opciones != null ? opciones : new VarianteConOpcionesValoresDTO(vd.getId(), new ArrayList<>()));
 				} else {
 					vr.setVarianteOpciones(new VarianteConOpcionesValoresDTO(vd.getId(), new ArrayList<>()));
@@ -311,6 +358,7 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 				log.warn("[V2] Error obteniendo opciones para variante {}: {}", vd.getId(), e.getMessage());
 				vr.setVarianteOpciones(new VarianteConOpcionesValoresDTO(vd.getId(), new ArrayList<>()));
 			}
+
 			
 			// Precios
 			try {
@@ -353,6 +401,97 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 		
 		out.setVariantes(variantesResp);
 		return out;
+	}
+
+	
+	@Override
+	public com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO obtenerSimplePorId(Long productoId) {
+		log.debug("[V2] obtenerSimplePorId llamado para productoId={}", productoId);
+		// proteger la obtención del producto contra excepciones que marquen la transacción rollback-only
+		ProductoCentralizadoResponseDTO producto = null;
+		try {
+			producto = productoService.obtenerPorId(productoId);
+		} catch (Exception ex) {
+			log.error("[V2] Error obteniendo producto {}: {}", productoId, ex.getMessage(), ex);
+			return null;
+		}
+		if (producto == null) return null;
+
+		List<VarianteDTO> variantes;
+		try {
+			variantes = varianteRepository.findByProducto_Id(productoId)
+				.stream()
+				.map(VarianteMapper::toDto)
+				.collect(java.util.stream.Collectors.toList());
+		} catch (Exception ex) {
+			log.error("[V2] Error obteniendo variantes para producto {}: {}", productoId, ex.getMessage(), ex);
+			return null;
+		}
+
+		com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO out = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO();
+		out.setProducto(producto);
+
+		List<com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.VarianteCentralizadaResponseSimpleDTO> variantesResp = new ArrayList<>();
+		for (VarianteDTO vd : variantes) {
+			com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.VarianteCentralizadaResponseSimpleDTO vr = new com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.VarianteCentralizadaResponseSimpleDTO();
+			vr.setId(vd.getId());
+			vr.setSku(vd.getSku());
+			vr.setAttributesJson(vd.getAttributesJson());
+			vr.setAttributesHash(vd.getAttributesHash());
+			vr.setEsDefault(vd.getEsDefault());
+			vr.setActivo(vd.getActivo());
+
+			try {
+				var precios = precioVarianteService.listarPorVarianteId(vd.getId());
+				vr.setPrecios(precios != null ? precios : new ArrayList<>());
+			} catch (Exception e) {
+				log.warn("[V2] Error obteniendo precios para variante {}: {}", vd.getId(), e.getMessage(), e);
+				vr.setPrecios(new ArrayList<>());
+			}
+
+			try {
+				var invDTO = inventarioVarianteService.obtenerPorVarianteId(vd.getId());
+				vr.setInventarios(invDTO != null ? List.of(invDTO) : new ArrayList<>());
+			} catch (Exception e) {
+				log.warn("[V2] Error obteniendo inventarios para variante {}: {}", vd.getId(), e.getMessage(), e);
+				vr.setInventarios(new ArrayList<>());
+			}
+
+			try {
+				var phys = varianteFisicoService.obtenerPorVarianteId(vd.getId());
+				vr.setPhysical(phys != null ? List.of(phys) : new ArrayList<>());
+			} catch (Exception e) {
+				log.warn("[V2] Error obteniendo physical para variante {}: {}", vd.getId(), e.getMessage(), e);
+				vr.setPhysical(new ArrayList<>());
+			}
+
+			try {
+				var imgs = imagenVarianteService.listarPorVarianteId(vd.getId());
+				vr.setImagenes(imgs != null ? imgs : new ArrayList<>());
+			} catch (Exception e) {
+				log.warn("[V2] Error obteniendo imagenes para variante {}: {}", vd.getId(), e.getMessage(), e);
+				vr.setImagenes(new ArrayList<>());
+			}
+
+			variantesResp.add(vr);
+		}
+
+		out.setVariantes(variantesResp);
+		return out;
+	}
+
+	// helper: calcular sha256 hex
+	private static String sha256Hex(String input) {
+		if (input == null) return null;
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+			StringBuilder sb = new StringBuilder();
+			for (byte b : digest) sb.append(String.format("%02x", b & 0xff));
+			return sb.toString();
+		} catch (Exception e) {
+			throw new RuntimeException("Unable to calculate SHA-256", e);
+		}
 	}
 
 }

@@ -108,12 +108,31 @@ public class VarianteService implements IVarianteService {
     @Transactional(readOnly = true)
     public java.util.List<VarianteDTO> listarPorProductoId(Long productoId) {
         if (productoId == null) return java.util.Collections.emptyList();
+        var productoOpt = productoRepo.findById(productoId);
+        if (productoOpt.isEmpty() || productoOpt.get().getDeletedAt() != null) {
+            return java.util.Collections.emptyList();
+        }
+
         var list = varianteRepo.findByProducto_Id(productoId);
         var out = new java.util.ArrayList<VarianteDTO>();
         for (Variante v : list) {
             if (v.getDeletedAt() == null) {
                 out.add(VarianteMapper.toDto(v));
             }
+        }
+        return out;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<VarianteDTO> listarTodas() {
+        var all = varianteRepo.findAll();
+        var out = new java.util.ArrayList<VarianteDTO>();
+        for (Variante v : all) {
+            if (v.getDeletedAt() != null) continue;
+            if (v.getProducto() == null) continue;
+            if (v.getProducto().getDeletedAt() != null) continue;
+            out.add(VarianteMapper.toDto(v));
         }
         return out;
     }

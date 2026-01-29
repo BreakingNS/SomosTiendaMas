@@ -6,10 +6,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "movimiento_inventario", indexes = {
-        @Index(name = "ix_mov_variante", columnList = "variante_id"),
-        @Index(name = "ix_mov_order_ref", columnList = "order_ref")
-})
+@Table(name = "movimiento_inventario",
+       indexes = {
+           @Index(name = "ix_mov_variante", columnList = "variante_id"),
+           @Index(name = "ix_mov_order_ref", columnList = "order_ref")
+       },
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uq_mov_order_tipo_var", columnNames = {"order_ref", "tipo", "variante_id"})
+       }
+)
 @Getter
 @Setter
 public class MovimientoInventario extends BaseEntidadAuditada {
