@@ -248,3 +248,5 @@ beta 0.1.8.2: Modulo 3 previo a centralizar todo en Variante (Precio, Imagenes, 
 beta 0.1.8.3: Modulo 3 Producto, Variante y ProductoCentralizado funcionando, por realizar ajustes DTOs.
 
 beta 0.1.8.4: Modulo 3 repaso y corregir advertencias de logica/criticas.
+
+beta 0.1.8.5: Modulo 3 repaso y corregir advertencias de logica/criticas (prueba en notebook).

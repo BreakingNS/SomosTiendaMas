@@ -83,7 +83,7 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         if (request.getVarianteId() == null) throw new IllegalArgumentException("varianteId es requerido");
         Variante v = varianteRepo.findById(request.getVarianteId())
             .orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + request.getVarianteId()));
-        InventarioVariante inv = repo.findByVarianteId(v.getId())
+        InventarioVariante inv = repo.findByVarianteIdForUpdate(v.getId())
             .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado: " + request.getVarianteId()));
 
         // si getOnHand()/getReserved() devuelven primitivos (long/int) no pueden ser null,
@@ -174,8 +174,15 @@ public class InventarioVarianteService implements IInventarioVarianteService {
         for (MovimientoInventario mov : reservas) {
             if (mov.getVariante() == null) continue;
             Long varId = mov.getVariante().getId();
-            InventarioVariante inv = repo.findByVarianteId(varId).orElse(null);
+            InventarioVariante inv = repo.findByVarianteIdForUpdate(varId).orElse(null);
             if (inv == null) continue;
+
+            // Si ya existe una SALIDA_VENTA para esta orderRef y variante, omitir (idempotencia)
+            boolean salidaExistente = movimientoRepo.findByOrderRefAndTipo(request.getOrderRef(), TipoMovimientoInventario.SALIDA_VENTA)
+                    .stream().anyMatch(m -> m.getVariante() != null && m.getVariante().getId().equals(varId));
+            if (salidaExistente) {
+                continue; // ya fue consumida por otra confirmación
+            }
 
             long onHand = safeNumber(inv.getOnHand());
             long reserved = safeNumber(inv.getReserved());
@@ -184,11 +191,8 @@ public class InventarioVarianteService implements IInventarioVarianteService {
             long newReserved = Math.max(0L, reserved - cantidad);
             long newOnHand = Math.max(0L, onHand - cantidad);
 
-            inv.setReserved((int) newReserved);
-            inv.setOnHand((int) newOnHand);
-            repo.save(inv);
-
-            // registrar movimiento de salida por venta
+            // registrar movimiento de salida por venta PRIMERO (para que la inserción actúe como claim)
+            boolean movimientoCreado = false;
             try {
                 MovimientoCrearDTO m2 = new MovimientoCrearDTO();
                 Long productoId = mov.getProducto() != null ? mov.getProducto().getId() : null;
@@ -199,9 +203,22 @@ public class InventarioVarianteService implements IInventarioVarianteService {
                 m2.setOrderRef(request.getOrderRef());
                 m2.setMetadataJson("{\"source\":\"confirmarVenta\"}");
                 movimientoService.crear(m2);
+                movimientoCreado = true;
             } catch (Exception ex) {
-                // ignorar error de trazabilidad
+                // si falla la creación porque ya existe, asumimos que otra transacción hizo el trabajo
+                movimientoCreado = movimientoRepo.findByOrderRefAndTipo(request.getOrderRef(), TipoMovimientoInventario.SALIDA_VENTA)
+                        .stream().anyMatch(m -> m.getVariante() != null && m.getVariante().getId().equals(varId));
             }
+
+            if (!movimientoCreado) {
+                // otra transacción reclamó la salida; omitir
+                continue;
+            }
+
+            // aplicar cambios al inventario solo si se creó el movimiento
+            inv.setReserved((int) newReserved);
+            inv.setOnHand((int) newOnHand);
+            repo.save(inv);
         }
 
         return new OperacionSimpleResponseDTO(true, "Venta confirmada para orderRef: " + request.getOrderRef());

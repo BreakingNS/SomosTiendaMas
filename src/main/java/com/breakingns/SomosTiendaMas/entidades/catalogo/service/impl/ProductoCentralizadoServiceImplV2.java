@@ -46,7 +46,6 @@ import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 
 @Service
-@Transactional
 public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoService {
 
 	private static final Logger log = LoggerFactory.getLogger(ProductoCentralizadoServiceImplV2.class);
@@ -86,6 +85,7 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 	}
 
 	@Override
+	@Transactional
 	public ProductoCentralizadoResponseFullDTO crear(ProductoCentralizadoCrearDTO dto) {
 		return crear(dto, "system");
 	}
@@ -324,6 +324,7 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ProductoCentralizadoResponseFullDTO obtenerPorId(Long productoId) {
 		log.debug("[V2] obtenerPorId llamado para productoId={}", productoId);
 		
@@ -405,6 +406,7 @@ public class ProductoCentralizadoServiceImplV2 implements IProductoCentralizadoS
 
 	
 	@Override
+	@Transactional(readOnly = true)
 	public com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizado.ProductoCentralizadoResponseFullSimpleDTO obtenerSimplePorId(Long productoId) {
 		log.debug("[V2] obtenerSimplePorId llamado para productoId={}", productoId);
 		// proteger la obtención del producto contra excepciones que marquen la transacción rollback-only

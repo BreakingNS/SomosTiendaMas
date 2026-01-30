@@ -46,13 +46,17 @@ public class MovimientoInventarioService implements IMovimientoInventarioService
 
         // Construir entidad sin variante inicialmente
         MovimientoInventario entidad = MovimientoMapper.fromCrear(dto);
-        entidad.setProducto(producto);
 
-        // Si se indicó varianteId, obtener una referencia gestionada y asignarla
+        // Si se indicó varianteId, obtener una referencia gestionada y asignarla PRIMERO
         if (dto.getVarianteId() != null) {
             Variante variante = varianteRepo.findById(dto.getVarianteId())
                 .orElseThrow(() -> new EntityNotFoundException("Variante no encontrada: " + dto.getVarianteId()));
             entidad.setVariante(variante);
+        }
+
+        // Asignar producto solo si ya tenemos la variante (evita crear Variante transitoria)
+        if (entidad.getVariante() != null) {
+            entidad.setProducto(producto);
         }
 
         // Idempotencia: si viene orderRef + tipo (+ varianteId), devolver movimiento existente
