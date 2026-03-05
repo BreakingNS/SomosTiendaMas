@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SomoTiendaMas Paginas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f7f7f8; color:#222; margin:0; padding:40px; }
+        .container{ max-width:760px; margin:40px auto; background:#fff; padding:24px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+        h1{ margin:0 0 12px; font-size:22px; }
+        .section { margin-top:18px; padding-top:12px; border-top:1px dashed #eee; }
+        .section h2 { font-size:14px; margin:0 0 10px; color:#444; display:flex; align-items:center; gap:10px; }
+        .pill { font-size:12px; padding:6px 8px; border-radius:999px; color:#fff; }
+        nav { display:flex; flex-wrap:wrap; gap:10px; }
+
+        /* botones grupo acciones (funcional) */
+        .btn { display:inline-block; margin:0; padding:10px 14px; text-decoration:none; border-radius:6px; font-weight:600; color:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+        .btn-primary { background: linear-gradient(180deg,#0078d4,#0063b1); }
+        .btn-primary:hover { filter:brightness(.95); }
+
+        /* botones grupo páginas de estado (informativo) */
+        .btn-status { background: linear-gradient(180deg,#6c757d,#565e64); }
+        .btn-status.alt { background: linear-gradient(180deg,#28a745,#1f7a34); } /* verde para verificado/éxito */
+        .btn-status.warning { background: linear-gradient(180deg,#f0ad4e,#e69500); } /* naranja para advertencia */
+
+        /* accesibilidad y texto pequeño */
+        .small { font-size:13px; color:#666; margin-top:8px; }
+        footer{ margin-top:18px; font-size:13px; color:#666; }
+
+        /* Estado de sesión (mantener) */
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SomoTiendaMas — Páginas de prueba</h1>
+        <p class="small">Enlaces agrupados: acciones funcionales (formularios) y páginas de estado/resultados.</p>
+
+        <!-- Modulo 2: Gestion de Usuarios -->
+
+        <section class="section" aria-labelledby="acciones-title">
+            <h1 id="acciones-title"> Modulo 2: Gestión de Usuarios </h1>
+        </section>
+
+        <!-- Grupo 1: Acciones funcionales -->
+        <section class="section" aria-labelledby="acciones-title">
+            <h2 id="acciones-title"><span class="pill" style="background:#005a9e">Acciones</span> Formularios / acciones que el usuario puede ejecutar</h2>
+            <nav aria-label="Acciones">
+                <a class="btn btn-primary" href="https://localhost:8443/public/iniciarSesion.html" title="Iniciar Sesion">Iniciar sesión</a>
+                <a class="btn btn-primary" href="https://localhost:8443/public/registro_usuario.html" title="Registro Usuario">Registro usuario</a>
+                <a class="btn btn-primary" href="https://localhost:8443/public/registro_empresa.html" title="Registro Empresa">Registro empresa</a>
+                <a class="btn btn-primary" href="https://localhost:8443/public/restaurarContraseña.html" title="Olvidé Contraseña">Olvidé contraseña</a>
+            </nav>
+            <p class="small">Estos enlaces llevan a formularios donde el usuario completa datos o solicita acciones.</p>
+        </section>
+
+        <!-- Grupo 2: Páginas de estado / resultados -->
+        <section class="section" aria-labelledby="estados-title">
+            <h2 id="estados-title"><span class="pill" style="background:#6c757d">Estados</span> Páginas informativas / confirmación</h2>
+            <nav aria-label="Páginas de estado">
+                <a class="btn btn-status" href="https://localhost:8443/public/correoEnviado(verificarCorreo).html" title="Correo enviado (Verificar correo)">Correo enviado (verificar)</a>
+                <a class="btn btn-status alt" href="https://localhost:8443/public/correoVerificado.html" title="Correo verificado">Correo verificado</a>
+                <a class="btn btn-status" href="https://localhost:8443/public/correoEnviado(recuperarContrasenia).html" title="Correo enviado (Recuperacion)">Correo enviado (recuperación)</a>
+                <a class="btn btn-status warning" href="https://localhost:8443/public/cambiarContrasenia.html" title="Cambio de Contraseña (Enlace de correo)">Cambio de contraseña (enlace)</a>
+                <a class="btn btn-status alt" href="https://localhost:8443/public/contraseniaCambiada.html" title="Contraseña cambiada exitosamente">Contraseña cambiada</a>
+            </nav>
+            <p class="small">Estas páginas muestran estado/confirmación tras acciones (por ejemplo: envío de mail, verificación, cambio).</p>
+        </section>
+
+        <!-- Modulo 3: Catalogo de Productos -->
+
+        <section class="section" aria-labelledby="acciones-title">
+            <h1 id="acciones-title"> Modulo 3: Catalogo de Productos </h1>
+        </section>
+
+        <!-- Grupo 1: Acciones funcionales -->
+        <section class="section" aria-labelledby="acciones-title">
+            <h2 id="acciones-title"><span class="pill" style="background:#005a9e">Acciones</span> Formularios / acciones que el usuario puede ejecutar</h2>
+            <nav aria-label="Acciones">
+                <a class="btn btn-primary" href="https://localhost:8443/public/listaProductosNoObligatorio.html" title="Lista Productos No Obligatorio">Lista Productos No Obligatorio</a>
+                <a class="btn btn-primary" href="https://localhost:8443/public/producto/categorias.html" title="Vender Producto">Vender Producto</a>
+                <!-- <a class="btn btn-primary" href="https://localhost:8443/public/producto/mostrar/producto.html" title="Ver Producto">Ver Producto</a> -->
+                <a class="btn btn-primary" href="https://localhost:8443/public/producto/mostrar/producto-simple.html?id=11" title="Ver Producto">Ver Producto</a>        
+                <a class="btn btn-primary" href="https://localhost:8443/public/producto/carga/producto-clasificacion.html" title="Subir Producto">Subir Producto</a>          
+            </nav>
+            <p class="small">Estos enlaces llevan a formularios donde el usuario completa datos o solicita acciones.</p>
+        </section>
+
+        <!-- Grupo 2: Páginas de estado / resultados -->
+        <section class="section" aria-labelledby="estados-title">
+            <h2 id="estados-title"><span class="pill" style="background:#6c757d">Estados</span> Páginas informativas / confirmación</h2>
+            <nav aria-label="Páginas de estado">
+            
+            </nav>
+            <p class="small">Estas páginas muestran estado/confirmación tras acciones (por ejemplo: envío de mail, verificación, cambio).</p>
+        </section>
+
+        <!-- Modulo DEV: Desarrollo y pruebas -->
+
+        <section class="section" aria-labelledby="acciones-title">
+            <h1 id="acciones-title"> Modulo DEV: Desarrollo y pruebas </h1>
+        </section>
+
+        <!-- Grupo 1: Acciones funcionales -->
+        <section class="section" aria-labelledby="acciones-title">
+            <h2 id="acciones-title"><span class="pill" style="background:#005a9e">Acciones</span> Formularios / acciones que el usuario puede ejecutar</h2>
+            <nav aria-label="Acciones">
+                <a class="btn btn-primary" href="https://localhost:8443/public/dev-tools/productos-dev.html" title="Lista Productos Dev">Lista Productos Dev</a>     
+                <a class="btn btn-primary" href="https://localhost:8443/public/dev-tools/drafts-dev.html" title="Lista Drafts Dev">Lista Drafts Dev</a>
+            </nav>
+            <p class="small">Estos enlaces llevan a formularios donde el usuario completa datos o solicita acciones.</p>
+        </section>
+
+        <!-- Grupo 2: Páginas de estado / resultados -->
+        <section class="section" aria-labelledby="estados-title">
+            <h2 id="estados-title"><span class="pill" style="background:#6c757d">Estados</span> Páginas informativas / confirmación</h2>
+            <nav aria-label="Páginas de estado">
+            
+            </nav>
+            <p class="small">Estas páginas muestran estado/confirmación tras acciones (por ejemplo: envío de mail, verificación, cambio).</p>
+        </section>
+
+        <footer>Proyecto de muestra</footer>
+    </div>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+
+        <!-- Botón de logout -->
+        <div style="margin-top:8px; text-align:center;">
+            <div style="display:inline-flex; gap:8px; align-items:center;">
+                <button id="ss-copy-jwt-btn" title="Copiar JWT al portapapeles" style="background:#0078d4;color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;">
+                    Copiar token
+                </button>
+                <button id="ss-logout-btn" title="Cerrar sesión" style="background:#e03b3b;color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;">
+                    Cerrar sesión
+                </button>
+            </div>
+            <div id="ss-copy-msg" style="font-size:12px;color:#333;margin-top:6px;height:18px;"></div>
+        </div>
+    </div>
+
+    <!-- El botón Copiar token fue integrado dentro de #session-status (junto a Cerrar sesión) -->
+
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
+
+    <script>
+        (function(){
+            const jwtEl = document.getElementById('ss-jwt');
+            const copyBtn = document.getElementById('ss-copy-jwt-btn');
+            const msg = document.getElementById('ss-copy-msg');
+
+            function isLikelyJwt(s){
+                if(!s) return false;
+                const t = s.trim();
+                // JWT typical format: header.payload.signature (two dots)
+                if (t.split('.').length === 3 && t.length > 20) return true;
+                return false;
+            }
+
+            function updateButton(){
+                if(!jwtEl || !copyBtn) return;
+                // enable only if dataset.token exists or the visible text looks like a JWT
+                const ds = (jwtEl.dataset && jwtEl.dataset.token) ? jwtEl.dataset.token.trim() : '';
+                const visible = (jwtEl.textContent || '').trim();
+                const enabled = (ds && ds.length>0) || isLikelyJwt(visible);
+                copyBtn.disabled = !enabled;
+            }
+
+            if(copyBtn){
+                copyBtn.addEventListener('click', async function(){
+                    console.log('[ss] copyBtn clicked');
+                    try{ console.log('[ss] data-token on #ss-jwt =', jwtEl && jwtEl.dataset ? jwtEl.dataset.token : '(no jwtEl)'); }catch(e){}
+                    // Prefer the hidden real token stored in data-token
+                    let token = '';
+                    if (jwtEl && jwtEl.dataset && jwtEl.dataset.token) token = jwtEl.dataset.token.trim();
+                    // If no dataset token, only accept visible text if it looks like a JWT
+                    if(!token){
+                        const visible = (jwtEl && jwtEl.textContent) ? jwtEl.textContent.trim() : '';
+                        if (isLikelyJwt(visible)) token = visible;
+                    }
+
+                    // Si no hay token visible, intentar obtenerlo desde el endpoint de desarrollo
+                    if(!token){
+                        try{
+                            const url = (window.location && window.location.origin) ? window.location.origin + '/dev/token/me' : '/dev/token/me';
+                            console.log('[ss] fetching dev token from', url);
+                            if(typeof fetch !== 'function'){
+                                console.warn('[ss] fetch not available, skipping');
+                                msg.textContent = 'Fetch no disponible';
+                                setTimeout(()=> msg.textContent = '', 2500);
+                                return;
+                            }
+                            const res = await fetch(url, { credentials: 'include', headers: { 'Accept': 'application/json' } });
+                            console.log('[ss] /dev/token response', res && res.status);
+                            if(!res.ok){
+                                msg.textContent = '/dev/token respuesta ' + res.status;
+                                setTimeout(()=> msg.textContent = '', 2500);
+                                return;
+                            }
+                            const data = await res.json();
+                            console.log('[ss] /dev/token json', data);
+                            token = (data && (data.jwt || data.token || data.accessToken)) || '';
+                            if(token){
+                                // guardar en el atributo data-token y mostrar una versión corta en UI
+                                if(jwtEl){ jwtEl.dataset.token = token; jwtEl.textContent = '(token obtenido)'; }
+                            }else{
+                                msg.textContent = 'Respuesta sin token';
+                                setTimeout(()=> msg.textContent = '', 2500);
+                                return;
+                            }
+                        }catch(err){
+                            console.error('[ss] fetch error', err);
+                            msg.textContent = 'Error al solicitar token (dev)';
+                            setTimeout(()=> msg.textContent = '', 2500);
+                            return;
+                        }
+                    }
+
+                    // Copiar al portapapeles (API moderna con fallback)
+                    try{
+                        console.log('[ss] token length:', token.length);
+                        // chequear permiso clipboard
+                        if (navigator.permissions && navigator.permissions.query) {
+                            try{
+                                const p = await navigator.permissions.query({ name: 'clipboard-write' });
+                                console.log('[ss] clipboard permission state:', p.state);
+                            }catch(eperm){ console.log('[ss] clipboard permission check error', eperm); }
+                        }
+
+                        // Intentar copiar usando Clipboard API
+                        await navigator.clipboard.writeText(token);
+                        console.log('[ss] navigator.clipboard.writeText succeeded');
+                        msg.textContent = 'Token copiado';
+                    }catch(e){
+                        console.warn('[ss] navigator.clipboard.writeText failed', e);
+                        try{
+                            // ensure window has focus (some browsers require focused window for execCommand)
+                            try{ window.focus(); }catch(ff){}
+                            const ta = document.createElement('textarea');
+                            ta.style.position = 'fixed'; ta.style.left='-9999px'; ta.style.top='0';
+                            ta.value = token;
+                            document.body.appendChild(ta);
+                            ta.focus();
+                            ta.select();
+                            if (ta.setSelectionRange) ta.setSelectionRange(0, ta.value.length);
+                            let ok = false;
+                            try{ ok = document.execCommand('copy'); console.log('[ss] execCommand copy ok=', ok); }catch(e2){ console.warn('[ss] execCommand failed', e2); }
+                            document.body.removeChild(ta);
+                            msg.textContent = ok ? 'Token copiado' : 'No se pudo copiar';
+                        }catch(finalErr){
+                            console.error('[ss] fallback copy failed', finalErr);
+                            msg.textContent = 'No se pudo copiar';
+                        }
+                    }
+
+                    // Mostrar una confirmación corta y trazas para depurar (dev only)
+                    try{ console.log('[ss] token preview:', token.substring(0,20) + '...'); }catch(e){}
+                    setTimeout(()=> msg.textContent = '', 2000);
+                });
+            }
+
+            // Observador para detectar cambios en el contenido del JWT
+            if(jwtEl){
+                const observer = new MutationObserver(()=> updateButton());
+                observer.observe(jwtEl, { childList:true, characterData:true, subtree:true });
+            }
+
+            // actualización inicial
+            document.addEventListener('DOMContentLoaded', updateButton);
+            // también un chequeo rápido por si el script corre después
+            setTimeout(updateButton, 200);
+        })();
+    </script>
+</body>
+</html>

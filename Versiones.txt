@@ -250,3 +250,5 @@ beta 0.1.8.3: Modulo 3 Producto, Variante y ProductoCentralizado funcionando, po
 beta 0.1.8.4: Modulo 3 repaso y corregir advertencias de logica/criticas.
 
 beta 0.1.8.5: Modulo 3 repaso y corregir advertencias de logica/criticas (prueba en notebook).
+
+beta 0.1.8.6: Modulo 3 finalizado con matices (faltan pruebas excaustivas y demas).

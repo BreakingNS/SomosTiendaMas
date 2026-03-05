@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Correo enviado | Tienda Mas</title>
+  <meta name="description" content="Instrucciones de recuperación de contraseña enviadas - Tienda Mas">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #FF6B35;
+      --primary-hover: #E55627;
+      --secondary-color: #004E89;
+      --light-gray: #F8F9FA;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-gray);
+      color: #333;
+    }
+    .btn-primary {
+      transition: all 0.2s ease;
+      background-color: var(--primary-color);
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+    .card {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <main class="card bg-white rounded-xl p-8 w-full max-w-md text-center">
+    <!-- Logo -->
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+        <span class="text-orange-500">Tienda</span>
+        <span class="text-blue-600 ml-1">Mas</span>
+      </h1>
+    </header>
+
+    <!-- Icono -->
+    <div class="text-orange-500 text-6xl mb-4" aria-hidden="true">
+      <i class="fas fa-envelope-open-text"></i>
+    </div>
+
+    <!-- Mensaje (neutral, evita confirmación de existencia de cuenta) -->
+    <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+      Si la dirección proporcionada existe en nuestro sistema, recibirás un correo con instrucciones para recuperar tu contraseña.
+    </h2>
+    <p class="text-gray-600 mb-6">
+      El correo incluirá un enlace seguro con instrucciones. Si no lo recibís en unos minutos, revisá la carpeta de spam.
+    </p>
+
+    <!-- Botón: ir a iniciar sesión -->
+    <a href="/public/iniciarSesion.html" class="btn-primary text-white font-medium py-3 px-6 rounded-lg inline-block" rel="noopener noreferrer" aria-label="Ir a iniciar sesión">
+      Volver a iniciar sesión
+    </a>
+  </main>
+</body>
+</html>

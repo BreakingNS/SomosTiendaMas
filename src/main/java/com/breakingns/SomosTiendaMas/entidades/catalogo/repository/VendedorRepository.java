@@ -7,13 +7,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VendedorRepository extends JpaRepository<Vendedor, Long> {
-    Optional<Vendedor> findByUserId(Long userId);
-    Optional<Vendedor> findByUserIdAndDeletedAtIsNull(Long userId);
+    Optional<Vendedor> findByUsuarioId(Long usuarioId);
+    Optional<Vendedor> findByUsuarioIdAndDeletedAtIsNull(Long usuarioId);
 
-    List<Vendedor> findByNombreContainingIgnoreCase(String nombre);
-    List<Vendedor> findAllByDeletedAtIsNullOrderByNombreAsc();
+    Optional<Vendedor> findByEmpresaIdAndDeletedAtIsNull(Long empresaId);
+    Optional<Vendedor> findByEmpresaId(Long empresaId);
+
+    List<Vendedor> findByDisplayNameContainingIgnoreCase(String nombre);
+    List<Vendedor> findAllByDeletedAtIsNullOrderByDisplayNameAsc();
 
     Optional<Vendedor> findByIdAndDeletedAtIsNull(Long id);
 
-    void deleteByUserId(Long userId);
+    boolean existsBySlugAndDeletedAtIsNull(String slug);
+
+    void deleteByUsuarioId(Long usuarioId);
 }

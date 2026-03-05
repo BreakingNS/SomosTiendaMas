@@ -34,7 +34,13 @@ public class VarianteFisicoControllerDesarrollo {
 
     @DeleteMapping("/variantes/{varianteId}/physical")
     public ResponseEntity<Void> eliminar(@PathVariable Long varianteId) {
-        service.eliminarPorVarianteId(varianteId);
+        service.borradoLogicoPorVarianteId(varianteId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/variantes/{varianteId}/physical/hard")
+    public ResponseEntity<Void> eliminarFisico(@PathVariable Long varianteId) {
+        service.borradoFisicoPorVarianteId(varianteId);
         return ResponseEntity.noContent().build();
     }
 }

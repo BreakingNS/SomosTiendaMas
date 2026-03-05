@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.MovimientoInventarioRepository;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.model.MovimientoInventario;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.enums.TipoMovimientoInventario;
@@ -292,9 +293,14 @@ public class InventarioVarianteService implements IInventarioVarianteService {
     @Override
     public void eliminarPorVarianteId(Long varianteId) {
         repo.findByVarianteId(varianteId).ifPresent(inv -> {
-            // si querés soft-delete y tu entidad tiene deletedAt, setearlo aquí.
-            // Si no, borramos físicamente:
-            repo.delete(inv);
+            // realizar soft-delete si la entidad soporta deletedAt
+            try {
+                inv.setDeletedAt(LocalDateTime.now());
+                repo.save(inv);
+            } catch (Exception ex) {
+                // fallback a borrado físico en caso de que la entidad no tenga deletedAt
+                repo.delete(inv);
+            }
         });
     }
 }

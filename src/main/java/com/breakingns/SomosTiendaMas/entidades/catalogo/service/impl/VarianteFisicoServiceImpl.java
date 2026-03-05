@@ -9,6 +9,7 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteFisicoS
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -62,10 +63,20 @@ public class VarianteFisicoServiceImpl implements IVarianteFisicoService {
 
     @Override
     @Transactional
-    public void eliminarPorVarianteId(Long varianteId) {
+    public void borradoFisicoPorVarianteId(Long varianteId) {
         if (varianteId == null) return;
         varianteFisicoRepository.findByVariante_Id(varianteId).ifPresent(entity -> {
             varianteFisicoRepository.delete(entity);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void borradoLogicoPorVarianteId(Long varianteId) {
+        if (varianteId == null) return;
+        varianteFisicoRepository.findByVariante_Id(varianteId).ifPresent(entity -> {
+            entity.setDeletedAt(LocalDateTime.now());
+            varianteFisicoRepository.save(entity);
         });
     }
 

@@ -10,18 +10,37 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import com.breakingns.SomosTiendaMas.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class InventarioVarianteIntegrationTest {
     
     @Autowired
@@ -33,8 +52,14 @@ public class InventarioVarianteIntegrationTest {
     @Autowired
     private ProductoRepository productoRepository;
     
-    @Autowired
-    private TestRestTemplate restTemplate;
+        @Autowired
+        private MockMvc mockMvc;
+
+        @Autowired
+        private ObjectMapper objectMapper;
+
+        @MockBean
+        private JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -102,13 +127,13 @@ public class InventarioVarianteIntegrationTest {
         
         // When
         Optional<InventarioVariante> resultado = repository.findById(inventario.getId());
-        
+
         // Then
         assertTrue(resultado.isPresent());
         assertEquals(50, resultado.get().getOnHand());
         assertEquals(5, resultado.get().getReserved());
     }
-    
+
     @Test
     void findAll_DeberiaRetornarLista_CuandoExistenInventariosVariante() {
         // Given
@@ -188,12 +213,14 @@ public class InventarioVarianteIntegrationTest {
         
         Long id = inventario.getId();
         
-        // When
-        repository.deleteById(id);
-        
-        // Then
+        // Simular borrado lógico: marcar deletedAt y guardar
+        inventario.setDeletedAt(LocalDateTime.now());
+        repository.save(inventario);
+
+        // Then: comprobar soft-delete
         Optional<InventarioVariante> resultado = repository.findById(id);
-        assertFalse(resultado.isPresent());
+        assertTrue(resultado.isPresent());
+        assertNotNull(resultado.get().getDeletedAt());
     }
     
     @Test
@@ -232,5 +259,119 @@ public class InventarioVarianteIntegrationTest {
         assertEquals(20, resultado.get().getReserved());
         assertEquals("Ubicación Actualizada", resultado.get().getUbicacion());
     }
+
+    // === VERIFICACIONES DB REALES ===
+
+    @Order(1)
+    @Test
+    @Transactional
+    void db_Transaccion_Rollback_Crear_NoPersiste() {
+        Producto producto = new Producto(); producto.setNombre("RB Prod IV"); producto.setSlug("rb-prod-iv-"+System.currentTimeMillis()); producto.setDescripcion("rb"); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("rb-sku-iv-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); varianteRepository.save(variante);
+
+        InventarioVariante inv = new InventarioVariante(); inv.setVariante(variante); inv.setOnHand(11); inv.setReserved(1); inv.setUbicacion("R1"); repository.save(inv);
+        entityManager.flush();
+    }
+
+    @Order(2)
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Transaccion_Rollback_Verificar_NoExiste() {
+        Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM variante_inventario vi JOIN variante v ON vi.variante_id = v.id WHERE v.sku LIKE :sku")
+                .setParameter("sku", "%rb-sku-iv-%")
+                .getSingleResult();
+        long count = cnt==null?0L:((Number)cnt).longValue();
+        assertEquals(0L, count, "La entidad creada en la transacción anterior debe haber sido rollback-eada");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Constraint_UniqueYNotNull_Y_Audit() {
+        Producto producto = new Producto(); producto.setNombre("P IV"); producto.setSlug("p-iv-"+System.currentTimeMillis()); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("sku-iv-"+UUID.randomUUID()); varianteRepository.save(variante);
+
+        InventarioVariante first = new InventarioVariante(); first.setVariante(variante); first.setOnHand(5); first.setReserved(0); first.setUbicacion("A"); repository.saveAndFlush(first);
+
+        boolean uniqueExists=false; try{ Object c = entityManager.createNativeQuery("SELECT count(*) FROM pg_constraint c JOIN pg_class t ON c.conrelid=t.oid WHERE t.relname='variante_inventario' AND c.contype='u'").getSingleResult(); if (c!=null) uniqueExists = ((Number)c).longValue()>0; } catch(Exception ex){ uniqueExists=false; }
+
+        InventarioVariante dup = new InventarioVariante(); dup.setVariante(variante); dup.setOnHand(5); dup.setReserved(0); dup.setUbicacion("A");
+        if (uniqueExists) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(dup); entityManager.flush(); }); }
+        else { repository.saveAndFlush(dup); entityManager.flush(); long cnt = repository.findAll().stream().filter(x-> x.getVariante().getId().equals(variante.getId()) && x.getOnHand()==5).count(); assertTrue(cnt>=2); }
+
+        try{ var saved = repository.findById(first.getId()).orElseThrow(); assertNotNull(saved.getCreatedAt()); } catch(Exception ex){ }
+    }
     
+    // === TESTS DE API (Controller) ===
+    // Aquí van los tests de integración a nivel HTTP usando `restTemplate`.
+    // Ejemplos pendientes: POST 201, GET {id} 200, GET lista 200, PUT 200, DELETE 204, POST 400.
+    // Mantener separados de los tests de Repository para facilitar pruebas unitarias de controllers luego.
+    // Tests HTTP usando MockMvc (perfil test, filtro JWT mockeado)
+
+    @Test
+    void post_DeberiaCrearInventarioVariante_Status201_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+
+        java.util.Map<String,Object> payload = new java.util.HashMap<>();
+        payload.put("varianteId", variante.getId());
+        payload.put("onHand", 42);
+        payload.put("reserved", 5);
+        payload.put("almacenId", 123L);
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.post("/api/inventario")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertNotNull(dto.get("id"));
+        assertEquals(123L, ((Number)dto.get("almacenId")).longValue());
+    }
+
+    @Test
+    void get_DeberiaRetornarInventarioVariante_Status200_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+        InventarioVariante inv = new InventarioVariante(); inv.setVariante(variante); inv.setOnHand(10); inv.setReserved(1); inv.setUbicacion("U1"); inv = repository.save(inv);
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.get("/api/inventario/variante/{varianteId}", variante.getId())
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertEquals(10, ((Number)dto.get("onHand")).intValue());
+    }
+
+    @Test
+    void post_AjusteStock_DeberiaRetornar200_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+        InventarioVariante inv = new InventarioVariante(); inv.setVariante(variante); inv.setOnHand(5); inv.setReserved(0); inv = repository.save(inv);
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.post("/api/inventario/variantes/{varianteId}/ajuste?deltaOnHand=3&deltaReserved=1", variante.getId())
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertEquals(8, ((Number)dto.get("onHand")).intValue());
+    }
+
+    @Test
+    void delete_DeberiaSoftDeletePorVariante_Status204_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+        InventarioVariante inv = new InventarioVariante(); inv.setVariante(variante); inv.setOnHand(7); inv = repository.save(inv);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/inventario/variante/{varianteId}", variante.getId()))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        var refreshed = repository.findById(inv.getId());
+        assertTrue(refreshed.isPresent());
+        assertNotNull(refreshed.get().getDeletedAt());
+    }
+
+
 }

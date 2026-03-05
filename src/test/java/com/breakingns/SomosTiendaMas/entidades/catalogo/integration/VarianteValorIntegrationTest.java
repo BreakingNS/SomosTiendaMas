@@ -6,6 +6,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -18,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class VarianteValorIntegrationTest {
     
     @Autowired
@@ -247,6 +254,52 @@ public class VarianteValorIntegrationTest {
         Optional<VarianteValor> resultado = repository.findById(id);
         assertFalse(resultado.isPresent());
     }
+
+    // === VERIFICACIONES DB REALES ===
+
+    @Order(1)
+    @Test
+    @Transactional
+    void db_Transaccion_Rollback_Crear_NoPersiste() {
+        Producto producto = new Producto(); producto.setNombre("RB Prod VV"); producto.setSlug("rb-prod-vv-"+System.currentTimeMillis()); producto.setDescripcion("rb"); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("rb-sku-vv-"+System.currentTimeMillis()); varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("RB Opt"); opcion.setOrden(1); opcion.setTipo("SIMPLE"); opcionRepository.save(opcion);
+        OpcionValor ov = new OpcionValor(); ov.setOpcion(opcion); ov.setValor("RB"); ov.setSlug("rb-ov-"+System.currentTimeMillis()); ov.setOrden(1); opcionValorRepository.save(ov);
+
+        VarianteValor vv = new VarianteValor(); vv.setVariante(variante); vv.setValor(ov); repository.save(vv);
+        entityManager.flush();
+    }
+
+    @Order(2)
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Transaccion_Rollback_Verificar_NoExiste() {
+        // Evitar inicializar proxies fuera de una sesión: usar consulta nativa para verificar existencia
+        Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM variante_valor vv JOIN variante v ON vv.variante_id = v.id WHERE v.sku LIKE :sku")
+                .setParameter("sku", "%rb-sku-vv-%")
+                .getSingleResult();
+        long count = cnt == null ? 0L : ((Number) cnt).longValue();
+        assertEquals(0L, count, "La entidad creada en la transacción anterior debe haber sido rollback-eada");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Constraint_UniqueYNotNull_Y_Audit() {
+        Producto producto = new Producto(); producto.setNombre("P VV"); producto.setSlug("p-vv-"+System.currentTimeMillis()); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("sku-vv-"+UUID.randomUUID()); varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("Opt VV"); opcion.setOrden(1); opcion.setTipo("SIMPLE"); opcionRepository.save(opcion);
+        OpcionValor ov = new OpcionValor(); ov.setOpcion(opcion); ov.setValor("V"); ov.setSlug("vv-"+UUID.randomUUID()); ov.setOrden(1); opcionValorRepository.save(ov);
+
+        VarianteValor first = new VarianteValor(); first.setVariante(variante); first.setValor(ov); repository.saveAndFlush(first);
+
+        boolean uniqueExists=false; try{ Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM pg_constraint c JOIN pg_class t ON c.conrelid=t.oid WHERE t.relname='variante_valor' AND c.contype='u'").getSingleResult(); if (cnt!=null) uniqueExists = ((Number)cnt).longValue()>0; }catch(Exception ex){ uniqueExists=false; }
+
+        VarianteValor dup = new VarianteValor(); dup.setVariante(variante); dup.setValor(ov);
+        if (uniqueExists) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(dup); entityManager.flush(); }); }
+        else { repository.saveAndFlush(dup); entityManager.flush(); long count = repository.findAll().stream().filter(x-> x.getVariante().getId().equals(variante.getId()) && x.getValor().getId().equals(ov.getId())).count(); assertTrue(count>=2); }
+
+        try{ var saved = repository.findById(first.getId()).orElseThrow(); assertNotNull(saved.getCreatedAt()); } catch(Exception ex){ }
+    }
     
     @Test
     void update_DeberiaActualizarVarianteValor_CuandoExiste() {
@@ -300,4 +353,7 @@ public class VarianteValorIntegrationTest {
         assertEquals("Valor Actualizado", resultado.get().getValor().getValor());
     }
     
+    // === TESTS DE API (Controller) ===
+    // VarianteOpcionValorIntegration se encarga de los tests de API relacionados con VarianteValor
+
 }

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Tienda Mas</title>
+    <meta name="description" content="Log in to your Tienda Mas account to access your shopping cart, orders, and exclusive offers">
+    <!----Tailwind CSS via CDN---->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!----Font Awesome para los icons---->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!----Google Fonts---->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-blue: #004E89;
+            --light-gray: #F8F9FA;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+            color: #333;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .login-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+        
+        .btn-login {
+            background-color: var(--primary-orange);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-login:hover {
+            background-color: #E55627; /* Naranja ligeramente más oscuro */
+        }
+        
+        .password-toggle {
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6B7280;
+        }
+        
+        .password-toggle:hover {
+            color: #374151;
+        }
+        
+        /* Ajustes responsivos */
+        @media (max-width: 640px) {
+            .login-container {
+                width: 100%;
+                border-radius: 0;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Inicio Estado de Sesion */
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+        /* Fin Estado de Sesion */
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <main class="login-container bg-white rounded-xl p-8 w-full max-w-md">
+        <!----Logo and Header---->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+                <span class="text-orange-500">Tienda</span>
+                <span class="text-blue-600 ml-1">Mas</span>
+            </h1>
+            <p class="text-gray-600">¡Bienvenido de nuevo! Iniciá sesión en tu cuenta</p>
+        </header>
+        
+        <!----Formulario de inicio de sesión---->
+        <form id="loginForm" class="space-y-5" novalidate>
+            <!----Mensaje de estado (oculto por defecto)---->
+            <div id="statusMessage" class="hidden p-3 rounded-lg text-sm"></div>
+            
+            <!----Campo de nombre de usuario---->
+            <div class="space-y-2">
+                <label for="username" class="block text-sm font-medium text-gray-700">
+                    Nombre de usuario <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text"
+                        id="username"
+                        name="username"
+                        required
+                        aria-required="true"
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 pl-10"
+                        placeholder="tu_usuario"
+                        autocomplete="username"
+                    >
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="far fa-user"></i>
+                    </div>
+                </div>
+                <p id="usernameError" class="text-red-500 text-xs mt-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Por favor ingresá tu nombre de usuario
+                </p>
+            </div>
+            
+            <!----Campo de contraseña---->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label for="password" class="block text-sm font-medium text-gray-700">
+                        Contraseña <span class="text-red-500">*</span>
+                    </label>
+                    <a href="restaurarContraseña.html" class="text-sm text-blue-600 hover:underline">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required
+                        aria-required="true"
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 pl-10 pr-10"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                    >
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility" onclick="togglePassword('password')">
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <p id="passwordError" class="text-red-500 text-xs mt-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Por favor ingresá tu contraseña
+                </p>
+            </div>
+            
+            <!----Recuérdame casilla de verificación---->
+            <div class="flex items-center">
+                <input 
+                    id="rememberMe" 
+                    name="rememberMe" 
+                    type="checkbox" 
+                    class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-2 focus:ring-orange-500"
+                >
+                <label for="rememberMe" class="ml-3 text-sm font-medium text-gray-700">
+                    Recordarme
+                </label>
+            </div>
+            
+            <!----Botón Enviar---->
+            <button 
+                type="submit" 
+                class="btn-login w-full text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                aria-label="Log in"
+            >
+                Iniciar sesión
+            </button>
+            
+            <!----Enlace de registro---->
+            <div class="text-center text-sm text-gray-600">
+                ¿No tenés una cuenta? 
+                <a href="registrarse.html" class="font-medium text-blue-600 hover:underline">Registrate</a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        /**
+         * Tienda Mas Login Page JavaScript
+         * Handles form validation and user feedback
+         */
+        
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggleIcon = field.parentNode.querySelector('.password-toggle i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                field.type = 'password';
+                toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+        
+        // Show error message
+        function showError(fieldId, errorId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(errorId);
+            
+            field.classList.add('border-red-500');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+        
+        // Hide error message
+        function hideError(fieldId, errorId) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(errorId);
+            
+            field.classList.remove('border-red-500');
+            errorElement.classList.add('hidden');
+        }
+        
+        // Show status message
+        function showStatus(message, isSuccess) {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
+            
+            if (isSuccess) {
+                statusMessage.classList.add('bg-green-100', 'text-green-700');
+                statusMessage.classList.remove('bg-red-100', 'text-red-700');
+            } else {
+                statusMessage.classList.add('bg-red-100', 'text-red-700');
+                statusMessage.classList.remove('bg-green-100', 'text-green-700');
+            }
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 5000);
+        }
+        
+        // Real-time validation para nombre de usuario
+        document.getElementById('username').addEventListener('blur', function() {
+            const username = this.value.trim();
+            if (!username) {
+                showError('username', 'usernameError', 'Por favor ingresá tu nombre de usuario');
+            } else {
+                hideError('username', 'usernameError');
+            }
+        });
+        
+        // Real-time validation para password
+        document.getElementById('password').addEventListener('blur', function() {
+            if (!this.value) {
+                showError('password', 'passwordError', 'Por favor ingresá tu contraseña');
+            } else {
+                hideError('password', 'passwordError');
+            }
+        });
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let isValid = true;
+
+            // Reset all errors
+            document.querySelectorAll('[id$="Error"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+
+            // Validar username (antes era email)
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showError('username', 'usernameError', 'Por favor ingresá tu nombre de usuario');
+                isValid = false;
+            }
+
+            // Validar password
+            const password = document.getElementById('password').value;
+            if (!password) {
+                showError('password', 'passwordError', 'Por favor ingresá tu contraseña');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showStatus('Por favor corregí los errores del formulario', false);
+                return;
+            }
+
+            // Real login: POST to backend endpoint
+            try {
+                const payload = { username: username, password: password };
+                const res = await fetch('/api/auth/public/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    // intentar leer mensaje del backend
+                    const err = await res.json().catch(() => null);
+                    const msg = err?.message || err?.error || 'Login fallido';
+                    showStatus(msg, false);
+                    return;
+                }
+
+                // Login exitoso: el backend setea las cookies (HttpOnly).  
+                showStatus('Login exitoso. Redirigiendo...', true);
+
+                // Recargar para que session-status.js detecte la sesión (cookies enviadas)
+                setTimeout(() => { window.location.href = '/'; }, 700);
+
+            } catch (error) {
+                showStatus('Error conectando al servidor', false);
+                console.error('Login error', error);
+            }
+        });
+        
+    </script>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+    </div>
+
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
+</body>
+</html>

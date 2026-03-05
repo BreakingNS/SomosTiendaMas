@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.breakingns</groupId>
 	<artifactId>SomosTiendaMas</artifactId>
-	<version>0.1.8.5</version>
+	<version>0.1.8.6</version>
 	<name>SomosTiendaMas</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -193,6 +193,7 @@
                 <version>${lombok.version}</version>
                 <optional>true</optional>
             </dependency>
+            
         </dependencies>  
 
         <build>  

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+// REVIEW: solo en tests, no usar en producción
 @Profile("test")
 @Configuration
 public class TestPasswordEncoderConfig {

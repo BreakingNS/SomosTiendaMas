@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer contraseña | Tienda Mas</title>
+    <meta name="description" content="Reset your Tienda Mas account password">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        orange: {
+                            500: '#FF6B35',
+                            600: '#E55627',
+                        },
+                        blue: {
+                            600: '#004E89',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .form-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-field:focus {
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 640px) {
+            .form-container {
+                width: 100%;
+                border-radius: 0;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Inicio Estado de Sesion */
+        #session-status { position: fixed; top:12px; right:12px; width:260px; background:#fff; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); padding:10px 12px; font-size:13px; z-index:9999; color:#222; }
+        #session-status .row { display:flex; justify-content:space-between; margin:6px 0; align-items:center; }
+        #session-status .label { color:#666; }
+        .status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:8px; vertical-align:middle; }
+        .dot-green { background:#28a745; }
+        .dot-red { background:#dc3545; }
+        /* Fin Estado de Sesion */
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main class="form-container bg-white rounded-xl p-8 w-full max-w-md">
+        <!----Logo and Header---->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+                <span class="text-orange-500">Tienda</span>
+                <span class="text-blue-600 ml-1">Mas</span>
+            </h1>
+            <p class="text-gray-600">Establecé tu nueva contraseña</p>
+        </header>
+        
+        <!----Formulario para restablecer contraseña---->
+        <form id="resetForm" class="space-y-6" novalidate>
+            <!----Mensaje de estado---->
+            <div id="statusMessage" class="hidden p-4 rounded-lg text-sm mb-4" aria-live="polite"></div>
+            
+            <!----Campo de nueva contraseña---->
+            <div class="space-y-2">
+                <label for="newPassword" class="block text-sm font-medium text-gray-700">
+                    Nueva Contraseña <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="newPassword" 
+                        name="newPassword" 
+                        required
+                        aria-required="true"
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 pl-10 pr-10"
+                        placeholder="••••••••"
+                        autocomplete="new-password"
+                        minlength="8"
+                    >
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button 
+                        type="button" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        aria-label="Toggle password visibility"
+                        onclick="togglePassword('newPassword')"
+                    >
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <p id="newPasswordError" class="text-red-500 text-xs mt-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> La contraseña debe tener al menos 8 caracteres
+                </p>
+                <div class="text-xs text-gray-500 mt-1">
+                    <p><i class="fas fa-info-circle mr-1"></i> Mínimo 8 caracteres</p>
+                </div>
+            </div>
+            
+            <!----Campo de comfirmar contraseña---->
+            <div class="space-y-2">
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
+                    Confirmar Contraseña <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        name="confirmPassword" 
+                        required
+                        aria-required="true"
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all duration-200 pl-10 pr-10"
+                        placeholder="••••••••"
+                        autocomplete="new-password"
+                    >
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <button 
+                        type="button" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        aria-label="Toggle password visibility"
+                        onclick="togglePassword('confirmPassword')"
+                    >
+                        <i class="far fa-eye"></i>
+                    </button>
+                </div>
+                <p id="confirmPasswordError" class="text-red-500 text-xs mt-1 hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Las contraseñas no coinciden
+                </p>
+            </div>
+            
+            <!----Boton de envio---->
+            <button 
+                type="submit" 
+                id="submitBtn"
+                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+                aria-label="Update password"
+            >
+                <span id="btnText">Actualizar Contraseña</span>
+                <div id="spinner" class="spinner ml-2"></div>
+            </button>
+            
+            <!-- Login Link -->
+            <div class="text-center text-sm text-gray-600">
+                <a href="iniciarSesion.html" class="font-medium text-blue-600 hover:underline">
+                    <i class="fas fa-arrow-left mr-1"></i> Volver al inicio de sesión
+                </a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        /*----Funcionalidad del formulario de restaurar contraseña----*/
+        
+        //----Elementos del DOM
+        const resetForm = document.getElementById('resetForm');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const newPasswordError = document.getElementById('newPasswordError');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        
+        //----Alternar visibilidad de contraseña----
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggleIcon = field.parentNode.querySelector('button i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                field.type = 'password';
+                toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+        
+        //----Mostrar mensaje de error----
+        function showError(fieldId, errorId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(errorId);
+            
+            field.classList.add('border-red-500');
+            errorElement.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${message}`;
+            errorElement.classList.remove('hidden');
+        }
+        
+        //----Ocultar mensaje de error----
+        function hideError(fieldId, errorId) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(errorId);
+            
+            field.classList.remove('border-red-500');
+            errorElement.classList.add('hidden');
+        }
+        
+        // Show status message
+        function showStatus(message, isSuccess) {
+            statusMessage.innerHTML = `
+                <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            `;
+            statusMessage.classList.remove('hidden');
+            
+            if (isSuccess) {
+                statusMessage.classList.add('bg-green-100', 'text-green-700');
+                statusMessage.classList.remove('bg-red-100', 'text-red-700');
+            } else {
+                statusMessage.classList.add('bg-red-100', 'text-red-700');
+                statusMessage.classList.remove('bg-green-100', 'text-green-700');
+            }
+        }
+        
+        // Validate password requirements
+        function validatePassword(password) {
+            return password.length >= 8;
+        }
+        
+        // Form submission handler
+        resetForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Reset errors
+            hideError('newPassword', 'newPasswordError');
+            hideError('confirmPassword', 'confirmPasswordError');
+            statusMessage.classList.add('hidden');
+            
+            // Get values
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            let isValid = true;
+            
+            // Validate new password
+            if (!newPassword) {
+                showError('newPassword', 'newPasswordError', 'Por favor ingresá una contraseña');
+                isValid = false;
+            } else if (!validatePassword(newPassword)) {
+                showError('newPassword', 'newPasswordError', 'La contraseña debe tener al menos 8 caracteres');
+                isValid = false;
+            }
+            
+            // Validate confirm password
+            if (!confirmPassword) {
+                showError('confirmPassword', 'confirmPasswordError', 'Por favor confirmá tu contraseña');
+                isValid = false;
+            } else if (newPassword && newPassword !== confirmPassword) {
+                showError('confirmPassword', 'confirmPasswordError', 'Las contraseñas no coinciden');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                showStatus('Por favor corregí los errores en el formulario', false);
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Actualizando...';
+            spinner.style.display = 'block';
+            
+            // Real API call a backend
+            try {
+                // obtener token de la query string
+                const params = new URLSearchParams(window.location.search);
+                const token = params.get('token') || params.get('codigo');
+                if (!token) {
+                    showStatus('Token ausente en el enlace. Solicitá un nuevo enlace de recuperación.', false);
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Actualizar contraseña';
+                    spinner.style.display = 'none';
+                    return;
+                }
+    
+                const payload = { token: token, nuevaPassword: newPassword };
+                const res = await fetch('/api/password/public/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+    
+                if (res.ok) {
+                    // éxito: redirigir a página final
+                    window.location.href = '/public/contraseniaCambiada.html';
+                    return;
+                }
+    
+                // leer detalle de error
+                let detail = null;
+                try { detail = (await res.json())?.error || (await res.json())?.message; } catch(e){ detail = await res.text().catch(()=>null); }
+                showStatus(detail || ('Error: HTTP ' + res.status), false);
+            } catch (err) {
+                console.error(err);
+                showStatus('Error conectando al servidor. Intentá más tarde.', false);
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Actualizar contraseña';
+                spinner.style.display = 'none';
+            }
+            
+            // End real API call
+        });
+        
+        // Real-time validation for password match
+        confirmPasswordInput.addEventListener('input', function() {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = this.value;
+            
+            if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+                showError('confirmPassword', 'confirmPasswordError', 'Passwords don\'t match');
+            } else {
+                hideError('confirmPassword', 'confirmPasswordError');
+            }
+        });
+        
+        // Real-time validation for password length
+        newPasswordInput.addEventListener('input', function() {
+            if (this.value && !validatePassword(this.value)) {
+                showError('newPassword', 'newPasswordError', 'Password must be at least 8 characters');
+            } else {
+                hideError('newPassword', 'newPasswordError');
+            }
+        });
+    </script>
+
+    <div id="session-status" aria-live="polite">
+        <div style="font-weight:600; margin-bottom:6px;">Estado de sesión</div>
+        <div class="row"><div class="label">Sesión:</div><div><span id="ss-sesion-label">Comprobando...</span> <span id="ss-dot" class="status-dot"></span></div></div>
+        <div class="row"><div class="label">Usuario:</div><div id="ss-usuario">---</div></div>
+        <div class="row"><div class="label">Rol:</div><div id="ss-rol">---</div></div>
+        <div class="row"><div class="label">JWT:</div><div id="ss-jwt">---</div></div>
+        <div class="row"><div class="label">Refresh:</div><div id="ss-refresh">---</div></div>
+        <div style="margin-top:6px; font-size:11px; color:#666;">Última comprobación: <span id="ss-last">nunca</span></div>
+    </div>
+
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/session-status.js"></script>
+</body>
+</html>

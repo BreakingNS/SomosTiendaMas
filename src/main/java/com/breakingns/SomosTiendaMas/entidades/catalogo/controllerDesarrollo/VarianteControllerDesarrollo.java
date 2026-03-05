@@ -11,10 +11,14 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteService
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IPrecioVarianteService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteFisicoService;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IVarianteOpcionService;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IImagenVarianteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+import jakarta.validation.Valid;
+import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.imagen.ImagenVarianteDTO;
 
 import java.net.URI;
 import java.util.List;
@@ -27,16 +31,19 @@ public class VarianteControllerDesarrollo {
     private final IPrecioVarianteService precioService;
     private final IVarianteFisicoService fisicoService;
     private final IVarianteOpcionService opcionService;
+    private final IImagenVarianteService imagenService;
 
     public VarianteControllerDesarrollo(
             IVarianteService service,
             IPrecioVarianteService precioService,
             IVarianteFisicoService fisicoService,
-            IVarianteOpcionService opcionService) {
+            IVarianteOpcionService opcionService,
+            IImagenVarianteService imagenService) {
         this.service = service;
         this.precioService = precioService;
         this.fisicoService = fisicoService;
         this.opcionService = opcionService;
+        this.imagenService = imagenService;
     }
 
     @PostMapping
@@ -191,6 +198,25 @@ public class VarianteControllerDesarrollo {
         }
     }
 
+    /**
+     * Soporte para tests: crear imagen enviando JSON a /dev/api/variantes/{varianteId}/imagenes
+     */
+    @PostMapping("/{varianteId}/imagenes")
+    public ResponseEntity<ImagenVarianteDTO> crearImagenPorVariante(
+            @PathVariable Long varianteId,
+            @Valid @RequestBody ImagenVarianteDTO dto,
+            UriComponentsBuilder uriBuilder) {
+        dto.setVarianteId(varianteId);
+        try {
+            ImagenVarianteDTO created = imagenService.crear(dto);
+            URI loc = uriBuilder.path("/dev/api/variantes/{varianteId}/imagenes").buildAndExpand(varianteId).toUri();
+            return ResponseEntity.created(loc).body(created);
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     /*
     // batch create for product
     @PostMapping("/productos/{productoId}/variantes/batch")

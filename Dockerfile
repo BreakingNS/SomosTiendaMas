@@ -2,15 +2,18 @@ FROM eclipse-temurin:17-jdk-alpine
 
 LABEL maintainer="nahuel@somostiendamas.com"
 LABEL description="SomosTiendaMas - E-commerce Application Beta"
-LABEL version="0.1.6.4"
+LABEL version="0.1.8.5"
 
 WORKDIR /app
 
 # Copiar JAR compilado
-COPY target/SomosTiendaMas-0.1.6.4.jar app.jar
+COPY target/SomosTiendaMas-0.1.8.5.jar app.jar
 
 # Copiar claves SSL y JWT
 COPY src/main/resources/keys/ /app/keys/
+
+# Copiar archivos de datos (excels) para importación en runtime si no hay dump
+COPY data/ /app/data/
 
 # Crear directorio de logs
 RUN mkdir -p /app/logs

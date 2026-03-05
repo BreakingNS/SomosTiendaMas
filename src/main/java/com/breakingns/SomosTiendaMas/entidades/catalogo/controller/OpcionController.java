@@ -1,4 +1,4 @@
-/* package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
+package com.breakingns.SomosTiendaMas.entidades.catalogo.controller;
 
 import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.opcion.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.service.IOpcionService;
@@ -55,6 +55,11 @@ public class OpcionController {
         return ResponseEntity.ok(service.listarOpcionesPorProductoId(productoId));
     }
 
+    @GetMapping("/opciones")
+    public ResponseEntity<List<OpcionResumenDTO>> listarPlantillas() {
+        return ResponseEntity.ok(service.listarPlantillas());
+    }
+
     @DeleteMapping("/opciones/{id}")
     public ResponseEntity<Void> eliminarOpcion(@PathVariable Long id) {
         service.eliminarOpcion(id);
@@ -86,4 +91,3 @@ public class OpcionController {
     }
 
 }
-*/

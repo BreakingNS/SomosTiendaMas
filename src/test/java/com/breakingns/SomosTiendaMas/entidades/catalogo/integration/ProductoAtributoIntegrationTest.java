@@ -16,6 +16,13 @@ public class ProductoAtributoIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
     
+    // === TESTS DE REPOSITORY ===
     // Tests pendientes
     
+    // === TESTS DE API (Controller) ===
+    // Aquí van los tests de integración a nivel HTTP usando `restTemplate`.
+    // Ejemplos pendientes: POST 201, GET {id} 200, GET lista 200, PUT 200, DELETE 204, POST 400.
+    // Mantener separados de los tests de Repository para facilitar pruebas unitarias de controllers luego.
+    // @Test void post_DeberiaCrearProductoAtributo_Status201() { /* pendiente */ }
+
 }

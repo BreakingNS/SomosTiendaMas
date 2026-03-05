@@ -4,17 +4,34 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.model.*;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import com.breakingns.SomosTiendaMas.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class VarianteOpcionValorIntegrationTest {
     
     @Autowired
@@ -33,10 +50,22 @@ public class VarianteOpcionValorIntegrationTest {
     private ProductoRepository productoRepository;
     
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @PersistenceContext
     private EntityManager entityManager;
+    
+    @Autowired
+    private VarianteOpcionRepository varianteOpcionRepository;
+
+    @Autowired
+    private VarianteValorRepository varianteValorRepository;
     
     @BeforeEach
     void sincronizarSecuencia() {
@@ -263,11 +292,15 @@ public class VarianteOpcionValorIntegrationTest {
         VarianteOpcionValor guardada = repository.save(vov);
         Long id = guardada.getId();
         
-        // Llamar deleteById
-        repository.deleteById(id);
-        
-        // Verificar que repository.findById(id).isEmpty() es true
-        assertTrue(repository.findById(id).isEmpty(), "La variante opción valor debe haber sido eliminada");
+        // Simular borrado lógico: marcar deletedAt y guardar
+        guardada.setDeletedAt(java.time.LocalDateTime.now());
+        guardada.setUpdatedBy("test");
+        repository.save(guardada);
+
+        // Verificar soft-delete: la entidad sigue presente y tiene deletedAt seteado
+        var opt = repository.findById(id);
+        assertTrue(opt.isPresent(), "La variante opción valor debe seguir presente (soft-delete)");
+        assertNotNull(opt.get().getDeletedAt(), "El campo deletedAt debe estar seteado tras soft-delete");
     }
     
     @Test
@@ -328,4 +361,56 @@ public class VarianteOpcionValorIntegrationTest {
         assertEquals(ovActualizado.getId(), resultado.get().getOpcionValor().getId());
     }
     
+    // === TESTS DE API (Controller) ===
+    @org.junit.jupiter.api.Test
+    void post_AsignarOpciones_DeberiaRetornar200_API() throws Exception {
+        // Preparar producto, variante, opcion y valor
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("Color API"); opcion.setOrden(1); opcion.setTipo("select"); opcion = opcionRepository.save(opcion);
+        OpcionValor ov = new OpcionValor(); ov.setOpcion(opcion); ov.setValor("Azul"); ov.setSlug("azul-test"); ov.setOrden(1); ov = opcionValorRepository.save(ov);
+
+        // Crear VarianteOpcion para que la opción pertenezca al producto
+        VarianteOpcion vo = new VarianteOpcion(); vo.setVariante(variante); vo.setOpcion(opcion); vo.setOrden(1); vo.setRequerido(false); vo.setActivo(true);
+        varianteOpcionRepository.save(vo);
+
+        // Payload acorde a VarianteOpcionesAsignarDTO
+        java.util.Map<String,Object> payload = new java.util.HashMap<>();
+        java.util.Map<String,Object> sel = new java.util.HashMap<>();
+        sel.put("opcionId", opcion.getId());
+        sel.put("opcionValorIds", java.util.List.of(ov.getId()));
+        payload.put("opciones", java.util.List.of(sel));
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.post("/dev/api/variantes/{varianteId}/opciones/asignar", variante.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertNotNull(dto);
+        assertEquals(variante.getId().intValue(), ((Number)dto.get("varianteId")).intValue());
+    }
+
+    @org.junit.jupiter.api.Test
+    void get_ObtenerConOpcionesValores_DeberiaRetornar200_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("GET P"); producto.setSlug("get-p-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-GET-"+System.currentTimeMillis()); variante.setEsDefault(false); variante.setActivo(true); variante = varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("OP GET"); opcion.setOrden(1); opcion.setTipo("select"); opcion = opcionRepository.save(opcion);
+        OpcionValor ov = new OpcionValor(); ov.setOpcion(opcion); ov.setValor("V1"); ov.setSlug("v1-test"); ov.setOrden(1); ov = opcionValorRepository.save(ov);
+
+        VarianteOpcion vo = new VarianteOpcion(); vo.setVariante(variante); vo.setOpcion(opcion); vo.setOrden(1); vo.setRequerido(false); vo.setActivo(true); varianteOpcionRepository.save(vo);
+
+        VarianteValor pv = new VarianteValor(); pv.setVariante(variante); pv.setValor(ov); pv.setCreatedAt(java.time.LocalDateTime.now()); pv.setCreatedBy("test"); varianteValorRepository.save(pv);
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.get("/dev/api/variantes/{varianteId}/con-opciones-valores", variante.getId())
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertNotNull(dto);
+        assertEquals(variante.getId().intValue(), ((Number)dto.get("varianteId")).intValue());
+    }
+
 }

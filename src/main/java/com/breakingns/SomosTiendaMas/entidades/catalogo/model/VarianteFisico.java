@@ -42,4 +42,16 @@ public class VarianteFisico extends BaseEntidadAuditada {
 
     @Column(name = "package_weight_grams")
     private Integer packageWeightGrams;
+
+    @PrePersist
+    @PreUpdate
+    private void validateDefaultVarianteFields() {
+        if (this.variante != null && this.variante.isEsDefault()) {
+            // Para la variante por defecto, requerimos que los campos físicos estén completos (no null)
+            if (this.widthMm == null || this.heightMm == null || this.depthMm == null || this.weightGrams == null
+                    || this.packageWidthMm == null || this.packageHeightMm == null || this.packageDepthMm == null || this.packageWeightGrams == null) {
+                throw new IllegalStateException("Variante por defecto requiere todos los campos físicos no nulos");
+            }
+        }
+    }
 }

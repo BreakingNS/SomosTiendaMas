@@ -12,28 +12,31 @@ Modulo 3: Tests Unitarios y de Integracion
 **Para cada entidad (Etiqueta, Marca, Vendedor):**
 
 # Lista de Models:
-## -2-  -3-
-## [ok] [  ] Etiqueta (Complejidad: 1)
-## [ok] [  ] Marca (Complejidad: 1)
-## [ok] [  ] Vendedor (Complejidad: 1)
-## [ok] [  ] Categoria (Complejidad: 2)
-## [ok] [  ] Opcion (Complejidad: 2)
-## [//] [//] PlantillaCampo (Complejidad: 2)
-## [ok] [  ] OpcionValor (Complejidad: 3)
-## [//] [//] PlantillaCategoria (Complejidad: 3)
-## [//] [//] ProductoAtributo (Complejidad: 3)
-## [ok] [  ] ProductoEtiqueta (Complejidad: 3)
-## [//] [//] ProductDraft (Complejidad: 3)
-## [ok] [  ] Producto (Complejidad: 4)
-## [ok] [  ] Variante (Complejidad: 4)
-## [ok] [  ] VarianteOpcion (Complejidad: 4)
-## [ok] [  ] VarianteOpcionValor (Complejidad: 4)
-## [ok] [  ] VarianteValor (Complejidad: 4)
-## [ok] [  ] ImagenVariante (Complejidad: 5)
-## [ok] [  ] PrecioVariante (Complejidad: 5)
-## [ok] [  ] InventarioVariante (Complejidad: 5)
-## [ok] [  ] VarianteFisico (Complejidad: 5)
-## [ok] [  ] MovimientoInventario (Complejidad: 5)
+## -2-  -3-  -4-
+## [ok] [ok] [ok] Etiqueta (Complejidad: 1)
+## [ok] [ok] [ok] Marca (Complejidad: 1)
+REVIEW: Implementar controller "Vendedor" para tests
+## [ok] [  ] [  ] Vendedor (Complejidad: 1) 
+## [ok] [ok] [ok] Categoria (Complejidad: 2)
+## [ok] [ok] [ok] Opcion (Complejidad: 2)
+## [--] [--] [--] PlantillaCampo (Complejidad: 2)
+## [ok] [ok] [ok] OpcionValor (Complejidad: 3)
+## [--] [--] [--] PlantillaCategoria (Complejidad: 3)
+## [--] [--] [--] ProductoAtributo (Complejidad: 3)
+## [ok] [ok] [ok] ProductoEtiqueta (Complejidad: 3)
+## [--] [--] [--] ProductDraft (Complejidad: 3)
+## [ok] [ok] [ok] Producto (Complejidad: 4)
+## [ok] [ok] [ok] Variante (Complejidad: 4)
+NOTE: VarianteOpcionValorIntegration se encarga de los tests de API relacionados con VarianteOpcion
+## [ok] [--] [ok] VarianteOpcion (Complejidad: 4)
+## [ok] [ok] [ok] VarianteOpcionValor (Complejidad: 4)
+NOTE: VarianteOpcionValorIntegration se encarga de los tests de API relacionados con VarianteValor
+## [ok] [--] [ok] VarianteValor (Complejidad: 4)
+## [ok] [ok] [ok] ImagenVariante (Complejidad: 5)
+## [ok] [ok] [ok] PrecioVariante (Complejidad: 5)
+## [ok] [ok] [ok] InventarioVariante (Complejidad: 5)
+## [ok] [ok] [ok] VarianteFisico (Complejidad: 5)
+## [ok] [ok] [ok] MovimientoInventario (Complejidad: 5)
 
 1. **Setup del Test**
    - [x] Crear clase `[Entidad]IntegrationTest` en `src/test/java/.../catalogo/integration/`
@@ -42,74 +45,74 @@ Modulo 3: Tests Unitarios y de Integracion
    - [x] Configurar DB de test (H2 o PostgreSQL según `application-test.properties`)
 
 2. **Tests de Repository (JPA)**
-   - [ ] `save_DeberiaCrear[Entidad]_CuandoDatosValidos()`
+   - [x] `save_DeberiaCrear[Entidad]_CuandoDatosValidos()`
       - Crear entidad con datos válidos
       - Llamar `repository.save(entidad)`
       - Verificar que `id != null` (auto-generado)
       - Verificar que los datos se guardaron correctamente
    
-   - [ ] `findById_DeberiaRetornar[Entidad]_CuandoExiste()`
+   - [x] `findById_DeberiaRetornar[Entidad]_CuandoExiste()`
       - Guardar entidad en DB
       - Buscar por ID: `repository.findById(id)`
       - Verificar que `Optional.isPresent()` es true
       - Verificar datos coinciden
    
-   - [ ] `findAll_DeberiaRetornarLista_CuandoExisten[Entidades]()`
+   - [x] `findAll_DeberiaRetornarLista_CuandoExisten[Entidades]()`
       - Guardar 3 entidades diferentes
       - Llamar `repository.findAll()`
       - Verificar que retorna 3+ elementos (puede haber datos previos)
    
-   - [ ] `delete_DeberiaEliminar[Entidad]_CuandoExiste()`
+   - [x] `delete_DeberiaEliminar[Entidad]_CuandoExiste()`
       - Guardar entidad
       - Llamar `repository.deleteById(id)`
       - Verificar que `repository.findById(id).isEmpty()` es true
    
-   - [ ] `update_DeberiaActualizar[Entidad]_CuandoExiste()`
+   - [x] `update_DeberiaActualizar[Entidad]_CuandoExiste()`
       - Guardar entidad con nombre "Original"
       - Modificar nombre a "Actualizado"
       - Llamar `repository.save(entidadModificada)`
       - Buscar por ID y verificar nombre es "Actualizado"
 
 3. **Tests de API (Controller)**
-   - [ ] `POST /api/[entidades] - DeberiaCrear[Entidad]_Status201()`
+   - [x] `POST /api/[entidades] - DeberiaCrear[Entidad]_Status201()`
       - Enviar JSON válido via `restTemplate.postForEntity()`
       - Verificar status 201 Created
       - Verificar que respuesta contiene ID generado
       - Verificar que datos coinciden
    
-   - [ ] `GET /api/[entidades]/{id} - DeberiaRetornar[Entidad]_Status200()`
+   - [x] `GET /api/[entidades]/{id} - DeberiaRetornar[Entidad]_Status200()`
       - Crear entidad directamente en DB (via repository)
       - Hacer GET con el ID
       - Verificar status 200 OK
       - Verificar datos en respuesta
    
-   - [ ] `GET /api/[entidades] - DeberiaRetornarLista_Status200()`
+   - [x] `GET /api/[entidades] - DeberiaRetornarLista_Status200()`
       - Crear 2-3 entidades en DB
       - Hacer GET a la lista
       - Verificar status 200 OK
       - Verificar que lista contiene al menos las creadas
    
-   - [ ] `PUT /api/[entidades]/{id} - DeberiaActualizar[Entidad]_Status200()`
+   - [x] `PUT /api/[entidades]/{id} - DeberiaActualizar[Entidad]_Status200()`
       - Crear entidad en DB
       - Enviar PUT con datos modificados
       - Verificar status 200 OK
       - Verificar que datos se actualizaron en DB
    
-   - [ ] `DELETE /api/[entidades]/{id} - DeberiaEliminar[Entidad]_Status204()`
+   - [x] `DELETE /api/[entidades]/{id} - DeberiaEliminar[Entidad]_Status204()`
       - Crear entidad en DB
       - Enviar DELETE
       - Verificar status 204 No Content
       - Verificar que no existe en DB
    
-   - [ ] `POST /api/[entidades] - DeberiaRetornar400_CuandoDatosInvalidos()`
+   - [x] `POST /api/[entidades] - DeberiaRetornar400_CuandoDatosInvalidos()`
       - Enviar JSON con datos inválidos (ej: nombre vacío)
       - Verificar status 400 Bad Request
       - Verificar mensaje de error en respuesta
 
 4. **Verificaciones de DB Real**
-   - [ ] Confirmar que transacciones funcionan (rollback en tests)
-   - [ ] Verificar que constraints de DB se respetan (unique, not null, etc.)
-   - [ ] Verificar que auditoría funciona si está implementada (createdAt, updatedAt)
+   - [x] Confirmar que transacciones funcionan (rollback en tests)
+   - [x] Verificar que constraints de DB se respetan (unique, not null, etc.)
+   - [x] Verificar que auditoría funciona si está implementada (createdAt, updatedAt)
 
 **Notas:**
 - Usar `@BeforeEach` para limpiar datos si es necesario

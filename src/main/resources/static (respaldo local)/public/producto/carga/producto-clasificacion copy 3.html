@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title id="page-title">Nuevo producto — Wizard</title>
+  <style>
+    :root{
+      --bg:#f6f7f9; --card:#ffffff; --muted:#9aa4ad; --accent:#0a8a0a; --accent-2:#ffb74d;
+      --border:#e6e9ec; --danger:#b30000; --shadow: 0 6px 18px rgba(12,20,31,0.06);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:#112;}
+    .container{max-width:1100px;margin:28px auto;padding:20px;}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    header h1{font-size:18px;margin:0;color:#071124;}
+    header p{margin:0;color:var(--muted);font-size:13px;}
+    .wizard-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow);}
+    .wizard-top{display:flex;gap:16px;margin-bottom:14px;}
+    .steps{display:flex;gap:10px;width:100%;align-items:center;}
+    .step{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;flex:1 1 0;background:#fafbfd;border:1px solid var(--border);color:#677682;font-size:13px;}
+    .num{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;background:#e9eef2;color:#25343f}
+    .step--active{background:linear-gradient(180deg,#e6f8ff,#e0f3ff);border:1px solid #90e0ff;color:#053b4a;transform:translateY(-2px);}
+    .step--enabled{background:linear-gradient(180deg,#fff8e6,#fff3e0);border:1px solid #ffd8a8;color:#6a4a12;}
+    .step--done{background:transparent;border:1px solid #dfe6df;color:#274a27;}
+    .wizard-body{display:grid;grid-template-columns:360px 1fr;gap:18px;margin-top:12px;}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:12px;}
+    .field{display:flex;flex-direction:column;margin-bottom:10px;}
+    .field label{font-size:13px;color:#34414a;margin-bottom:6px;}
+    input, select, textarea {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+    .tag{background:#eef6ef;color:var(--accent);padding:6px 8px;border-radius:999px;font-size:12px;}
+    .wizard-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;border:0;font-weight:600;cursor:pointer;}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:#334;}
+    .btn[disabled]{opacity:0.5;cursor:not-allowed;}
+    .notice{font-size:13px;color:var(--muted);padding:10px;border-radius:8px;background:#fbfdff;border:1px solid #eef6ff;margin-bottom:8px;}
+    .step-content{display:none;}
+    .step-content.active{display:block;}
+    .images-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+    .images-preview img{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #e6e6e6;}
+    .features-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+    .feature-item{display:flex;gap:8px;align-items:center;}
+    .dimensions{display:flex;gap:8px;}
+    
+    /* ===== Fix: solo paso 5, alinear publicación a la izquierda ===== */
+    .step-content[data-step-content="5"] { /* no cambiar display por defecto aquí */ }
+
+    /* Aplicar reglas solo cuando el paso 5 está activo */
+    .step-content[data-step-content="5"].active {
+      /* conservar el flujo normal; no usar display:flex aquí para no afectar otros pasos */
+      display: block;
+    }
+
+    /* Limitar el ancho del bloque principal y centrarlo como bloque (opcional) */
+    .step-content[data-step-content="5"].active > .field,
+    .step-content[data-step-content="5"].active > .field > div {
+      max-width: 760px;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    /* Afectar solo el contenedor de opciones de publicación: mantenerlo como bloque y alineado a la izquierda */
+    .step-content[data-step-content="5"].active #publication-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start; /* asegura que contenido interno quede a la izquierda */
+      width: 100%;
+      max-width: 760px;
+      margin: 0; /* lo acerca al borde izquierdo del panel */
+    }
+
+    /* Asegurarse que cada label muestre su radio + texto en línea, pero alineado a la izquierda */
+    .step-content[data-step-content="5"].active #publication-options label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* El bloque descriptivo dentro de cada opción (el <div> que estaba a la derecha) mantendrá su formato pero sin empujar a la derecha */
+    .step-content[data-step-content="5"].active #publication-options label > div {
+      display: block;
+    }
+
+    /* Centrar solo la caja resumen (el panel con padding) respecto al bloque de publicación, no desplazarla a la derecha */
+    .step-content[data-step-content="5"].active .field > div[style*="padding:12px"] {
+      max-width: 760px;
+      margin: 12px 0;
+    }
+
+    /* Pequeño ajuste responsive para evitar overflow en pantallas pequeñas */
+    @media (max-width:880px) {
+      .step-content[data-step-content="5"].active #publication-options,
+      .step-content[data-step-content="5"].active .field > div[style*="padding:12px"] {
+        max-width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Crear producto</h1>
+        <p>Paso a paso — completa la información básica y avanza.</p>
+      </div>
+      <div>
+        <small style="color:var(--muted)">
+          Usuario: <span id="header-user">cargando...</span> · <span id="header-status">Borrador</span>
+        </small>
+      </div>
+    </header>
+
+    <div id="session-status" style="display:none" aria-live="polite"><div id="ss-usuario">---</div></div>
+
+    <main class="wizard-card" role="main">
+      <div class="wizard-top">
+        <div class="steps" id="wizard-steps">
+          <div class="step step--active" data-step="1"><div class="num">1</div><div><div style="font-weight:700">Identificación / clasificación</div><div style="font-size:12px;color:var(--muted)">Categoría, subcategoría, etiquetas</div></div></div>
+          <div class="step step--disabled" data-step="2"><div class="num">2</div><div><div style="font-weight:700">Datos principales</div><div style="font-size:12px;color:var(--muted)">Nombre, imágenes, precio</div></div></div>
+          <div class="step step--disabled" data-step="3"><div class="num">3</div><div><div style="font-weight:700">Contenido descriptivo</div><div style="font-size:12px;color:var(--muted)">Descripción, características, garantía</div></div></div>
+          <div class="step step--disabled" data-step="4"><div class="num">4</div><div><div style="font-weight:700">Logística / envío</div><div style="font-size:12px;color:var(--muted)">Stock, peso, dimensiones</div></div></div>
+          <div class="step step--disabled" data-step="5"><div class="num">5</div><div><div style="font-weight:700">Comercio / visibilidad</div><div style="font-size:12px;color:var(--muted)">Visibilidad y comisiones</div></div></div>
+        </div>
+      </div>
+
+      <div class="wizard-body">
+        <aside class="panel" aria-label="Resumen del paso">
+          <h3>Resumen</h3>
+          <div class="meta">Paso <strong id="current-step-label">1</strong> de 5</div>
+          <div class="notice" id="wizard-note">Estamos en el paso 1. Completa los datos de clasificación antes de avanzar.</div>
+          <div style="margin-top:10px"><strong>Estado actual</strong><div style="margin-top:8px"><div class="tag">Borrador</div></div></div>
+          <div style="margin-top:14px"><strong>Tips</strong>
+            <ul style="padding-left:18px;margin:8px 0;color:var(--muted);font-size:13px">
+              <li>Mantené nombres claros y sin abreviaturas.</li>
+              <li>Seleccioná la categoría correcta para mejorar búsquedas.</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="panel" aria-live="polite">
+          <h3 id="panel-title">Paso 1 — Identificación / clasificación</h3>
+          <div class="meta">Campos mínimos: categoryId, subcategoryId, tags[]</div>
+
+          <form id="step-form" onsubmit="return false;">
+            <!-- STEP 1 -->
+            <div class="step-content" data-step-content="1">
+              <div class="field">
+                <label for="category">Categoría</label>
+                <select id="category" aria-label="Categoría"><option value="">-- seleccionar --</option></select>
+              </div>
+
+              <div class="field">
+                <label for="subcategory">Subcategoría</label>
+                <select id="subcategory" aria-label="Subcategoría"><option value="">-- seleccionar --</option></select>
+              </div>
+
+              <div class="field">
+                <label for="tags">Etiquetas (separadas por coma)</label>
+                <input id="tags" type="text" placeholder="oled, 55, lg, 4k"/>
+                <div class="tags" id="tag-list" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="step-content" data-step-content="2">
+              <div class="field" style="display:flex;flex-direction:column;gap:8px;align-items:stretch;">
+                <div style="width:100%;display:flex;flex-direction:column;">
+                  <label for="title">Nombre del producto</label>
+                  <input id="title" type="text" placeholder="Ej: Smart TV 55'' LG OLED" />
+                </div>
+
+                <div style="width:100%;display:flex;flex-direction:column;">
+                  <label for="sku">SKU (opcional)</label>
+                  <input id="sku" type="text" placeholder="SKU corto" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="marcaId">Marca</label>
+                <select id="marcaId" required>
+                  <option value="OTRA">Otro</option>
+                  <!-- Opcional: poblar dinámicamente con /api/marcas -->
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="slug">Slug (opcional)</label>
+                <input id="slug" type="text" placeholder="smart-tv-55-lg-oled-4k"/>
+              </div>
+
+              <div class="field">
+                <label>Imágenes principales</label>
+                <button type="button" id="btn-select-images" class="btn btn-ghost">Seleccionar imágenes</button>
+                <input id="images" type="file" accept="image/*" multiple style="display:none" />
+                <div class="images-preview" id="images-preview" aria-live="polite"></div>
+              </div>
+
+              <div class="field">
+                <label>Precio vigente</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input id="price-amount" type="number" placeholder="Monto" style="flex:1" min="0" />
+                  <select id="price-currency" style="width:120px;">
+                    <option value="ARS">ARS</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                  <input id="price-previous" type="number" placeholder="Precio anterior (opcional)" style="flex:1" min="0" />
+                  <input id="price-iva" type="number" placeholder="IVA %" style="width:140px" min="0" max="100" value="21" disabled />
+                </div>
+
+                <div style="margin-top:8px;">
+                  <label style="font-size:13px;color:var(--muted);margin-bottom:6px">Precio sin IVA (calculado automáticamente)</label>
+                  <div id="price-without-iva-display" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:#fff">-</div>
+                </div>
+
+                <div style="margin-top:8px;color:var(--muted);font-size:13px">
+                  Consejo: el precio sin IVA se calcula automáticamente asumiendo IVA 21% (monto / 1.21).
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: Contenido descriptivo -->
+            <div class="step-content" data-step-content="3">
+              <div class="field">
+                <label for="descripcionTexto">Descripción (texto plano)</label>
+                <textarea id="descripcionTexto" rows="6" placeholder="Descripción en texto plano que describa el producto y sus usos"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Características técnicas</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <select id="feature-option" style="flex:1">
+                    <option value="">-- seleccionar atributo --</option>
+                  </select>
+                  <select id="feature-value" style="flex:1" disabled>
+                    <option value="">-- seleccionar valor --</option>
+                  </select>
+                  <button id="add-feature" type="button" class="btn btn-ghost">Agregar</button>
+                </div>
+                <div class="features-list" id="features-list" aria-live="polite" style="margin-top:8px"></div>
+              </div>
+
+              <div class="field">
+                <label for="warranty">Garantía</label>
+                <input id="warranty" type="text" placeholder="ej: 12 meses"/>
+              </div>
+
+              <div class="field">
+                <label for="returns">Política de devoluciones</label>
+                <textarea id="returns" rows="3" placeholder="Condiciones de devolución"></textarea>
+              </div>
+            </div>
+
+            <!-- STEP 4: Logística / comercio -->
+            <div class="step-content" data-step-content="4">
+              <div class="field">
+                <label for="stock">Stock disponible</label>
+                <input id="stock" type="number" min="0" value="0"/>
+              </div>
+
+              <div class="field">
+                <label for="weight">Peso (kg)</label>
+                <input id="weight" type="number" min="0" step="0.01" placeholder="Peso (kg)" />
+              </div>
+
+              <div class="field">
+                <label>Dimensiones (cm)</label>
+                <div style="display:flex;gap:8px;">
+                  <div style="flex:1;display:flex;flex-direction:column;">
+                    <label for="dim-l" style="font-size:12px;color:var(--muted);margin-bottom:6px">Largo (L)</label>
+                    <input id="dim-l" type="number" min="0" step="0.1" placeholder="Largo (cm)"/>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;">
+                    <label for="dim-w" style="font-size:12px;color:var(--muted);margin-bottom:6px">Ancho (W)</label>
+                    <input id="dim-w" type="number" min="0" step="0.1" placeholder="Ancho (cm)"/>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;">
+                    <label for="dim-h" style="font-size:12px;color:var(--muted);margin-bottom:6px">Alto (H)</label>
+                    <input id="dim-h" type="number" min="0" step="0.1" placeholder="Alto (cm)"/>
+                  </div>
+                </div>
+                <small style="color:var(--muted);font-size:13px;margin-top:6px">Ingresá medidas en centímetros. Útil para calcular volumetría / embalaje.</small>
+              </div>
+
+              <div class="field">
+                <label>Métodos de envío</label>
+                <div id="shipping-methods" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                  <label><input type="checkbox" value="RETIRO_LOCAL" /> Retiro por local</label>
+                  <label><input type="checkbox" value="CADETE" /> Envío por cadete</label>
+                  <label><input type="checkbox" value="ENCOMIENDA" /> Envío por encomienda</label>
+                </div>
+                <small style="color:var(--muted);font-size:13px;margin-top:6px">Podés seleccionar uno o varios métodos.</small>
+              </div>
+
+              <div class="field">
+                <label for="specialRequirements">Requisitos especiales (opcional)</label>
+                <textarea id="specialRequirements" rows="2" placeholder="Ej: frágil, requiere embalaje adicional, voluminoso"></textarea>
+              </div>
+            </div>
+
+            <!-- STEP 5: Comercio y visibilidad -->
+            <div class="step-content" data-step-content="5">
+              <div class="field">
+                <label>Precio ingresado</label>
+                <div style="font-weight:700" id="summary-price-entered">-</div>
+              </div>
+
+              <div class="field">
+                <label>Elegí visibilidad / tipo de publicación</label>
+
+                <div id="publication-options" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                  <label style="display:flex;align-items:center;gap:10px;">
+                    <input name="pubOption" type="radio" value="NORMAL" data-commission="0" checked />
+                    <div>
+                      <div style="font-weight:700">0% — Publicación normal</div>
+                      <div style="font-size:13px;color:var(--muted)">Listado estándar, sin destaque</div>
+                    </div>
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:10px;">
+                    <input name="pubOption" type="radio" value="DESTACADA_5" data-commission="5" />
+                    <div>
+                      <div style="font-weight:700">5% — Publicación destacada</div>
+                      <div style="font-size:13px;color:var(--muted)">Sobresale de normales</div>
+                    </div>
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:10px;">
+                    <input name="pubOption" type="radio" value="DESTACADA_10" data-commission="10" />
+                    <div>
+                      <div style="font-weight:700">10% — Destacada + aparece en recomendados</div>
+                      <div style="font-size:13px;color:var(--muted)">Más visibilidad, mayor comisión</div>
+                    </div>
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:10px;">
+                    <input name="pubOption" type="radio" value="DESTACADA_20" data-commission="20" />
+                    <div>
+                      <div style="font-weight:700">20% — Máxima visibilidad / notificaciones</div>
+                      <div style="font-size:13px;color:var(--muted)">Incluye notificaciones y campañas</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:10px;">
+                <label>Resumen de la opción seleccionada</label>
+                <div style="padding:12px;border-radius:8px;border:1px solid var(--border);background:#fbfdff">
+                  <div id="pub-selected-name" style="font-weight:700">-</div>
+                  <div style="margin-top:6px;font-size:13px;color:var(--muted)">Comisión: <span id="pub-selected-commission">-</span></div>
+                  <div style="margin-top:6px;font-size:13px;color:var(--muted)">Vendedor recibe: <span id="pub-selected-net">-</span></div>
+                  <div style="margin-top:6px;font-size:13px;color:var(--muted)">Comisión plataforma: <span id="pub-selected-fee">-</span></div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label><input id="featured" type="checkbox"/> Destacado (override manual)</label>
+              </div>
+            </div>
+
+            <div class="wizard-footer">
+              <button class="btn btn-ghost" id="btn-prev" type="button">Atrás</button>
+              <div>
+                <button class="btn btn-primary" id="btn-next" type="button" disabled>Siguiente</button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/auth-client.js"></script>
+  <script src="/js/session-status.js"></script>
+
+  <script>
+  (function main(){
+    // session name copy
+    const headerUser = document.getElementById('header-user');
+    (function copySessionName(){
+      const ss = document.getElementById('ss-usuario');
+      if (ss && ss.textContent && ss.textContent !== '---') { headerUser.textContent = ss.textContent.trim(); return; }
+      if (window.__session && window.__session.usuario) { headerUser.textContent = window.__session.usuario; return; }
+      setTimeout(()=>{ headerUser.textContent = headerUser.textContent === 'cargando...' ? 'demo' : headerUser.textContent; }, 1200);
+    })();
+
+    // UI refs
+    const skuInput = document.getElementById('sku');
+    const marcaSelect = document.getElementById('marcaId');
+    const priceWithoutIvaDisplay = document.getElementById('price-without-iva-display');
+
+    const selectCat = document.getElementById('category');
+    const selectSub = document.getElementById('subcategory');
+    const titleInput = document.getElementById('title');
+    const tagsInput = document.getElementById('tags');
+    const slugInput = document.getElementById('slug');
+    const tagList = document.getElementById('tag-list');
+    const btnNext = document.getElementById('btn-next');
+    const steps = Array.from(document.querySelectorAll('#wizard-steps .step'));
+    const stepContents = Array.from(document.querySelectorAll('.step-content'));
+    const currentLabel = document.getElementById('current-step-label');
+    const panelTitle = document.getElementById('panel-title');
+    const note = document.getElementById('wizard-note');
+    const imagesInput = document.getElementById('images');
+    const imagesPreview = document.getElementById('images-preview');
+    const priceAmount = document.getElementById('price-amount');
+    const btnSelectImages = document.getElementById('btn-select-images');
+    if (btnSelectImages) btnSelectImages.addEventListener('click', ()=> imagesInput && imagesInput.click());
+
+    // STEP 3 controls (reemplaza las declaraciones antiguas)
+    const descText = document.getElementById('descripcionTexto');
+    const featureOption = document.getElementById('feature-option');
+    const featureValue = document.getElementById('feature-value');
+    const addFeatBtn = document.getElementById('add-feature');
+    const featuresList = document.getElementById('features-list');
+
+    // Estructuras internas
+    let opcionesCache = []; // array de { id?, nombre, slug? }
+    let valoresCacheByOpcion = new Map(); // mapa opcionId->array de valores
+    let valoresGenerales = []; // fallback si no hay /api/opciones
+
+    // Helper para extraer id/nombre seguros de objetos recibidos
+    function uId(obj) { return (obj && (obj.id || obj._id || obj.idOpcion || obj.opcionId || obj.value)) || null; }
+    function uName(obj) { return (obj && (obj.nombre || obj.name || obj.title || obj.label || obj.valor || obj.value)) || ''; }
+
+    // Cargar opciones y valores desde el backend (versión que usa /api/opciones/with-valores)
+    async function loadOptionsAndValues() {
+      if (!featureOption) return;
+
+      opcionesCache = [];
+      valoresCacheByOpcion = new Map();
+      valoresGenerales = [];
+
+      // Intentamos la versión compacta: opciones con sus valores en un solo JSON
+      try {
+        const res = await fetch('/api/opciones/with-valores', { credentials: 'same-origin' });
+        if (res.ok) {
+          const list = await res.json();
+          if (Array.isArray(list)) {
+            // normalizar y cachear
+            opcionesCache = list.map(o => ({
+              id: o.id != null ? String(o.id) : String(o.nombre || ''),
+              nombre: o.nombre || '',
+              tipo: o.tipo || null,
+              raw: o
+            }));
+            for (const o of list) {
+              const key = o.id != null ? String(o.id) : String(o.nombre || '');
+              const vals = Array.isArray(o.valores) ? o.valores : [];
+              valoresCacheByOpcion.set(key, vals);
+            }
+          }
+          await populateFeatureOptionsSelect();
+          return;
+        }
+        // si responde no-ok, soltamos al fallback
+        console.warn('/api/opciones/with-valores respondió:', res.status);
+      } catch (e) {
+        console.warn('No se pudo cargar /api/opciones/with-valores:', e);
+      }
+
+      // --- Fallback (comportamiento previo) ---
+      // Intentamos cargar /api/opciones y /api/valores por separado como antes
+      try {
+        const resOpc = await fetch('/api/opciones', { credentials: 'same-origin' });
+        if (resOpc.ok) {
+          const list = await resOpc.json();
+          opcionesCache = Array.isArray(list) ? list.map(o => ({ id: (o.id != null ? String(o.id) : String(o.nombre || '')), nombre: o.nombre || String(o.id || ''), raw: o })) : [];
+        }
+      } catch (e) {
+        console.warn('No se pudo cargar /api/opciones (fallback):', e);
+        opcionesCache = [];
+      }
+
+      try {
+        const resVal = await fetch('/api/valores', { credentials: 'same-origin' });
+        if (resVal.ok) {
+          const vals = await resVal.json();
+          valoresGenerales = Array.isArray(vals) ? vals : [];
+          // indexamos por campos comunes (como antes)
+          valoresGenerales.forEach(v => {
+            const opcionKey = v.opcionId ?? v.opcion ?? v.opcion_id ?? v.opcionNombre ?? (v.opcion && (v.opcion.id || v.opcion._id)) ?? null;
+            const key = opcionKey != null ? String(opcionKey) : '__unknown__';
+            if (!valoresCacheByOpcion.has(key)) valoresCacheByOpcion.set(key, []);
+            valoresCacheByOpcion.get(key).push(v);
+          });
+        }
+      } catch (e) {
+        console.warn('No se pudo cargar /api/valores (fallback):', e);
+      }
+
+      await populateFeatureOptionsSelect();
+    }
+    // Pone opciones en el select a partir de opcionesCache
+    async function populateFeatureOptionsSelect() {
+      if (!featureOption) return;
+      featureOption.innerHTML = '<option value="">-- seleccionar atributo --</option>';
+
+      for (const opt of opcionesCache) {
+        // valor interno: id si existe, sino el nombre
+        const val = opt.id || opt.nombre;
+        const txt = opt.nombre || String(opt.id || val);
+        const o = document.createElement('option');
+        o.value = String(val);
+        o.textContent = txt;
+        featureOption.appendChild(o);
+      }
+    }
+
+    // Al seleccionar una opción, cargamos sus valores desde valoresCacheByOpcion
+    async function onFeatureOptionChange() {
+      const sel = (featureOption && featureOption.value) || '';
+      featureValue.innerHTML = '<option value="">-- seleccionar valor --</option>';
+      featureValue.disabled = true;
+      if (!sel) return;
+
+      // 1) Si tenemos lista en la cache (por el endpoint with-valores), usarla directamente
+      if (valoresCacheByOpcion.has(sel)) {
+        const list = valoresCacheByOpcion.get(sel) || [];
+        list.forEach(v => {
+          const vVal = (v.id != null ? String(v.id) : (v.valor || uName(v) || ''));
+          const vText = v.valor || uName(v) || vVal;
+          const o = document.createElement('option');
+          o.value = vVal;
+          o.textContent = vText;
+          featureValue.appendChild(o);
+        });
+        featureValue.disabled = false;
+        return;
+      }
+
+      // 2) Si no existe en cache, intentar pedir /api/opciones/{sel}/valores (compatibilidad)
+      try {
+        const res = await fetch(`/api/opciones/${encodeURIComponent(sel)}/valores`, { credentials: 'same-origin' });
+        if (res.ok) {
+          const list = await res.json();
+          valoresCacheByOpcion.set(sel, Array.isArray(list) ? list : []);
+          (Array.isArray(list) ? list : []).forEach(v => {
+            const vVal = (v.id != null ? String(v.id) : (v.valor || uName(v) || ''));
+            const vText = v.valor || uName(v) || vVal;
+            const o = document.createElement('option');
+            o.value = vVal;
+            o.textContent = vText;
+            featureValue.appendChild(o);
+          });
+          featureValue.disabled = false;
+          return;
+        }
+      } catch (e) {
+        // no fatal; seguiremos con fallback
+        console.warn('Error pidiendo /api/opciones/{id}/valores:', e);
+      }
+
+      // 3) Fallback: filtrar valoresGenerales si están disponibles
+      if (valoresGenerales && valoresGenerales.length) {
+        const filtered = valoresGenerales.filter(v => {
+          const opcionName = v.opcionNombre || v.opcion_name || (v.opcion && (v.opcion.nombre || v.opcion.name)) || '';
+          const opcionId = v.opcionId || v.opcion_id || v.opcion;
+          return String(opcionName) === String(sel) || String(opcionId) === String(sel);
+        });
+        filtered.forEach(v => {
+          const vVal = (v.id != null ? String(v.id) : (v.valor || uName(v) || ''));
+          const vText = v.valor || uName(v) || vVal;
+          const o = document.createElement('option');
+          o.value = vVal;
+          o.textContent = vText;
+          featureValue.appendChild(o);
+        });
+        if (filtered.length) featureValue.disabled = false;
+        return;
+      }
+
+      // si llegamos aquí, no hay valores detectados; dejamos disabled
+    }
+    
+    // Evento de cambio
+    if (featureOption) featureOption.addEventListener('change', onFeatureOptionChange);
+
+    // Agregar característica a la lista y eliminar la opción del select para evitar duplicados
+    if (addFeatBtn) {
+      addFeatBtn.addEventListener('click', ()=>{
+        const key = (featureOption.value || '').trim();
+        const keyText = (featureOption.options[featureOption.selectedIndex] || {}).textContent || key;
+        const val = (featureValue.value || '').trim();
+        const valText = (featureValue.options[featureValue.selectedIndex] || {}).textContent || val;
+
+        if (!key || !val) { alert('Seleccioná atributo y valor antes de agregar.'); return; }
+
+        // crear item en la lista (guardamos también el texto visible en dataset.keyText)
+        const item = document.createElement('div');
+        item.className = 'feature-item';
+        item.dataset.key = key;            // id o valor usado internamente
+        item.dataset.keyText = keyText;    // texto visible (nombre del atributo)
+        item.dataset.value = val;
+        item.dataset.valueText = valText;  // texto visible del valor
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.gap = '8px';
+        item.innerHTML = `<strong style="min-width:120px">${keyText}:</strong><span style="flex:1">${valText}</span><button type="button" class="btn btn-ghost btn-remove">Quitar</button>`;
+        featuresList.appendChild(item);
+
+        // eliminar la opción del select para evitar re-selección
+        const optEl = Array.from(featureOption.options).find(o => String(o.value) === String(key));
+        if (optEl) optEl.remove();
+
+        // limpiar value select
+        featureValue.innerHTML = '<option value="">-- seleccionar valor --</option>';
+        featureValue.disabled = true;
+        featureOption.value = '';
+      });
+    }
+
+    if (featuresList) {
+      featuresList.addEventListener('click', (e)=>{
+        if (e.target.classList.contains('btn-remove')) {
+          const container = e.target.closest('.feature-item');
+          if (!container) return;
+          const restoredKey = container.dataset.key;
+          // buscar en cache una opcion que coincida con este key
+          const found = opcionesCache.find(o => String(o.id) === String(restoredKey) || String(o.nombre) === String(restoredKey));
+          const restoredText = (found && (found.nombre || found.id)) || (container.dataset.keyText || restoredKey);
+          // restaurar opcion en el select (si no existe ya)
+          if (!Array.from(featureOption.options).some(o => String(o.value) === String(restoredKey))) {
+            const o = document.createElement('option');
+            o.value = restoredKey;
+            o.textContent = restoredText;
+            featureOption.appendChild(o);
+          }
+          container.remove();
+        }
+      });
+    }
+
+    // Inicialización: cargar datos de backend
+    loadOptionsAndValues();
+
+    // state
+    const byId = new Map();
+    function toId(v){ return v == null ? '' : String(v); }
+    function clearSelect(sel){ sel.innerHTML = '<option value="">-- seleccionar --</option>'; }
+
+    // load tree once (usar /api/categorias/arbol)
+    (async function loadTree(){
+      try {
+        const res = await fetch('/api/categorias/arbol', { credentials:'same-origin' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const tree = await res.json();
+        (function index(nodes){
+          (nodes||[]).forEach(n=>{
+            if (!n) return;
+            const id = toId(n.id);
+            const copy = Object.assign({}, n, { _children: Array.isArray(n.hijos) ? n.hijos : [] });
+            byId.set(id, copy);
+            if (Array.isArray(copy._children) && copy._children.length) index(copy._children);
+          });
+        })(Array.isArray(tree) ? tree : []);
+        // render only parents
+        selectCat.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
+        for (const node of byId.values()){
+          const padreRaw = node.categoriaPadreId ?? node.parentId ?? node.padreId ?? node.parent ?? undefined;
+          const isParent = padreRaw === null || padreRaw === undefined || padreRaw === '';
+          if (isParent){
+            const opt = document.createElement('option');
+            opt.value = node._id || toId(node.id);
+            opt.textContent = node.nombre ?? node.title ?? opt.value;
+            selectCat.appendChild(opt);
+          }
+        }
+      } catch(e){
+        console.warn('Error cargando arbol:', e);
+      }
+    })();
+
+    function getChildren(node){
+      return Array.isArray(node?._children) ? node._children : (Array.isArray(node?.hijos) ? node.hijos : []);
+    }
+
+    // wizard UI
+    let current = 1;
+    function showStepContent(n){
+      stepContents.forEach(el => el.classList.toggle('active', Number(el.getAttribute('data-step-content')) === n));
+      
+      steps.forEach(s=>{
+        const idx = Number(s.getAttribute('data-step'));
+        // limpiar clases de estado
+        s.classList.remove('step--active','step--enabled','step--done','step--disabled');
+
+        // NUEVA LÓGICA:
+        // - idx < n : paso anterior -> naranja/amarillo (usamos step--enabled)
+        // - idx === n : paso activo -> azul/celeste (step--active)
+        // - idx > n : pasos futuros -> gris (step--disabled)
+        if (idx < n) s.classList.add('step--enabled');
+        else if (idx === n) s.classList.add('step--active');
+        else s.classList.add('step--disabled');
+      });
+      currentLabel.textContent = n;
+      panelTitle.textContent = `Paso ${n} — ${steps[n-1].querySelector('div > div').textContent || 'Paso'}`;
+      note.textContent = n === 1 ? 'Estamos en el paso 1. Completa los datos de clasificación antes de avanzar.' : `Estás en el paso ${n}.`;
+      btnNext.disabled = !validForNext();
+      if (btnNext) btnNext.textContent = (n === 5 ? 'Previsualizar' : 'Siguiente');
+    }
+    showStepContent(current);
+
+    // STEP transitions and validations
+    function validForNext(){
+      if (current === 1){ return !!(selectCat.value && selectSub.value); }
+      if (current === 2) {
+        const name = (titleInput.value || '').trim();
+        const amount = Number((priceAmount || {}).value || 0);
+        const marcaOk = !!(marcaSelect && (marcaSelect.value || '').trim());
+        return !!name && amount > 0 && marcaOk;
+      }      
+      if (current === 3){ return !!((descText.value || '').trim()); }
+      if (current === 4){ const stock = Number(document.getElementById('stock').value || 0); return stock >= 0; }
+      return true;
+    }
+
+    document.getElementById('btn-next').addEventListener('click', ()=>{
+      if (!validForNext()){ alert(current === 1 ? 'Completa categoría y subcategoría.' : 'Completa los campos requeridos antes de continuar.'); return; }
+      if (current < 5){ current++; showStepContent(current); }
+      else {
+        // último paso -> recolectar y enviar (placeholder)
+        const payload = collectDraft();
+        console.log('Draft listo:', payload);
+        alert('Draft listo en consola (verificar).');
+      }
+    });
+
+    function collectDraft(){
+      const features = Array.from(featuresList.querySelectorAll('.feature-item')).map(el=>({
+        key: el.dataset.key, value: el.dataset.value
+      }));
+      const shipping = (function(){
+        const container = document.getElementById('shipping-methods');
+        if (container) {
+          return Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        }
+        // fallback al campo antiguo por compatibilidad
+        const oldInput = (document.getElementById('shippingOptions') || {}).value || '';
+        return oldInput.split(',').map(s=>s.trim()).filter(Boolean);
+      })();
+    }
+
+    // select category -> populate subcategories
+    selectCat.addEventListener('change', function(){
+      const val = this.value;
+      clearSelect(selectSub);
+      if (!val) { btnNext.disabled = !validForNext(); return; }
+      const node = byId.get(val);
+      if (!node) return;
+      const hijos = getChildren(node);
+      hijos.forEach(h=>{
+        const opt = document.createElement('option');
+        opt.value = toId(h.id);
+        opt.textContent = h.nombre ?? h.title ?? opt.value;
+        selectSub.appendChild(opt);
+      });
+      btnNext.disabled = !validForNext();
+    });
+
+    // inputs that affect validation
+    [selectCat, selectSub, titleInput, priceAmount, descText, document.getElementById('stock')].forEach(el=>{
+      if (!el) return;
+      el.addEventListener('input', ()=>{ btnNext.disabled = !validForNext(); });
+      el.addEventListener('change', ()=>{ btnNext.disabled = !validForNext(); });
+    });
+
+    // tags preview
+    tagsInput.addEventListener('change', ()=>{
+      const raw = tagsInput.value.split(',').map(s=>s.trim()).filter(Boolean);
+      tagList.innerHTML = '';
+      raw.forEach(t=>{ const el=document.createElement('span'); el.className='tag'; el.textContent=t; tagList.appendChild(el); });
+    });
+
+   // manejo avanzado de selección y miniaturas (permite añadir en múltiples selecciones y quitar)
+   let selectedFiles = [];
+
+   function renderPreviews(){
+     // limpiar y generar miniaturas con botón de quitar
+     imagesPreview.innerHTML = '';
+     selectedFiles.forEach((file, idx) => {
+       const url = URL.createObjectURL(file);
+       const wrap = document.createElement('div');
+       wrap.style.position = 'relative';
+       wrap.style.display = 'inline-block';
+       wrap.style.marginRight = '8px';
+
+       const img = document.createElement('img');
+       img.src = url;
+       img.style.width = '80px';
+       img.style.height = '80px';
+       img.style.objectFit = 'cover';
+       img.style.borderRadius = '6px';
+       img.alt = file.name || '';
+
+       const btnRemove = document.createElement('button');
+       btnRemove.type = 'button';
+       btnRemove.title = 'Quitar';
+       btnRemove.textContent = '✕';
+       btnRemove.style.position = 'absolute';
+       btnRemove.style.top = '4px';
+       btnRemove.style.right = '4px';
+       btnRemove.style.width = '22px';
+       btnRemove.style.height = '22px';
+       btnRemove.style.border = 'none';
+       btnRemove.style.borderRadius = '50%';
+       btnRemove.style.background = 'rgba(0,0,0,0.6)';
+       btnRemove.style.color = '#fff';
+       btnRemove.style.cursor = 'pointer';
+       btnRemove.addEventListener('click', () => {
+         // quitar y re-render
+         selectedFiles.splice(idx, 1);
+         renderPreviews();
+         // reset input value para permitir re-selecciones iguales
+         imagesInput.value = '';
+       });
+
+       wrap.appendChild(img);
+       wrap.appendChild(btnRemove);
+       imagesPreview.appendChild(wrap);
+       // revocar URL después de un tiempo (evita leaks si se re-renderiza mucho)
+       setTimeout(()=> URL.revokeObjectURL(url), 10000);
+     });
+   }
+
+   imagesInput.addEventListener('change', (ev) => {
+     const files = Array.from(ev.target.files || []);
+     files.forEach(f => {
+       // evitar duplicados por name+size+lastModified
+       const exists = selectedFiles.some(sf => sf.name === f.name && sf.size === f.size && sf.lastModified === f.lastModified);
+       if (!exists) selectedFiles.push(f);
+     });
+     renderPreviews();
+   });
+
+    // features add/remove
+    addFeatBtn.addEventListener('click', ()=>{
+      const k = (featKey.value||'').trim();
+      const v = (featVal.value||'').trim();
+      if (!k) return;
+      const item = document.createElement('div'); item.className='feature-item'; item.dataset.key=k; item.dataset.value=v;
+      item.innerHTML = `<strong style="min-width:120px">${k}:</strong><span style="flex:1">${v}</span><button type="button" class="btn btn-ghost btn-remove">Quitar</button>`;
+      featuresList.appendChild(item);
+      featKey.value=''; featVal.value=''; featKey.focus();
+    });
+    featuresList.addEventListener('click', (e)=>{
+      if (e.target.classList.contains('btn-remove')) e.target.closest('.feature-item').remove();
+    });
+
+    document.getElementById('btn-prev').addEventListener('click', ()=> {
+      // si estamos en el primer paso, confirmar y resetear; si no, retroceder un paso
+      if (typeof current === 'undefined' || current <= 1) {
+        if (confirm('Descartar los cambios y volver?')) {
+          document.getElementById('step-form').reset();
+          tagList.innerHTML = '';
+          imagesPreview.innerHTML = '';
+          featuresList.innerHTML = '';
+          clearSelect(selectSub);
+          current = 1;
+          showStepContent(current);
+        }
+        return;
+      }
+      current--;
+      showStepContent(current);
+    });
+
+    // --- Helpers de formato y cálculo ---
+    function formatCurrencyFromAmount(amount, currency) {
+      // amount: número (monto) en unidad (no centavos)
+      try {
+        return new Intl.NumberFormat('es-AR', { style: 'currency', currency: currency || 'ARS' }).format(Number(amount || 0));
+      } catch(e){
+        return (Number(amount||0).toFixed(2)) + ' ' + (currency || 'ARS');
+      }
+    }
+
+    function computePriceWithoutIva(price, ivaPct) {
+      // price en unidad (ej: 2999.99), ivaPct en %
+      const p = Number(price || 0);
+      const iva = Number(ivaPct || 0);
+      if (iva <= 0) return p;
+      return +(p / (1 + iva / 100));
+    }
+
+    function updatePriceWithoutIvaAuto() {
+      const price = Number((document.getElementById('price-amount') || {}).value || 0);
+      const iva = Number((document.getElementById('price-iva') || {}).value || 0) || 21;
+      if (!priceWithoutIvaDisplay) return;
+      if (price <= 0) { priceWithoutIvaDisplay.textContent = '-'; return; }
+      const calc = computePriceWithoutIva(price, iva); // divide por (1 + iva/100)
+      priceWithoutIvaDisplay.textContent = formatCurrencyFromAmount(Math.round(calc * 100) / 100, (document.getElementById('price-currency')||{}).value || 'ARS');
+    }
+
+    // --- Publication options logic (Paso 5) ---
+    const publicationOptions = document.getElementById('publication-options');
+    const summaryPriceEntered = document.getElementById('summary-price-entered');
+    const pubSelectedName = document.getElementById('pub-selected-name');
+    const pubSelectedCommission = document.getElementById('pub-selected-commission');
+    const pubSelectedNet = document.getElementById('pub-selected-net');
+    const pubSelectedFee = document.getElementById('pub-selected-fee');
+
+    function getSelectedPublicationOption() {
+      if (!publicationOptions) return null;
+      const sel = publicationOptions.querySelector('input[name="pubOption"]:checked');
+      if (!sel) return null;
+      return { key: sel.value, commission: Number(sel.dataset.commission || 0) };
+    }
+
+    function updatePublicationSummary() {
+      const price = Number((document.getElementById('price-amount') || {}).value || 0);
+      const currency = (document.getElementById('price-currency') || {}).value || 'ARS';
+      if (summaryPriceEntered) summaryPriceEntered.textContent = formatCurrencyFromAmount(price, currency);
+
+      const sel = getSelectedPublicationOption();
+      if (!sel) {
+        if (pubSelectedName) pubSelectedName.textContent = '-';
+        if (pubSelectedCommission) pubSelectedCommission.textContent = '-';
+        if (pubSelectedNet) pubSelectedNet.textContent = '-';
+        if (pubSelectedFee) pubSelectedFee.textContent = '-';
+        return;
+      }
+
+      const commissionPct = sel.commission;
+      const montoCentavos = Math.round(price * 100);
+      const commissionCentavos = Math.round(montoCentavos * (commissionPct / 100));
+      const netCentavos = montoCentavos - commissionCentavos;
+
+      const commissionAmount = commissionCentavos / 100;
+      const netAmount = netCentavos / 100;
+
+      const labels = {
+        'NORMAL': '0% — Publicación normal',
+        'DESTACADA_5': '5% — Publicación destacada',
+        'DESTACADA_10': '10% — Destacada + recomendados',
+        'DESTACADA_20': '20% — Máxima visibilidad'
+      };
+
+      pubSelectedName.textContent = labels[sel.key] || sel.key;
+      pubSelectedCommission.textContent = commissionPct + '%';
+      pubSelectedNet.textContent = formatCurrencyFromAmount(netAmount, currency);
+      pubSelectedFee.textContent = formatCurrencyFromAmount(commissionAmount, currency);
+    }
+
+    // listeners extra para paso 4 (actualizar validación)
+    ['stock','weight','dim-l','dim-w','dim-h'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', ()=>{ btnNext.disabled = !validForNext(); });
+      el.addEventListener('change', ()=>{ btnNext.disabled = !validForNext(); });
+    });
+
+    // listeners para checkboxes de envío
+    const shippingContainer = document.getElementById('shipping-methods');
+    if (shippingContainer){
+      shippingContainer.addEventListener('change', ()=>{ btnNext.disabled = !validForNext(); });
+    }
+
+    // Listeners para mantener sincronizado
+    ['price-amount','price-iva','price-previous','price-currency'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', ()=>{ updatePriceWithoutIvaAuto(); updatePublicationSummary(); btnNext.disabled = !validForNext(); });
+      el.addEventListener('change', ()=>{ updatePriceWithoutIvaAuto(); updatePublicationSummary(); btnNext.disabled = !validForNext(); });
+    });
+    if (marcaSelect) marcaSelect.addEventListener('change', ()=>{ btnNext.disabled = !validForNext(); });
+    if (skuInput) skuInput.addEventListener('input', ()=>{ /* opcional: nada */ });
+
+    if (publicationOptions){
+      publicationOptions.addEventListener('change', updatePublicationSummary);
+      // init
+      updatePublicationSummary();
+      // Init adicionales
+      if (marcaSelect && !marcaSelect.value) marcaSelect.value = 'OTRA';
+      updatePriceWithoutIvaAuto();
+      btnNext.disabled = !validForNext();
+    }
+
+    // --- Ajuste en collectDraft: incluir priceAnteriorCentavos, priceSinIvaCentavos y publicationOption ---
+    const origCollectDraft = collectDraft;
+    collectDraft = function(){
+      const priceAmountValue = Number((document.getElementById('price-amount')||{}).value || 0);
+      const currency = (document.getElementById('price-currency')||{}).value || 'ARS';
+      const precioAnterior = Number((document.getElementById('price-previous')||{}).value || 0);
+      const ivaPct = Number((document.getElementById('price-iva')||{}).value || 0) || 21;
+      
+      base.price = base.price || {};
+      base.price.montoCentavos = Math.round(priceAmountValue * 100);
+      base.price.moneda = currency;
+      base.price.precioAnteriorCentavos = precioAnterior ? Math.round(precioAnterior * 100) : null;
+      const calcSinIva = computePriceWithoutIva(priceAmountValue, ivaPct);
+      base.price.precioSinIvaCentavos = Math.round(calcSinIva * 100);
+      base.price.ivaPorcentaje = ivaPct;
+
+      base.sku = (document.getElementById('sku')||{}).value || null;
+      base.marcaId = (document.getElementById('marcaId')||{}).value || 'OTRA';
+
+      const sel = getSelectedPublicationOption();
+      base.publicationOption = sel ? { key: sel.key, commissionPct: sel.commission } : null;
+    };
+
+  })();
+  </script>
+</body>
+</html>

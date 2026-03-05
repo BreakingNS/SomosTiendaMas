@@ -72,12 +72,7 @@ public class ImportLocalidadesService {
                 Optional<Localidad> existentes = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
                     nombreLocalidad, municipio, departamento, provincia
                 );
-                /*
-                List<Localidad> existentes = localidadRepository.findByNombreAndMunicipioAndDepartamentoAndProvincia(
-                    nombreLocalidad, municipio, departamento, provincia
-                );
-                 */
-                if (existentes == null) {
+                if (existentes.isEmpty()) {
                     Localidad localidad = new Localidad();
                     localidad.setNombre(nombreLocalidad);
                     localidad.setMunicipio(municipio);

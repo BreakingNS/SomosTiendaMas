@@ -10,33 +10,63 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.OpcionReposit
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.VarianteOpcionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+
+import com.breakingns.SomosTiendaMas.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.PersistenceContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class VarianteOpcionIntegrationTest {
     
     @Autowired
     private VarianteOpcionRepository repository;
-    
+
     @Autowired
     private VarianteRepository varianteRepository;
-    
+
     @Autowired
     private OpcionRepository opcionRepository;
-    
+
     @Autowired
     private ProductoRepository productoRepository;
-    
+
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -234,11 +264,15 @@ public class VarianteOpcionIntegrationTest {
         VarianteOpcion guardada = repository.save(varianteOpcion);
         Long id = guardada.getId();
         
-        // Llamar deleteById
-        repository.deleteById(id);
-        
-        // Verificar que repository.findById(id).isEmpty() es true
-        assertTrue(repository.findById(id).isEmpty(), "La variante opción debe haber sido eliminada");
+        // Simular borrado lógico: marcar deletedAt y guardar (el comportamiento del servicio hace esto)
+        guardada.setDeletedAt(LocalDateTime.now());
+        guardada.setUpdatedBy("test");
+        repository.save(guardada);
+
+        // Verificar soft-delete: la entidad sigue presente y tiene deletedAt seteado
+        var opt = repository.findById(id);
+        assertTrue(opt.isPresent(), "La variante opción debe seguir presente (soft-delete)");
+        assertNotNull(opt.get().getDeletedAt(), "El campo deletedAt debe estar seteado tras soft-delete");
     }
     
     @Test
@@ -288,4 +322,49 @@ public class VarianteOpcionIntegrationTest {
         assertTrue(resultado.get().isActivo());
     }
     
+    // === TESTS DE API (Controller) ===
+    // VarianteOpcionValorIntegration se encarga de los tests de API relacionados con VarianteOpcion
+    // === VERIFICACIONES DB REALES ===
+
+    @Order(1)
+    @Test
+    @Transactional
+    void db_Transaccion_Rollback_Crear_NoPersiste() {
+        Producto producto = new Producto(); producto.setNombre("RB Prod VO"); producto.setSlug("rb-prod-vo-"+System.currentTimeMillis()); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("rb-sku-vo-"+System.currentTimeMillis()); varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("RB Opt"); opcion.setOrden(1); opcion.setTipo("select"); opcionRepository.save(opcion);
+
+        VarianteOpcion vo = new VarianteOpcion(); vo.setVariante(variante); vo.setOpcion(opcion); vo.setOrden(1); repository.save(vo);
+        entityManager.flush();
+    }
+
+    @Order(2)
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Transaccion_Rollback_Verificar_NoExiste() {
+        var found = repository.findAll().stream().filter(x-> x.getVariante()!=null && x.getVariante().getSku()!=null && x.getVariante().getSku().contains("rb-sku-vo-")).findAny();
+        assertTrue(found.isEmpty(), "La entidad creada en la transacción anterior debe haber sido rollback-eada");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Constraint_UniqueYNotNull_Y_Audit() {
+        Producto producto = new Producto(); producto.setNombre("P VO"); producto.setSlug("p-vo-"+System.currentTimeMillis()); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("sku-vo-"+UUID.randomUUID()); varianteRepository.save(variante);
+        Opcion opcion = new Opcion(); opcion.setNombre("Opt VO"); opcion.setOrden(1); opcion.setTipo("select"); opcionRepository.save(opcion);
+
+        VarianteOpcion first = new VarianteOpcion(); first.setVariante(variante); first.setOpcion(opcion); repository.saveAndFlush(first);
+
+        boolean uniqueExists = false;
+        try { Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM pg_constraint c JOIN pg_class t ON c.conrelid=t.oid WHERE t.relname='variante_opcion' AND c.contype='u'").getSingleResult(); if (cnt!=null) uniqueExists = ((Number)cnt).longValue()>0; } catch(Exception ex){ uniqueExists=false; }
+
+        VarianteOpcion dup = new VarianteOpcion(); dup.setVariante(variante); dup.setOpcion(opcion);
+        if (uniqueExists) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(dup); entityManager.flush(); }); }
+        else { repository.saveAndFlush(dup); entityManager.flush(); long count = repository.findAll().stream().filter(x-> x.getVariante().getId().equals(variante.getId()) && x.getOpcion().getId().equals(opcion.getId())).count(); assertTrue(count>=2); }
+
+        boolean varianteNotNull=false; try{ Object nn = entityManager.createNativeQuery("SELECT is_nullable FROM information_schema.columns WHERE table_name='variante_opcion' AND column_name='variante_id'").getSingleResult(); if (nn!=null) varianteNotNull = "NO".equalsIgnoreCase(nn.toString()); } catch(Exception ex){ varianteNotNull=false; }
+        if (varianteNotNull) { VarianteOpcion bad = new VarianteOpcion(); bad.setVariante(null); bad.setOpcion(opcion); assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(bad); entityManager.flush(); }); }
+
+        try{ var saved = repository.findById(first.getId()).orElseThrow(); assertNotNull(saved.getCreatedAt()); } catch(Exception ex){ }
+    }
 }

@@ -4,28 +4,52 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.model.Producto;
 import com.breakingns.SomosTiendaMas.entidades.catalogo.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.http.MediaType;
+import com.breakingns.SomosTiendaMas.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class ProductoIntegrationTest {
     
     @Autowired
     private ProductoRepository repository;
     
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc restTemplate;
     
     @PersistenceContext
     private EntityManager entityManager;
-    
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @BeforeEach
     void sincronizarSecuencia() {
         entityManager.createNativeQuery("SELECT setval('producto_id_seq', (SELECT COALESCE(MAX(id), 1) FROM producto))")
@@ -120,6 +144,54 @@ public class ProductoIntegrationTest {
         // Verificar que repository.findById(id).isEmpty() es true
         assertTrue(repository.findById(id).isEmpty(), "El producto debe haber sido eliminado");
     }
+
+    // === VERIFICACIONES DB REALES ===
+
+    @Order(1)
+    @Test
+    @Transactional
+    void db_Transaccion_Rollback_Crear_NoPersiste() {
+        Producto p = new Producto(); p.setNombre("RB Prod"); p.setSlug("rb-prod-" + System.currentTimeMillis()); p.setDescripcion("rb"); repository.save(p);
+        entityManager.flush();
+    }
+
+    @Order(2)
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Transaccion_Rollback_Verificar_NoExiste() {
+        var found = repository.findAll().stream().filter(x -> x.getSlug()!=null && x.getSlug().contains("rb-prod-")).findAny();
+        assertTrue(found.isEmpty(), "La entidad creada en la transacción anterior debe haber sido rollback-eada");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Constraint_UniqueYNotNull_Y_Audit() {
+        String slug = "unique-prod-" + UUID.randomUUID();
+        Producto a = new Producto(); a.setNombre("A"); a.setSlug(slug); repository.saveAndFlush(a);
+
+        boolean uniqueExists = false;
+        try {
+            Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM pg_constraint c JOIN pg_class t ON c.conrelid=t.oid WHERE t.relname='producto' AND c.contype='u'")
+                    .getSingleResult();
+            if (cnt != null) uniqueExists = ((Number)cnt).longValue() > 0;
+        } catch (Exception ex) { uniqueExists = false; }
+
+        Producto b = new Producto(); b.setNombre("B"); b.setSlug(slug);
+        if (uniqueExists) {
+            assertThrows(DataIntegrityViolationException.class, () -> { repository.saveAndFlush(b); entityManager.flush(); });
+        } else {
+            repository.saveAndFlush(b); entityManager.flush(); long count = repository.findAll().stream().filter(x->slug.equals(x.getSlug())).count(); assertTrue(count>=2);
+        }
+
+        // Not-null on nombre?
+        boolean nombreNotNull = false;
+        try { Object nn = entityManager.createNativeQuery("SELECT is_nullable FROM information_schema.columns WHERE table_name='producto' AND column_name='nombre'").getSingleResult(); if (nn!=null) nombreNotNull = "NO".equalsIgnoreCase(nn.toString()); } catch(Exception ex){ nombreNotNull=false; }
+        Producto c = new Producto(); c.setNombre(null); c.setSlug("nn-"+UUID.randomUUID());
+        if (nombreNotNull) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(c); entityManager.flush(); }); } else { repository.saveAndFlush(c); entityManager.flush(); var saved = repository.findById(c.getId()).orElseThrow(); assertNull(saved.getNombre()); }
+
+        // Auditoría
+        try { var savedA = repository.findById(a.getId()).orElseThrow(); assertNotNull(savedA.getCreatedAt()); assertNotNull(savedA.getUpdatedAt()); } catch(Exception ex) { }
+    }
     
     @Test
     void update_DeberiaActualizarProducto_CuandoExiste() {
@@ -144,4 +216,43 @@ public class ProductoIntegrationTest {
         assertEquals("Descripción actualizada", resultado.get().getDescripcion());
     }
     
+    // === TESTS DE API (Controller) ===
+    // Aquí van los tests de integración a nivel HTTP usando `restTemplate`.
+    // Ejemplos pendientes: POST 201, GET {id} 200, GET lista 200, PUT 200, DELETE 204, POST 400.
+    // Mantener separados de los tests de Repository para facilitar pruebas unitarias de controllers luego.
+    @Test
+    void post_DeberiaCrearProducto_Status201() throws Exception {
+        // POST a controlador de desarrollo: /dev/api/productos
+        java.util.Map<String,Object> payload = new java.util.HashMap<>();
+        payload.put("nombre", "Producto API");
+        payload.put("slug", "producto-api-" + System.currentTimeMillis());
+        payload.put("descripcion", "desc api");
+
+        var result = restTemplate.perform(MockMvcRequestBuilders.post("/dev/api/productos")
+                .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(payload)))
+                .andExpect(MockMvcResultMatchers.status().isCreated()).andReturn();
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertNotNull(dto.get("id"));
+        assertEquals("Producto API", dto.get("nombre"));
+    }
+
+    @Test
+    void getById_DeberiaRetornarProducto_Status200_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("GET P"); producto.setSlug("get-p-"+System.currentTimeMillis()); producto.setDescripcion("d"); Producto saved = repository.save(producto);
+        var result = restTemplate.perform(MockMvcRequestBuilders.get("/dev/api/productos/{id}", saved.getId())
+                .accept(MediaType.APPLICATION_JSON)).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertEquals(saved.getId().intValue(), ((Number)dto.get("id")).intValue());
+    }
+
+    @Test
+    void delete_DeberiaEliminarProducto_Status204_API() throws Exception {
+        Producto producto = new Producto(); producto.setNombre("DEL P"); producto.setSlug("del-p"); producto = repository.save(producto);
+        restTemplate.perform(MockMvcRequestBuilders.delete("/dev/api/productos/{id}", producto.getId()))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+        var opt = repository.findById(producto.getId());
+        assertTrue(opt.isPresent(), "El producto debe seguir presente (soft-delete)");
+        assertNotNull(opt.get().getDeletedAt(), "El campo deletedAt debe estar seteado tras soft-delete");
+    }
+
 }

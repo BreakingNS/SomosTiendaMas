@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dev Tools — Visor Producto V2</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#0f172a;margin:0;padding:20px}
+    .panel{max-width:1100px;margin:0 auto;background:#fff;padding:18px;border-radius:8px;box-shadow:0 4px 14px rgba(15,23,42,0.06)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    header h1{font-size:16px;margin:0;color:#064e3b}
+    .controls{display:flex;gap:8px;align-items:center}
+    input[type=text]{padding:8px;border:1px solid #e6e6e6;border-radius:6px;width:480px}
+    button{padding:8px 12px;border-radius:6px;border:none;background:#ff6f00;color:#fff;cursor:pointer}
+    .muted{color:#6b7280}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    .box{background:#fafafa;padding:12px;border-radius:6px;border:1px solid #eee}
+    pre{background:#fff;padding:8px;border-radius:6px;border:1px solid #eee;overflow:auto}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#fbfbfb}
+    .small{font-size:13px;color:#6b7280}
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <header>
+      <h1>Visor de Producto — V2</h1>
+      <div class="controls">
+        <input id="apiUrl" type="text" placeholder="URL API (ej: /dev/api/productos/centralizado/1/detalle-simple)" value="/dev/api/productos/centralizado/1/detalle-simple">
+        <button id="btnFetch">Cargar</button>
+      </div>
+    </header>
+
+    <section id="result">
+      <div class="muted">Introduce la URL y presiona "Cargar" para ver el producto y variantes.</div>
+    </section>
+
+    <footer style="margin-top:12px" class="small muted">Este visor intenta adaptarse a distintos shapes JSON (nombres alternativos para atributos, precios en centavos, pesos en gramos/kg).</footer>
+  </div>
+
+<script>
+  function tryGet(obj, paths){
+    for(const p of paths){
+      if(!obj) continue;
+      const parts = p.split('.');
+      let cur = obj;
+      let ok = true;
+      for(const k of parts){ if(cur==null || !(k in cur)){ ok=false; break } cur = cur[k]; }
+      if(ok) return cur;
+    }
+    return undefined;
+  }
+
+  function findVariants(root){
+    if(!root) return [];
+    if(Array.isArray(root.variantes)) return root.variantes;
+    if(Array.isArray(root.variante)) return root.variante;
+    if(Array.isArray(root.items)) return root.items;
+    if(Array.isArray(root.data)) return root.data;
+    if(root.producto && Array.isArray(root.producto.variantes)) return root.producto.variantes;
+    // fallback: search first array-of-objects in root
+    for(const k of Object.keys(root)){
+      if(Array.isArray(root[k]) && root[k].length>0 && typeof root[k][0] === 'object') return root[k];
+    }
+    return [];
+  }
+
+  function parseAttributes(v){
+    const candidates = ['attributesJson','attributes','atributosJson','atributos','attributes_json','attributesJsonString'];
+    for(const c of candidates){ if(c in v){ try{ const val = v[c]; if(typeof val === 'string') return JSON.parse(val); return val; }catch(e){ return v[c]; } } }
+    // try to build from opciones
+    if(Array.isArray(v.varianteOpciones) && v.varianteOpciones.length>0){
+      const map = {};
+      v.varianteOpciones.forEach(o=>{ if(o && o.opcion && o.valor!=null){ map[o.opcion] = o.valor } });
+      return map;
+    }
+    return {};
+  }
+
+  function sortObject(obj){
+    if(Array.isArray(obj)) return obj.map(sortObject);
+    if(obj && typeof obj === 'object'){
+      const keys = Object.keys(obj).sort();
+      const out = {};
+      for(const k of keys) out[k] = sortObject(obj[k]);
+      return out;
+    }
+    return obj;
+  }
+
+  function findPrice(v){
+    if(!v) return null;
+    // precio en lista de precios
+    if(Array.isArray(v.precios) && v.precios.length>0){
+      const p0 = v.precios[0];
+      const cents = p0.montoCentavos ?? p0.monto ?? p0.amountCents ?? p0.amount ?? p0.cents;
+      if(cents!=null) return Number(cents);
+    }
+    // otros nombres comunes
+    if(Array.isArray(v.prices) && v.prices.length>0){
+      const p0 = v.prices[0];
+      const cents = p0.amountCents ?? p0.amount ?? p0.cents;
+      if(cents!=null) return Number(cents);
+    }
+    if(v.precio && typeof v.precio === 'object'){
+      const cents = v.precio.montoCentavos ?? v.precio.monto ?? v.precio.cents ?? v.precio.amount;
+      if(cents!=null) return Number(cents);
+    }
+    // valores directos
+    const direct = v.precioCentavos ?? v.montoCentavos ?? v.priceCents ?? v.amountCents ?? v.precioActual ?? v.price ?? v.precio;
+    if(direct!=null) return Number(direct);
+    return null;
+  }
+
+  function formatMoney(cents){ if(cents==null) return '-'; try{ return '$ ' + (Math.round(Number(cents)/100).toLocaleString('es-AR')); }catch(e){ return String(cents); } }
+
+  function findStock(v){
+    if(!v) return null;
+    // direct fields
+    const direct = v.onhand ?? v.onHand ?? v.stockDisponible ?? v.stock ?? v.available ?? v.disponible ?? v.cantidad ?? v.quantity ?? v.quantityAvailable ?? null;
+    if(direct != null) return direct;
+    // check nested inventory objects
+    if(v.inventario){ const i = v.inventario; const on = i.onhand ?? i.disponible ?? i.available ?? i.onHand ?? i.cantidad; if(on!=null) return on; }
+    if(v.stock){ const s = v.stock; const on = s.onhand ?? s.disponible ?? s.available ?? s.onHand ?? s.cantidad; if(on!=null) return on; }
+    // arrays of inventories inside variant
+    if(Array.isArray(v.inventarios) && v.inventarios.length>0){
+      const item = v.inventarios[0]; const on = item.onhand ?? item.disponible ?? item.available ?? item.cantidad; if(on!=null) return on;
+    }
+    return null;
+  }
+
+  function findWeightKg(v){
+    if(!v) return null;
+    const candidates = ['fisicas','fisico','physical','physicalData'];
+    for(const c of candidates){
+      const val = v[c];
+      if(Array.isArray(val) && val.length>0){
+        const f = val[0];
+        const w = f.pesoKg ?? f.pesoKilos ?? f.peso_kgs ?? f.peso_kg ?? f.peso ?? f.pesoGramos ?? f.peso_gramos ?? f.weightGrams ?? f.weight;
+        if(w!=null && w!=='') { const kg = toKg(w); if(kg!=null) return kg; }
+      }
+      if(val && typeof val === 'object'){
+        const w = val.pesoKg ?? val.pesoKilos ?? val.pesoGramos ?? val.peso ?? val.weightGrams ?? val.weight;
+        if(w!=null && w!=='') { const kg = toKg(w); if(kg!=null) return kg; }
+      }
+    }
+    // direct properties
+    const direct = v.pesoKg ?? v.pesoKilos ?? v.pesoGramos ?? v.peso ?? v.weightGrams ?? v.weight;
+    if(direct!=null && direct!=='') { const kg = toKg(direct); if(kg!=null) return kg; }
+    return null;
+  }
+
+  function toKg(val){
+    const n = Number(val);
+    if(isNaN(n)) return null;
+    // heuristics: if > 1000 probably grams
+    if(n>1000) return (n/1000);
+    // if between 0 and 100 maybe already kg
+    if(n>0 && n<100) return n;
+    return n;
+  }
+
+  function findImagesCount(v){
+    if(Array.isArray(v.imagenes)) return v.imagenes.length;
+    if(Array.isArray(v.images)) return v.images.length;
+    if(typeof v.imagenesCount === 'number') return v.imagenesCount;
+    if(typeof v.imagesCount === 'number') return v.imagesCount;
+    // maybe product-level images
+    return 0;
+  }
+
+  function findDefaultVariant(variantes, product, body){
+    if(!variantes || variantes.length===0) return null;
+    const candidates = [body?.varianteDefault, body?.defaultVariant, product?.varianteDefault, product?.defaultVariant, product?.variante_default];
+    for(const c of candidates){ if(c && typeof c === 'object') return c; }
+    for(const v of variantes){ 
+      if(v && (v.default === true || v.isDefault === true || v.varianteDefault === true || v.esDefault === true || v.es_default === true || v.is_default === true)) return v; 
+    }
+    const defId = product?.varianteDefaultId ?? product?.defaultVariantId ?? product?.varianteDefault ?? product?.defaultVariant;
+    if(defId!=null){ for(const v of variantes){ if(v.id != null && String(v.id) === String(defId)) return v; if(v.sku && String(v.sku) === String(defId)) return v; } }
+    return null;
+  }
+
+  function clearResult(){ document.getElementById('result').innerHTML = ''; }
+
+  function buildInventoryMap(body, product, variantes){
+    const mapById = new Map();
+    const mapBySku = new Map();
+    const mapByIdWeight = new Map();
+    const mapBySkuWeight = new Map();
+
+    function considerItem(it){
+      if(!it || typeof it !== 'object') return;
+      const id = it.varianteId ?? it.variantId ?? it.id ?? it.variante_id ?? it.variant_id;
+      const sku = it.sku ?? it.codigo ?? it.code;
+      const onhand = it.onhand ?? it.disponible ?? it.available ?? it.cantidad ?? it.quantity ?? it.onHand ?? null;
+      const weight = it.pesoKg ?? it.pesoKilos ?? it.peso ?? it.weightKg ?? it.weightGrams ?? it.weight ?? null;
+      if(id!=null && onhand!=null) mapById.set(String(id), onhand);
+      if(sku && onhand!=null) mapBySku.set(String(sku), onhand);
+      if(id!=null && weight!=null) mapByIdWeight.set(String(id), weight);
+      if(sku && weight!=null) mapBySkuWeight.set(String(sku), weight);
+    }
+
+    // common top-level arrays
+    const arrCandidates = ['inventario','inventarios','inventarioVariantes','inventario_por_variante','stocks','stock','stocksList','inventarioProductos','inventario_variantes','inventarios_por_variante'];
+    for(const k of arrCandidates){ if(Array.isArray(body[k])){ body[k].forEach(considerItem); } }
+
+    // search any array of objects that looks like inventory
+    for(const k of Object.keys(body)){
+      const v = body[k];
+      if(Array.isArray(v) && v.length>0 && typeof v[0] === 'object'){
+        // heuristic: element contains onhand/disponible or varianteId
+        const sample = v[0];
+        if(sample.onhand!=null || sample.disponible!=null || sample.variantId!=null || sample.varianteId!=null){ v.forEach(considerItem); }
+      }
+    }
+
+    // product-level inventories
+    if(product){
+      const pInv = product.inventario || product.inventarios || product.stock || product.stocks;
+      if(Array.isArray(pInv)) pInv.forEach(considerItem);
+    }
+
+    // fallback: check variants themselves for inventory fields
+    if(Array.isArray(variantes)){
+      variantes.forEach(v=>{
+        const id = v.id ?? v.varianteId ?? v.variantId;
+        const sku = v.sku;
+        const on = v.onhand ?? v.stock ?? v.disponible ?? v.available ?? null;
+        if(id!=null && on!=null) mapById.set(String(id), on);
+        if(sku && on!=null) mapBySku.set(String(sku), on);
+      });
+    }
+
+    return { byId: mapById, bySku: mapBySku, byIdWeight: mapByIdWeight, bySkuWeight: mapBySkuWeight };
+  }
+
+  function renderProduct(product, variantes, varianteDefault, inventoryMap){
+    const r = document.getElementById('result'); r.innerHTML = '';
+    const title = document.createElement('div'); title.className='box';
+    const name = product?.nombre ?? product?.title ?? product?.name ?? '—';
+
+    // categoría padre>hija
+    const parent = product?.categoriaPadre ?? product?.categoria_parent ?? product?.categoriaPrincipal ?? product?.categoria ?? tryGet(product,['categoriaPadre.nombre','categoriaPadreName','categoriaPadreName']);
+    const child = product?.categoriaHija ?? product?.categoria_child ?? tryGet(product,['categoriaHija.nombre','categoriaHijaName']);
+    const cat = child ? (String(parent||'') + ' > ' + String(child)) : String(parent||'');
+
+    title.innerHTML = `<h2 style="margin:0 0 6px 0">${escapeHtml(name)}</h2><div class="small muted">Categoría: ${escapeHtml(cat||'Sin categoría')}</div>`;
+    r.appendChild(title);
+
+    const tableBox = document.createElement('div'); tableBox.className='box';
+    const table = document.createElement('table');
+    table.innerHTML = '<thead><tr><th>Variante</th><th>Attributes (ordenado)</th><th>Precio</th><th>Stock (onhand)</th><th>Peso (kg)</th><th>Imágenes (#)</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    variantes.forEach((v,idx)=>{
+      const tr = document.createElement('tr');
+      const nameCell = document.createElement('td');
+      nameCell.textContent = v.sku ?? v.nombre ?? ('Variante #' + (idx+1));
+
+      const attrs = parseAttributes(v) || {};
+      const sorted = sortObject(attrs);
+      const attrCell = document.createElement('td');
+      const list = document.createElement('div'); list.style.whiteSpace='pre-wrap'; list.style.fontFamily='monospace'; list.style.maxHeight='220px'; list.style.overflow='auto';
+      // render as plain lines: key: value (no quotes, no commas)
+      const lines = [];
+      Object.keys(sorted).forEach(k => {
+        const val = sorted[k];
+        if(Array.isArray(val)){
+          val.forEach(it => { lines.push(k + ': ' + String(it)); });
+        } else if(typeof val === 'object'){
+          // flatten object to key.subkey: value
+          Object.keys(val).forEach(sub => { lines.push(k + '.' + sub + ': ' + String(val[sub])); });
+        } else {
+          lines.push(k + ': ' + String(val));
+        }
+      });
+      if(lines.length===0) { list.textContent = '-'; } else { list.textContent = lines.join('\n'); }
+      attrCell.appendChild(list);
+
+      // fallback: variante -> inventoryMap -> varianteDefault -> product-level
+      const pVal = findPrice(v) ?? (varianteDefault ? findPrice(varianteDefault) : null);
+      // stock: prefer inventoryMap lookup by id or sku
+      let stockVal = null;
+      try{
+        const id = v.id ?? v.varianteId ?? v.variantId;
+        const sku = v.sku ?? v.codigo ?? v.code;
+        if(inventoryMap){ if(id!=null && inventoryMap.byId.has(String(id))) stockVal = inventoryMap.byId.get(String(id));
+          else if(sku && inventoryMap.bySku.has(String(sku))) stockVal = inventoryMap.bySku.get(String(sku)); }
+      }catch(e){ }
+      if(stockVal==null) stockVal = findStock(v) ?? (varianteDefault ? findStock(varianteDefault) : null);
+
+      // weight: variante propia -> varianteDefault (no product-level)
+      let weightVal = findWeightKg(v);
+      if(weightVal==null && varianteDefault) weightVal = findWeightKg(varianteDefault);
+
+      const imgs = findImagesCount(v) || (varianteDefault ? findImagesCount(varianteDefault) : 0);
+
+      const priceCell = document.createElement('td'); priceCell.textContent = formatMoney(pVal);
+
+      const stockCell = document.createElement('td'); stockCell.textContent = (stockVal!=null ? stockVal : '-');
+
+      const weight = weightVal; const weightCell = document.createElement('td'); weightCell.textContent = (weight!=null? (Number(weight).toFixed(3) + ' kg') : '-');
+
+      const imgCell = document.createElement('td'); imgCell.textContent = imgs;
+
+      tr.appendChild(nameCell); tr.appendChild(attrCell); tr.appendChild(priceCell); tr.appendChild(stockCell); tr.appendChild(weightCell); tr.appendChild(imgCell);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody); tableBox.appendChild(table); r.appendChild(tableBox);
+  }
+
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c)); }
+
+  async function load(){
+    clearResult();
+    const url = document.getElementById('apiUrl').value.trim();
+    if(!url){ document.getElementById('result').innerHTML = '<div class="muted">Proporciona una URL válida.</div>'; return; }
+    document.getElementById('result').innerHTML = '<div class="muted">Cargando...</div>';
+    try{
+      const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!resp.ok){ document.getElementById('result').innerHTML = '<div class="muted">Error al consultar API: ' + resp.status + '</div>'; return; }
+      const body = await resp.json();
+      // Intenta detectar producto y variantes
+      const product = body.producto || body.product || tryGet(body,['data.producto','data.product']) || body;
+      let variantes = findVariants(body) || [];
+      // if variantes is empty, try product.variantes
+      if((!variantes || variantes.length===0) && product && Array.isArray(product.variantes)) variantes = product.variantes;
+
+      if(!product){ document.getElementById('result').innerHTML = '<div class="muted">No se pudo detectar el objeto producto en la respuesta.</div>'; return; }
+      const defaultVar = findDefaultVariant(variantes, product, body);
+      const inventoryMap = buildInventoryMap(body, product, variantes);
+      renderProduct(product, variantes, defaultVar, inventoryMap);
+    }catch(e){ console.error(e); document.getElementById('result').innerHTML = '<div class="muted">Error al procesar la respuesta: '+ (e.message||e) +'</div>'; }
+  }
+
+  document.getElementById('btnFetch').addEventListener('click', load);
+  // allow Enter in input
+  document.getElementById('apiUrl').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ load(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Registros - SomosTiendaMas</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #1565c0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(21,101,192,0.12);
+            padding: 32px 24px;
+        }
+        h2 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        label {
+            font-weight: 500;
+        }
+        select {
+            padding: 8px 10px;
+            border: 1px solid #90caf9;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #f5faff;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+            background: #f5faff;
+        }
+        th, td {
+            border: 1px solid #90caf9;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 0.98rem;
+        }
+        th {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .error {
+            color: #e53935;
+            margin-top: 12px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px 4px;
+            }
+            th, td {
+                font-size: 0.92rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Consulta de Registros</h2>
+        <div class="form-group">
+            <label for="tipoConsulta">Selecciona qué deseas ver:</label>
+            <select id="tipoConsulta">
+                <option value="">Selecciona...</option>
+                <option value="usuarios">Usuarios</option>
+                <option value="perfiles-empresa">Perfiles Empresa</option>
+                <option value="direcciones">Direcciones</option>
+                <option value="telefonos">Teléfonos</option>
+            </select>
+        </div>
+        <div id="tablaResultados"></div>
+        <div id="errorMsg"></div>
+    </div>
+    <script>
+        const tipoConsulta = document.getElementById('tipoConsulta');
+        const tablaResultados = document.getElementById('tablaResultados');
+        const errorMsg = document.getElementById('errorMsg');
+
+        tipoConsulta.addEventListener('change', async function() {
+            tablaResultados.innerHTML = '';
+            errorMsg.textContent = '';
+            if (!this.value) return;
+            let url = '/api/admin/' + this.value;
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Error al consultar los datos');
+                const data = await res.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    tablaResultados.innerHTML = '<p>No hay datos para mostrar.</p>';
+                    return;
+                }
+                renderTable(data);
+            } catch (err) {
+                errorMsg.textContent = 'No se pudo obtener los datos: ' + err.message;
+            }
+        });
+
+        function renderTable(data) {
+            const keys = Object.keys(data[0]);
+            let html = '<table><thead><tr>';
+            keys.forEach(k => {
+                html += `<th>${k}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr>';
+                keys.forEach(k => {
+                    html += `<td>${row[k] !== null ? row[k] : ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            tablaResultados.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

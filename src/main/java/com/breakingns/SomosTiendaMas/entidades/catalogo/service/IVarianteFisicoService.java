@@ -5,5 +5,6 @@ import com.breakingns.SomosTiendaMas.entidades.catalogo.dto.producto_centralizad
 public interface IVarianteFisicoService {
     PhysicalPropertiesDTO obtenerPorVarianteId(Long varianteId);
     PhysicalPropertiesDTO crearOActualizarPorVariante(Long varianteId, PhysicalPropertiesDTO dto);
-    void eliminarPorVarianteId(Long varianteId);
+    void borradoLogicoPorVarianteId(Long varianteId);
+    void borradoFisicoPorVarianteId(Long varianteId);
 }

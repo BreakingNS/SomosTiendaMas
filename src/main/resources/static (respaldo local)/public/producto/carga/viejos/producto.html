@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Subir Producto — Producto</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--primary-orange: #FF6B35;
+			--primary-blue: #004E89;
+			--light-gray: #F8F9FA;
+			--muted: #e6e7ea;
+		}
+		body { font-family: 'Inter', sans-serif; background:var(--light-gray); color:#222; margin:0; padding:24px; }
+		/* marca / header */
+		.site-brand-title {
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			color: #1f2937;
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+			font-size: 1.25rem;
+			line-height: 1.1;
+		}
+		@media (min-width: 640px) { .site-brand-title { font-size: 1.875rem; } }
+		.site-brand-accent-orange { color: var(--primary-orange); }
+		.site-brand-accent-blue   { color: var(--primary-blue); }
+
+		/* progress card igual que categorias.html */
+		.progress-wrap { max-width:900px; margin:22px auto; padding:18px 12px; background:white; border-radius:10px; box-shadow:0 6px 20px rgba(2,6,23,0.04); }
+		.progress { 
+			display:flex; 
+			gap:0; 
+			align-items:center; 
+			justify-content:space-between; 
+			position:relative; 
+			padding:24px 8px;
+			list-style: none;
+			padding-left: 0;
+			margin: 0;
+		}
+		.step { position:relative; flex:1; text-align:center; padding:0 6px; z-index:2; }
+		.step .circle { width:40px; height:40px; border-radius:50%; display:inline-block; border:3px solid var(--muted); background:white; box-sizing:border-box; }
+		.step .label { display:block; margin-top:10px; font-weight:600; color:#222; font-size:14px; }
+		.step:not(:last-child)::after {
+			content:"";
+			position:absolute;
+			top:25%;
+			left:60%;
+			right:-40%;
+			height:6px;
+			background:var(--muted);
+			transform:translateY(-50%);
+			z-index:1;
+			border-radius:4px;
+		}
+		.step.completed .circle,
+		.step.active .circle { background:var(--primary-orange); border-color:var(--primary-orange); box-shadow:0 0 0 6px rgba(255,107,53,0.08); }
+		.step.completed:not(:last-child)::after { background: linear-gradient(90deg,var(--primary-orange), #e55627); }
+		.step.active .circle { transform:scale(1.05); }
+
+		/* tarjeta de contenido (espacio para formulario de producto) */
+		.content-card {
+			max-width: 1100px; /* aumentado */
+			margin: 22px auto;
+			background: #ffffff;
+			border-radius: 10px;
+			padding: 28px;
+			box-shadow: 0 8px 30px rgba(2,6,23,0.06);
+			box-sizing: border-box;
+			min-height: 320px; /* un poco más alto */
+		}
+
+		/* ==== NUEVO: estilos del botón primario (copiados de categoria) ==== */
+		.primary-btn {
+			background: linear-gradient(90deg, var(--primary-orange), #e55627);
+			color: #fff;
+			padding: 10px 18px;
+			border-radius: 8px;
+			border: none;
+			font-weight: 700;
+			cursor: pointer;
+			box-shadow: 0 6px 18px rgba(255,107,53,0.12);
+		}
+		.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(229,86,39,0.14); }
+		.primary-btn[disabled] { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+
+		/* ==== NUEVO: estilos para formulario de producto ==== */
+		.form-grid { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+		.form-col { flex:1 1 420px; min-width:280px; }
+		.form-col.right { max-width:340px; }
+		.field { margin-bottom:12px; }
+		.field label { display:block; font-weight:600; margin-bottom:6px; font-size:13px; }
+		.input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e6e7ea; box-sizing:border-box; font-size:14px; }
+		.variants { display:flex; flex-direction:column; gap:8px; }
+		.variant-row { display:flex; gap:8px; align-items:center; }
+		.variant-row input { flex:1; }
+		.small-btn { padding:6px 10px; border-radius:8px; background:#f1f3f5; border:1px solid #e6e7ea; cursor:pointer; font-weight:600; }
+		.images-preview { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+		.thumb { position:relative; width:90px; height:90px; border-radius:8px; overflow:hidden; border:2px solid transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; background:#fafafa; }
+		.thumb img { max-width:100%; max-height:100%; object-fit:cover; display:block; }
+		.thumb.selected { border-color: var(--primary-orange); box-shadow:0 6px 16px rgba(255,107,53,0.12); }
+		.thumb .remove { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; }
+		.char-list { display:flex; flex-direction:column; gap:8px; }
+		.char-row { display:flex; gap:8px; align-items:center; }
+		.char-row input[type="text"] { flex:1; }
+		.add-char { display:inline-flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer; color:var(--primary-orange); font-weight:700; }
+
+		/* Autocomplete dropdown */
+		.autocomplete { position:relative; }
+		.suggestions {
+			position:absolute;
+			left:0; right:0;
+			background:white;
+			border:1px solid var(--muted);
+			border-radius:8px;
+			max-height:240px;
+			overflow:auto;
+			z-index:30;
+			box-shadow:0 8px 24px rgba(2,6,23,0.08);
+		}
+		.suggestions div { padding:8px 10px; cursor:pointer; }
+		.suggestions div:hover { background:#f6f7f8; }
+
+		/* Descripcion */
+		.textarea { min-height:120px; resize:vertical; }
+
+		/* Drag & drop visual */
+		.thumb.dragging { opacity:0.5; transform:scale(0.98); }
+
+		/* NUEVO: animación suave al reordenar (FLIP) */
+		.thumb {
+			transition: transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 150ms;
+			will-change: transform;
+		}
+	</style>
+</head>
+<body>
+	<header class="mb-6 md:mb-8 text-center">
+		<h1 class="site-brand-title"><span class="site-brand-accent-orange">Tienda</span><span class="site-brand-accent-blue">Mas</span></h1>
+		<p class="text-gray-600 text-xs sm:text-sm mt-2">Agregar tu producto — paso Producto</p>
+	</header>
+
+	<main class="progress-wrap">
+		<ol class="progress" aria-label="Progreso de carga de producto">
+			<li class="step completed">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Categoria</span>
+			</li>
+			<li class="step active" aria-current="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Producto</span>
+			</li>
+			<li class="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Caracteristicas</span>
+			</li>
+			<li class="step">
+				<span class="circle" aria-hidden="true"></span>
+				<span class="label">Precio</span>
+			</li>
+		</ol>
+	</main>
+
+	<!-- tarjeta blanca para contenido del paso Producto -->
+	<div class="content-card" aria-label="Contenido paso Producto">
+		<form id="productoForm" class="form-grid" onsubmit="return false;" aria-label="Formulario de producto">
+			<!-- Columna izquierda: Producto / Variantes / Imagenes -->
+			<div class="form-col">
+				<div class="field">
+					<label for="productoInput">Producto (genérico)</label>
+					<div class="autocomplete">
+						<input id="productoInput" class="input" type="text" placeholder="Escriba o seleccione un producto..." autocomplete="off" />
+						<div id="productoSuggestions" class="suggestions" style="display:none" role="listbox"></div>
+					</div>
+					<small style="color:#666;">Si el producto ya existe se mostrarán coincidencias desde la base de datos.</small>
+				</div>
+
+				<div class="field">
+					<label>Variantes</label>
+					<div id="variants" class="variants" aria-live="polite">
+						<!-- filas de variantes dinámicas -->
+					</div>
+					<button id="addVariantBtn" class="small-btn" type="button">+ Agregar Variante</button>
+				</div>
+
+				<div class="field">
+					<label>Imágenes (arrastre para ordenar - la primera será portada)</label>
+					<input id="imagesInput" class="input" type="file" accept="image/*" multiple />
+					<div id="imagesPreview" class="images-preview" aria-live="polite"></div>
+					<small style="display:block;margin-top:6px;color:#666;">Arrastre las miniaturas para reordenar. La primera imagen será la portada.</small>
+				</div>
+			</div>
+
+			<!-- Columna derecha: Título arriba, descripción y Características -->
+			<div class="form-col right" aria-label="Panel de caracteristicas">
+				<div style="display:flex;flex-direction:column;gap:8px;">
+					<div class="field">
+						<label for="tituloInput">Título de la oferta</label>
+						<input id="tituloInput" class="input" type="text" placeholder="Ej: Samsung S25 ultra 256gb 8gb ram blue sky reacondicionado" />
+					</div>
+
+					<div class="field">
+						<label for="descripcionInput">Descripción <small style="color:#666">(máx <span id="descMax">1000</span> caracteres)</small></label>
+						<textarea id="descripcionInput" class="input textarea" maxlength="1000" placeholder="Describe el estado, detalles, accesorios incluidos..."></textarea>
+						<div style="text-align:right;font-size:13px;color:#666;margin-top:6px;"><span id="descCount">0</span>/1000</div>
+					</div>
+				</div>
+
+				<h3 style="margin-top:8px;">Caracteristicas</h3>
+				<div id="charList" class="char-list" role="group" aria-label="Características predeterminadas"></div>
+				<button id="addCharBtn" class="add-char" type="button">+ Nueva Caracteristica</button>
+
+				<!-- acciones -->
+				<div style="display:flex; justify-content:space-between; gap:12px; margin-top:20px;">
+					<button id="backToCategoria" class="primary-btn" type="button" aria-label="Anterior">Anterior</button>
+					<button id="saveAndNext" class="primary-btn" type="button" aria-label="Siguiente">Siguiente</button>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<script>
+		// Datos de ejemplo
+		const sampleProducts = ['Samsung A75','Samsung Pocket','Nokia 1100','Motorola G1','Xiaomi Mi A1'];
+
+		const defaultCharacteristics = {
+			'Electronica|Celulares': [
+				{ key: 'Pantalla', type: 'text' },
+				{ key: 'Memoria interna', type: 'text' },
+				{ key: 'RAM', type: 'text' },
+				{ key: 'Almacenamiento expandible', type: 'text' },
+				{ key: 'Cargador incluido', type: 'boolean' },
+				{ key: 'Carga rápida', type: 'boolean' },
+				{ key: 'NFC', type: 'boolean' }
+			]
+		};
+
+		// Inicializacion DOM
+		const productoInput = document.getElementById('productoInput');
+		const productoSuggestions = document.getElementById('productoSuggestions');
+		const variantsEl = document.getElementById('variants');
+		const addVariantBtn = document.getElementById('addVariantBtn');
+		const imagesInput = document.getElementById('imagesInput');
+		const imagesPreview = document.getElementById('imagesPreview');
+		const charList = document.getElementById('charList');
+		const addCharBtn = document.getElementById('addCharBtn');
+		const tituloInput = document.getElementById('tituloInput');
+		const descripcionInput = document.getElementById('descripcionInput');
+		const descCount = document.getElementById('descCount');
+		const saveAndNext = document.getElementById('saveAndNext');
+		const backToCategoria = document.getElementById('backToCategoria');
+
+		// Estado
+		let selectedProduct = null; // objeto { id, name } si viene del backend
+		let imagesStore = []; // {file, url, id}
+		let idCounter = 0;
+
+		// UTIL: debounce
+		function debounce(fn, wait = 300){ let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), wait); }; }
+
+		// AUTOCOMPLETE PRODUCTOS (consulta al backend)
+		async function fetchProductos(query){
+			if(!query) return [];
+			try {
+				// Endpoint esperado: /api/productos?query=...
+				const res = await fetch(`/api/productos?query=${encodeURIComponent(query)}`);
+				if(!res.ok) return [];
+				return await res.json(); // esperar [{id,name}, ...]
+			} catch(e){ console.warn('fetchProductos', e); return []; }
+		}
+
+		const showProductoSuggestions = debounce(async (q) => {
+			const list = await fetchProductos(q);
+			if(!q || list.length === 0){ productoSuggestions.style.display = 'none'; return; }
+			productoSuggestions.innerHTML = '';
+			for(const p of list){
+				const d = document.createElement('div');
+				d.textContent = p.name;
+				d.dataset.id = p.id;
+				d.addEventListener('click', () => {
+					productoInput.value = p.name;
+					selectedProduct = { id: p.id, name: p.name };
+					productoSuggestions.style.display = 'none';
+					// al seleccionar producto, recargar sugerencias de variantes si se desea
+					loadVariantSuggestionsForSelectedProduct();
+				});
+				productoSuggestions.appendChild(d);
+			}
+			productoSuggestions.style.display = 'block';
+		}, 250);
+
+		productoInput.addEventListener('input', (e) => {
+			const q = e.target.value.trim();
+			selectedProduct = null; // si usuario escribe, no hay producto seleccionado hasta elegir
+			if(!q){ productoSuggestions.style.display = 'none'; return; }
+			showProductoSuggestions(q);
+		});
+		// cerrar suggestions al hacer click fuera
+		document.addEventListener('click', (ev) => {
+			if(!productoSuggestions.contains(ev.target) && ev.target !== productoInput){
+				productoSuggestions.style.display = 'none';
+			}
+		});
+
+		// VARIANTAS: agregar fila (con input que puede mostrar sugerencias si hay producto seleccionado)
+		function addVariantRow(value = '') {
+			const row = document.createElement('div');
+			row.className = 'variant-row';
+			row.innerHTML = `
+				<div style="flex:1;position:relative;">
+					<input class="input variant-input" type="text" placeholder="Ej: 256GB / 8GB RAM / Blue" value="${value}" />
+					<div class="suggestions" style="display:none"></div>
+				</div>
+				<button type="button" class="small-btn" aria-label="Eliminar variante">Eliminar</button>
+			`;
+			const removeBtn = row.querySelector('button');
+			removeBtn.addEventListener('click', () => row.remove());
+
+			// suggestions para variante
+			const vinput = row.querySelector('.variant-input');
+			const suggs = row.querySelector('.suggestions');
+
+			const fetchVariantSuggestions = debounce(async (q) => {
+				if(!selectedProduct || !selectedProduct.id || !q) { suggs.style.display = 'none'; return; }
+				try {
+					// Endpoint esperado: /api/variantes?productId=...&query=...
+					const res = await fetch(`/api/variantes?productId=${encodeURIComponent(selectedProduct.id)}&query=${encodeURIComponent(q)}`);
+					if(!res.ok) { suggs.style.display = 'none'; return; }
+					const list = await res.json(); // [{id,name},...]
+					if(!list.length){ suggs.style.display = 'none'; return; }
+					suggs.innerHTML = '';
+					for(const it of list){
+						const d = document.createElement('div'); d.textContent = it.name;
+						d.addEventListener('click', () => { vinput.value = it.name; suggs.style.display='none'; });
+						suggs.appendChild(d);
+					}
+					suggs.style.display = 'block';
+				} catch(e){ console.warn('fetchVariantSuggestions', e); suggs.style.display = 'none'; }
+			}, 200);
+
+			vinput.addEventListener('input', (ev) => {
+				const q = ev.target.value.trim();
+				if(!q){ suggs.style.display = 'none'; return; }
+				fetchVariantSuggestions(q);
+			});
+			// cerrar sugerencias al click fuera
+			document.addEventListener('click', (ev) => {
+				if(!row.contains(ev.target)) suggs.style.display = 'none';
+			});
+
+			variantsEl.appendChild(row);
+		}
+		addVariantBtn.addEventListener('click', () => addVariantRow());
+
+		// Cuando se selecciona producto desde autocomplete, intentar precargar una variante ejemplo o limpiar
+		function loadVariantSuggestionsForSelectedProduct(){
+			// Al seleccionar producto, puede opcionalmente agregar una variante vacía si no hay
+			if(variantsEl.children.length === 0) addVariantRow('');
+		}
+
+		// DESCRIPCION contador
+		descCount.textContent = '0';
+		descripcionInput.addEventListener('input', () => {
+			descCount.textContent = descripcionInput.value.length.toString();
+		});
+
+		// IMAGENES: preview, eliminar y DnD reorder
+		function renderImages() {
+			imagesPreview.innerHTML = '';
+			for(const img of imagesStore){
+				const div = document.createElement('div');
+				div.className = 'thumb';
+				div.draggable = true;
+				div.dataset.id = img.id;
+				div.innerHTML = `
+					<img src="${img.url}" alt="Imagen ${img.id}" />
+					<div class="remove" title="Eliminar">×</div>
+				`;
+				// DnD handlers
+				div.addEventListener('dragstart', (ev) => {
+					div.classList.add('dragging');
+					ev.dataTransfer.setData('text/plain', String(img.id));
+					ev.dataTransfer.effectAllowed = 'move';
+				});
+				div.addEventListener('dragend', () => { div.classList.remove('dragging'); });
+
+				div.addEventListener('dragover', (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; });
+				div.addEventListener('drop', (ev) => {
+					ev.preventDefault();
+					const draggedId = Number(ev.dataTransfer.getData('text/plain'));
+					const targetId = img.id;
+					reorderImages(draggedId, targetId);
+				});
+
+				// remove handler
+				div.querySelector('.remove').addEventListener('click', (ev) => {
+					ev.stopPropagation();
+					imagesStore = imagesStore.filter(x => x.id !== img.id);
+					URL.revokeObjectURL(img.url);
+					renderImages();
+				});
+				imagesPreview.appendChild(div);
+			}
+		}
+
+		// Reemplazar reorderImages por versión FLIP para animación suave
+		function reorderImages(draggedId, targetId){
+			// 1) capturar posiciones antes del cambio
+			const prevRects = new Map();
+			imagesPreview.querySelectorAll('.thumb').forEach(el => {
+				prevRects.set(Number(el.dataset.id), el.getBoundingClientRect());
+			});
+
+			// 2) reordenar el array de imágenes
+			const fromIndex = imagesStore.findIndex(i => i.id === draggedId);
+			const toIndex = imagesStore.findIndex(i => i.id === targetId);
+			if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+			const [item] = imagesStore.splice(fromIndex, 1);
+			imagesStore.splice(toIndex, 0, item);
+
+			// 3) renderizar en nuevo orden (DOM nuevo)
+			renderImages();
+
+			// 4) aplicar transform inverso y animar hacia 0 (FLIP)
+			imagesPreview.querySelectorAll('.thumb').forEach(el => {
+				const id = Number(el.dataset.id);
+				const prev = prevRects.get(id);
+				if (!prev) return;
+				const newRect = el.getBoundingClientRect();
+				const dx = prev.left - newRect.left;
+				const dy = prev.top - newRect.top;
+				if (dx === 0 && dy === 0) return;
+
+				// aplicar desplazamiento inverso inmediatamente
+				el.style.transition = 'none';
+				el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+				// forzar reflow y luego animar al lugar (transform -> '')
+				requestAnimationFrame(() => {
+					// permitir la animación definida en CSS (.thumb transition)
+					el.style.transition = ''; // usa la transición CSS definida
+					el.style.transform = '';
+				});
+			});
+		}
+
+		imagesInput.addEventListener('change', (e) => {
+			const files = Array.from(e.target.files || []);
+			for(const f of files){
+				if(!f.type.startsWith('image/')) continue;
+				const url = URL.createObjectURL(f);
+				const id = ++idCounter;
+				imagesStore.push({ file: f, url, id });
+			}
+			renderImages();
+			imagesInput.value = '';
+		});
+
+		// Guardar y navegar (validaciones actualizadas)
+		saveAndNext.addEventListener('click', () => {
+			if(!tituloInput.value.trim()){
+				alert('Por favor ingrese un título para la publicación.');
+				return;
+			}
+			if(imagesStore.length === 0){
+				alert('Por favor agregue al menos una imagen.');
+				return;
+			}
+			// variantes
+			const variants = Array.from(variantsEl.querySelectorAll('.variant-row .variant-input')).map(i=>i.value).filter(v=>v.trim());
+			// caracteristicas
+			const chars = Array.from(charList.querySelectorAll('.char-row')).map(r => {
+				const inputs = r.querySelectorAll('input');
+				return { key: inputs[0].value, value: inputs[1].value };
+			}).filter(c => c.key && c.key.trim());
+
+			const productData = {
+				producto: selectedProduct ? { id: selectedProduct.id, name: selectedProduct.name } : { id: null, name: productoInput.value.trim() },
+				variantes: variants,
+				titulo: tituloInput.value.trim(),
+				descripcion: descripcionInput.value.trim(),
+				imagenes: imagesStore.map(i => ({ name: i.file.name, id: i.id })), // backend deberá usar el orden del array; la primera es portada
+				caracteristicas: chars,
+				createdAt: new Date().toISOString()
+			};
+
+			try { sessionStorage.setItem('publProduct', JSON.stringify(productData)); } catch(e){ console.warn(e); }
+			window.location.href = 'https://localhost:8443/public/producto/caracteristicas.html';
+		});
+
+		// Back
+		backToCategoria.addEventListener('click', () => {
+			window.location.href = 'https://localhost:8443/public/producto/categorias.html';
+		});
+
+		// Características: reutiliza función anterior (si existe) para cargar defaults según categoría/subcategoria
+		function addCharacteristicRow(name = '', value = '') {
+			const row = document.createElement('div');
+			row.className = 'char-row';
+			row.innerHTML = `
+				<input type="text" class="input" placeholder="Característica (ej: Pantalla)" value="${name}" />
+				<input type="text" class="input" placeholder="Valor (ej: 6.5'' / Si / 128GB)" value="${value}" />
+				<button type="button" class="small-btn" aria-label="Eliminar caracteristica">Eliminar</button>
+			`;
+			const remove = row.querySelector('button');
+			remove.addEventListener('click', () => row.remove());
+			charList.appendChild(row);
+		}
+		addCharBtn.addEventListener('click', () => addCharacteristicRow());
+
+		// Inicialización: agregar una variante vacía por defecto
+		addVariantRow('');
+	</script>
+</body>
+</html>

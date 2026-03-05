@@ -9,11 +9,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/dev/api/variantes")
-public class VarianteOpcionControllerDesarrollo {
+public class VarianteOpcionValorControllerDesarrollo {
 
     private final IVarianteOpcionService service;
 
-    public VarianteOpcionControllerDesarrollo(IVarianteOpcionService service) {
+    public VarianteOpcionValorControllerDesarrollo(IVarianteOpcionService service) {
         this.service = service;
     }
 

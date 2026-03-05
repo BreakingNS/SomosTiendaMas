@@ -1,0 +1,59 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; margin-top: 80px; }
+        h2 { font-size: 2em; margin-bottom: 30px; }
+        form { display: inline-block; text-align: left; }
+        label { display: block; margin-top: 15px; }
+        input { width: 250px; padding: 8px; margin-top: 5px; }
+        .btn { width: 100%; margin-top: 25px; padding: 10px; font-size: 1em; background: #1976d2; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+        .btn:hover { background: #1565c0; }
+        .links { margin-top: 20px; }
+        .links a { margin: 0 10px; color: #1976d2; text-decoration: none; }
+        .links a:hover { text-decoration: underline; }
+    </style>
+</head>
+    <body>
+        <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+        <label for="username">Usuario o Email:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" name="password" required>
+
+        <button class="btn" type="submit">Ingresar</button>
+    </form>
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const response = await fetch('/api/auth/public/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+            // Aquí puedes guardar el token, redirigir, etc.
+            alert('Login exitoso');
+            // Ejemplo: window.location.href = "index.html";
+        } else {
+            const error = await response.json();
+            alert(error.message || 'Usuario o contraseña incorrectos');
+        }
+    });
+    </script>
+    <div class="links">
+        <a href="index.html">Volver al inicio</a>
+        <a href="registro.html">Registrarse</a>
+        <a href="recuperar.html">¿Olvidaste tu contraseña?</a>
+    </div>
+</body>
+</html>

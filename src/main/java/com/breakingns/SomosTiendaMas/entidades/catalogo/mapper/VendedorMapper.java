@@ -17,10 +17,10 @@ public final class VendedorMapper {
         if (v == null) return null;
         return VendedorResponseDTO.builder()
                 .id(v.getId())
-                .userId(v.getUserId())
-                .nombre(v.getNombre())
-                .descripcion(v.getDescripcion())
-                .rating(v.getRating())
+                .userId(v.getUsuarioId() != null ? v.getUsuarioId() : v.getEmpresaId())
+                .nombre(v.getDisplayName() != null ? v.getDisplayName() : v.getNombreLegal())
+                .descripcion(extractDescripcionFromMetadata(v.getMetadata()))
+                .rating(null)
                 .createdAt(v.getCreatedAt())
                 .updatedAt(v.getUpdatedAt())
                 .deletedAt(v.getDeletedAt())
@@ -31,8 +31,8 @@ public final class VendedorMapper {
         if (v == null) return null;
         VendedorResumenDTO r = new VendedorResumenDTO();
         r.setId(v.getId());
-        r.setNombre(v.getNombre());
-        r.setRating(v.getRating());
+        r.setNombre(v.getDisplayName() != null ? v.getDisplayName() : v.getNombreLegal());
+        r.setRating(null);
         return r;
     }
 
@@ -44,17 +44,46 @@ public final class VendedorMapper {
     public static Vendedor fromCrear(VendedorCrearDTO dto) {
         if (dto == null) return null;
         Vendedor v = new Vendedor();
-        v.setUserId(dto.getUserId());
-        v.setNombre(dto.getNombre());
-        v.setDescripcion(dto.getDescripcion());
-        v.setRating(dto.getRating());
+        // map DTO userId -> usuarioId
+        v.setUsuarioId(dto.getUserId());
+        // set both legal/display names from provided nombre
+        v.setNombreLegal(dto.getNombre());
+        v.setDisplayName(dto.getNombre());
+        // store descripcion inside metadata as simple JSON {"descripcion":"..."}
+        if (dto.getDescripcion() != null) {
+            v.setMetadata("{\"descripcion\":\"" + escapeJson(dto.getDescripcion()) + "\"}");
+        }
         return v;
     }
 
     public static void applyActualizar(VendedorActualizarDTO dto, Vendedor entidad) {
         if (dto == null || entidad == null) return;
-        if (dto.getNombre() != null) entidad.setNombre(dto.getNombre());
-        if (dto.getDescripcion() != null) entidad.setDescripcion(dto.getDescripcion());
-        if (dto.getRating() != null) entidad.setRating(dto.getRating());
+        if (dto.getNombre() != null) {
+            entidad.setDisplayName(dto.getNombre());
+            entidad.setNombreLegal(dto.getNombre());
+        }
+        if (dto.getDescripcion() != null) {
+            entidad.setMetadata("{\"descripcion\":\"" + escapeJson(dto.getDescripcion()) + "\"}");
+        }
+    }
+
+    private static String extractDescripcionFromMetadata(String metadata) {
+        if (metadata == null) return null;
+        // very small heuristic: look for a simple {"descripcion":"..."} pattern
+        try {
+            int idx = metadata.indexOf("\"descripcion\":");
+            if (idx >= 0) {
+                int patternLen = "\"descripcion\":".length();
+                int start = metadata.indexOf('"', idx + patternLen) + 1;
+                int end = metadata.indexOf('"', start);
+                if (start > 0 && end > start) return metadata.substring(start, end);
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private static String escapeJson(String s) {
+        if (s == null) return null;
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
     }
 }

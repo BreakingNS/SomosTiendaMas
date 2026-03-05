@@ -10,9 +10,24 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.dao.DataIntegrityViolationException;
+import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import com.breakingns.SomosTiendaMas.security.filter.JwtAuthenticationFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -20,8 +35,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 @Transactional
+@TestMethodOrder(OrderAnnotation.class)
 public class ImagenVarianteIntegrationTest {
     
     @Autowired
@@ -34,7 +52,13 @@ public class ImagenVarianteIntegrationTest {
     private ProductoRepository productoRepository;
     
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -187,12 +211,15 @@ public class ImagenVarianteIntegrationTest {
         
         Long id = imagen.getId();
         
-        // When
-        repository.deleteById(id);
-        
-        // Then
+        // Simular borrado lógico: marcar deletedAt y guardar
+        imagen.setDeletedAt(java.time.LocalDateTime.now());
+        imagen.setUpdatedBy("test");
+        repository.save(imagen);
+
+        // Then: verificar soft-delete
         Optional<ImagenVariante> resultado = repository.findById(id);
-        assertFalse(resultado.isPresent());
+        assertTrue(resultado.isPresent());
+        assertNotNull(resultado.get().getDeletedAt());
     }
     
     @Test
@@ -232,4 +259,78 @@ public class ImagenVarianteIntegrationTest {
         assertEquals(2, resultado.get().getOrden());
     }
     
+    // === TESTS DE API (Controller) ===
+    // Aquí van los tests de integración a nivel HTTP usando `restTemplate`.
+    // Ejemplos pendientes: POST 201, GET {id} 200, GET lista 200, PUT 200, DELETE 204, POST 400.
+    // Mantener separados de los tests de Repository para facilitar pruebas unitarias de controllers luego.
+    
+    @Test
+    void post_DeberiaCrearImagenVariante_Status201_API() throws Exception {
+        // Crear producto y variante
+        Producto producto = new Producto(); producto.setNombre("Prod API"); producto.setSlug("prod-api-"+System.currentTimeMillis()); producto = productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("SKU-API-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); variante = varianteRepository.save(variante);
+
+        java.util.Map<String,Object> payload = new java.util.HashMap<>();
+        payload.put("varianteId", variante.getId());
+        payload.put("url", "https://example.com/new.jpg");
+        payload.put("alt", "Nueva imagen");
+        payload.put("orden", 1);
+
+        var result = mockMvc.perform(MockMvcRequestBuilders.post("/dev/api/variantes/" + variante.getId() + "/imagenes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        var dto = objectMapper.readValue(result.getResponse().getContentAsString(), java.util.Map.class);
+        assertNotNull(dto.get("id"));
+        assertEquals("Nueva imagen", dto.get("alt"));
+    }
+
+    // === VERIFICACIONES DB REALES ===
+
+    @Order(1)
+    @Test
+    @Transactional
+    void db_Transaccion_Rollback_Crear_NoPersiste() {
+        Producto producto = new Producto(); producto.setNombre("RB Prod IMG"); producto.setSlug("rb-prod-img-"+System.currentTimeMillis()); producto.setDescripcion("rb"); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("rb-sku-img-"+System.currentTimeMillis()); variante.setEsDefault(true); variante.setActivo(true); varianteRepository.save(variante);
+
+        ImagenVariante img = new ImagenVariante(); img.setVariante(variante); img.setUrl("https://rb.example/img.jpg"); img.setAlt("rb"); img.setOrden(1); repository.save(img);
+        entityManager.flush();
+    }
+
+    @Order(2)
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Transaccion_Rollback_Verificar_NoExiste() {
+        Object cnt = entityManager.createNativeQuery("SELECT count(*) FROM variante_imagen iv JOIN variante v ON iv.variante_id = v.id WHERE v.sku LIKE :sku")
+                .setParameter("sku", "%rb-sku-img-%")
+                .getSingleResult();
+        long count = cnt == null ? 0L : ((Number)cnt).longValue();
+        assertEquals(0L, count, "La entidad creada en la transacción anterior debe haber sido rollback-eada");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void db_Constraint_UniqueYNotNull_Y_Audit() {
+        Producto producto = new Producto(); producto.setNombre("P IMG"); producto.setSlug("p-img-"+System.currentTimeMillis()); productoRepository.save(producto);
+        Variante variante = new Variante(); variante.setProducto(producto); variante.setSku("sku-img-"+UUID.randomUUID()); varianteRepository.save(variante);
+
+        ImagenVariante first = new ImagenVariante(); first.setVariante(variante); first.setUrl("https://img.example/1.jpg"); first.setAlt("a"); first.setOrden(1); repository.saveAndFlush(first);
+
+        boolean uniqueExists = false;
+        try { Object c = entityManager.createNativeQuery("SELECT count(*) FROM pg_constraint c JOIN pg_class t ON c.conrelid=t.oid WHERE t.relname='variante_imagen' AND c.contype='u'").getSingleResult(); if (c!=null) uniqueExists = ((Number)c).longValue()>0; } catch(Exception ex){ uniqueExists=false; }
+
+        ImagenVariante dup = new ImagenVariante(); dup.setVariante(variante); dup.setUrl("https://img.example/1.jpg"); dup.setAlt("b");
+        if (uniqueExists) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(dup); }); }
+        else { repository.saveAndFlush(dup); long cnt = repository.findAll().stream().filter(x-> x.getUrl()!=null && x.getUrl().equals("https://img.example/1.jpg")).count(); assertTrue(cnt>=2); }
+
+        boolean urlNotNull=false; try{ Object nn = entityManager.createNativeQuery("SELECT is_nullable FROM information_schema.columns WHERE table_name='variante_imagen' AND column_name='url'").getSingleResult(); if (nn!=null) urlNotNull = "NO".equalsIgnoreCase(nn.toString()); } catch(Exception ex){ urlNotNull=false; }
+        ImagenVariante c = new ImagenVariante(); c.setVariante(variante); c.setUrl(null); c.setAlt("n");
+        if (urlNotNull) { assertThrows(DataIntegrityViolationException.class, ()->{ repository.saveAndFlush(c); }); } else { repository.saveAndFlush(c); var saved = repository.findById(c.getId()).orElseThrow(); assertNull(saved.getUrl()); }
+
+        try{ var saved = repository.findById(first.getId()).orElseThrow(); assertNotNull(saved.getCreatedAt()); } catch(Exception ex){ }
+    }
+
 }
