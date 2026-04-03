@@ -1,10 +1,10 @@
-package com.breakingns.SomosTiendaMas.entidades.perfil_usuario.controller;
+package com.breakingns.SomosTiendaMas.entidades.perfil.controller;
 
 import com.breakingns.SomosTiendaMas.auth.model.UserAuthDetails;
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.registrarDTO.PerfilUsuarioCreateDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.dto.PerfilUsuarioDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.dto.PerfilUsuarioResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.service.IPerfilUsuarioService;
+import com.breakingns.SomosTiendaMas.entidades.perfil.dto.PerfilUsuarioDTO;
+import com.breakingns.SomosTiendaMas.entidades.perfil.dto.PerfilUsuarioResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.perfil.service.IPerfilUsuarioService;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import com.breakingns.SomosTiendaMas.entidades.usuario.service.UsuarioServiceImpl;
 

@@ -5,8 +5,8 @@ import com.breakingns.SomosTiendaMas.auth.model.RefreshToken;
 import com.breakingns.SomosTiendaMas.auth.model.Rol;
 import com.breakingns.SomosTiendaMas.auth.model.SesionActiva;
 import com.breakingns.SomosTiendaMas.auth.model.TokenEmitido;
+import com.breakingns.SomosTiendaMas.entidades.perfil.model.Perfil;
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
 import com.breakingns.SomosTiendaMas.model.Carrito;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -26,6 +26,13 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+import jakarta.persistence.EntityListeners;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,6 +41,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter @Setter
 @Table(name = "usuario", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"username"}),
@@ -46,51 +54,74 @@ public class Usuario {
     @SequenceGenerator(name = "usuario_seq", sequenceName = "usuario_id_seq", allocationSize = 1)
     private Long idUsuario;
 
+    // --------------------------------------------------
+    // AUTENTICACION BASICA
+    // --------------------------------------------------
     @Column(length = 50, nullable = false, unique = true)
     private String username;
 
     @Column(length = 100, nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(length = 255, nullable = false)
     private String password;
-    
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol")
+    private Rol rol;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoUsuario tipoUsuario;
+
+    // --------------------------------------------------
+    // ESTADO/SEGURIDAD
+    // --------------------------------------------------
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @Column(nullable = false)
+    private Boolean cuentaBloqueada = false;
 
     @Column(nullable = false)
     private Boolean emailVerificado = false;
 
     @Column(nullable = false)
-    private LocalDateTime fechaRegistro = LocalDateTime.now();
-
-    @Column(nullable = false)
     private Integer intentosFallidosLogin = 0;
 
-    @Column(nullable = false)
-    private Boolean cuentaBloqueada = false;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoUsuario tipoUsuario;
-    
-    @Column(nullable = false)
-    private Boolean aceptaTerminos = false;
+    // --------------------------------------------------
+    // TIMESTAMPS/METADATA (Spring Data JPA Auditing)
+    // --------------------------------------------------
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime fechaRegistro;
 
-    @Column(nullable = false)
-    private Boolean aceptaPoliticaPriv = false;
-
-    // Timestamps / metadata
-    private LocalDateTime fechaVerificacionEmail;
     private LocalDateTime fechaUltimoAcceso;
 
-    @Column(nullable = false)
-    private LocalDateTime fechaUltimaModificacion = LocalDateTime.now();
+    private LocalDateTime fechaVerificacionEmail;
 
-    // Preferencias / flags
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime fechaUltimaModificacion;
+
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    private Long createdBy;
+
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    private Long updatedBy;
+
+    @Version
+    private Integer version;
+
+    // --------------------------------------------------
+    // PREFERENCIAS
+    // --------------------------------------------------
+    private Boolean notificacionesEmail;
     private Boolean recibirPromociones;
     private Boolean recibirNewsletters;
-    private Boolean notificacionesEmail;
     private Boolean notificacionesSms;
 
     @Column(length = 5)
@@ -98,36 +129,45 @@ public class Usuario {
 
     @Column(length = 50)
     private String timezone;
-    
-    // Relaciones con roles, sesiones y carrito
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_rol")
-    private Rol rol;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    // --------------------------------------------------
+    // CONSENTIMIENTO/FLAGS
+    // --------------------------------------------------
+    @Column(nullable = false)
+    private Boolean aceptaTerminos = false;
+
+    @Column(nullable = false)
+    private Boolean aceptaPoliticaPriv = false;
+    
+    // Relaciones con sesiones, carrito y colecciones sensibles
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<SesionActiva> sesionesActivas = new ArrayList<>();
 
     @JsonIgnore
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Carrito carrito;
 
     // Empresas que administra este usuario (relación existente)
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PerfilEmpresa> empresas;
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PerfilEmpresa> empresas = new ArrayList<>();
 
     @JsonIgnore
     @OneToOne(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private PerfilUsuario perfilUsuario;
-    
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EmailVerificacion> emailVerificaciones;
+    private Perfil perfilUsuario;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RefreshToken> refreshTokens;
+    @JsonIgnore
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmailVerificacion> emailVerificaciones = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TokenEmitido> tokenEmitidos;
+    @JsonIgnore
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefreshToken> refreshTokens = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TokenEmitido> tokenEmitidos = new ArrayList<>();
 
     public Usuario() {}
 
@@ -143,10 +183,6 @@ public class Usuario {
         PERSONA_FISICA, EMPRESA, ADMINISTRADOR
     }
 
-    public enum Genero {
-        MASCULINO, FEMENINO, OTRO
-    }
-
     public boolean isActivo() {
         return Boolean.TRUE.equals(this.activo);
     }
@@ -158,6 +194,8 @@ public class Usuario {
     public void setRol(Rol rol) {
         this.rol = rol;
     }
+
+    // lifecycle validations (timestamps handled by auditing)
 }
 //---------------------------------------------------------------
 //---------------------------------------------------------------

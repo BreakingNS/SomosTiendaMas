@@ -1,4 +1,4 @@
-package com.breakingns.SomosTiendaMas.entidades.perfil_usuario.dto;
+package com.breakingns.SomosTiendaMas.entidades.perfil.dto;
 
 import java.time.LocalDate;
 

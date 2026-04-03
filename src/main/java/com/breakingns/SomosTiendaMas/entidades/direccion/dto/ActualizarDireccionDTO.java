@@ -25,4 +25,16 @@ public class ActualizarDireccionDTO {
 
     private Boolean activa;
     private Boolean esPrincipal;
+
+    // Metadatos opcionales para update
+    private Long copiadaDeDireccionId;
+    private Long canonicalAddressId;
+    private String origen;
+    private String originOwnerType;
+    private Long originOwnerId;
+    private Boolean syncEnabled;
+
+    private String notas;
+
+    private Integer version;
 }

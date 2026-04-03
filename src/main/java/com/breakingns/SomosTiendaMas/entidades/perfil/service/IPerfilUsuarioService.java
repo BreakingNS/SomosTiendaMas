@@ -1,7 +1,7 @@
-package com.breakingns.SomosTiendaMas.entidades.perfil_usuario.service;
+package com.breakingns.SomosTiendaMas.entidades.perfil.service;
 
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.registrarDTO.PerfilUsuarioCreateDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.dto.PerfilUsuarioResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.perfil.dto.PerfilUsuarioResponseDTO;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 import java.util.Optional;

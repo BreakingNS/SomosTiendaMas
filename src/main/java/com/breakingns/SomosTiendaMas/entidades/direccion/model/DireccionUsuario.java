@@ -1,7 +1,9 @@
-package com.breakingns.SomosTiendaMas.entidades.direccion.model;
+//TODO: deprecado, unificado en Direcicon.java con un campo discriminador "entidad" (CLIENTE, EMPRESA, PROVEEDOR) para evitar duplicación de código y facilitar mantenimiento. Mantener esta clase solo si se necesita una tabla separada por razones de rendimiento o seguridad, pero preferir la unificación si no hay una necesidad clara.
+
+/* package com.breakingns.SomosTiendaMas.entidades.direccion.model;
 
 import com.breakingns.SomosTiendaMas.auth.model.*;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
+import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.Perfil;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +21,7 @@ public class DireccionUsuario {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "perfil_usuario_id", nullable = false)
-    private PerfilUsuario perfilUsuario;
+    private Perfil perfilUsuario;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -65,4 +67,4 @@ public class DireccionUsuario {
     private Boolean esPrincipal = true;
 
     public enum TipoDireccion { PERSONAL, FISCAL, ENVIO, FACTURACION }
-}
+}*/

@@ -1,3 +1,5 @@
+//TODO: deprecado, unificado en Direcicon.java con un campo discriminador "entidad" (CLIENTE, EMPRESA, PROVEEDOR) para evitar duplicación de código y facilitar mantenimiento. Mantener esta clase solo si se necesita una tabla separada por razones de rendimiento o seguridad, pero preferir la unificación si no hay una necesidad clara.
+/* 
 package com.breakingns.SomosTiendaMas.entidades.direccion.model;
 
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
@@ -65,4 +67,4 @@ public class DireccionEmpresa {
     private Boolean esPrincipal = true;
 
     public enum TipoDireccion { FISCAL, ENVIO, FACTURACION }
-}
+}*/

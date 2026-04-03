@@ -5,11 +5,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class DireccionResponseDTO {
     private Long id;
-    // "USUARIO" o "EMPRESA"
+
+    // Owner: "USUARIO" o "EMPRESA"
     private String ownerType;
     private Long ownerId;
 
@@ -30,4 +35,18 @@ public class DireccionResponseDTO {
 
     private Boolean activa;
     private Boolean esPrincipal;
+    private Long copiadaDeDireccionId;
+    private Long canonicalAddressId;
+
+    private String origen;
+    private String originOwnerType;
+    private Long originOwnerId;
+    private Boolean syncEnabled;
+
+    private String notas;
+
+    private Integer version;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

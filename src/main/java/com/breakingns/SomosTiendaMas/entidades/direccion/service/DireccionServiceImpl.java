@@ -6,8 +6,8 @@ import com.breakingns.SomosTiendaMas.entidades.direccion.dto.DireccionResponseDT
 import com.breakingns.SomosTiendaMas.entidades.direccion.model.DireccionUsuario;
 import com.breakingns.SomosTiendaMas.entidades.direccion.model.DireccionEmpresa;
 import com.breakingns.SomosTiendaMas.entidades.direccion.repository.DireccionUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.perfil.model.Perfil;
 import com.breakingns.SomosTiendaMas.entidades.direccion.repository.DireccionEmpresaRepository;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
 import com.breakingns.SomosTiendaMas.auth.model.Pais;
 import com.breakingns.SomosTiendaMas.auth.model.Provincia;
@@ -35,7 +35,7 @@ public class DireccionServiceImpl implements IDireccionService {
     public DireccionResponseDTO registrarDireccion(RegistroDireccionDTO dto) {
         if (dto.getPerfilUsuarioId() != null) {
             DireccionUsuario e = new DireccionUsuario();
-            PerfilUsuario perfil = new PerfilUsuario();
+            Perfil perfil = new Perfil();
             perfil.setId(dto.getPerfilUsuarioId());
             e.setPerfilUsuario(perfil);
             // Tipo

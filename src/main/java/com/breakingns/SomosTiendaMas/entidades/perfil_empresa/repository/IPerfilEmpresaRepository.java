@@ -1,3 +1,5 @@
+// TODO: reemplazar por PerfilRepository, eliminar esta clase y sus referencias
+/* 
 package com.breakingns.SomosTiendaMas.entidades.perfil_empresa.repository;
 
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
@@ -15,4 +17,4 @@ public interface IPerfilEmpresaRepository extends JpaRepository<PerfilEmpresa, L
     Optional<PerfilEmpresa> findByUsuario(Usuario usuario);
     List<PerfilEmpresa> findByEstadoAprobado(PerfilEmpresa.EstadoAprobado estadoAprobado);
 
-}
+}*/

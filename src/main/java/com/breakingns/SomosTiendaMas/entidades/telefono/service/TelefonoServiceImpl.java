@@ -3,7 +3,7 @@ package com.breakingns.SomosTiendaMas.entidades.telefono.service;
 import com.breakingns.SomosTiendaMas.entidades.telefono.dto.*;
 import com.breakingns.SomosTiendaMas.entidades.telefono.repository.*;
 import com.breakingns.SomosTiendaMas.entidades.telefono.model.*;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
+import com.breakingns.SomosTiendaMas.entidades.perfil.model.Perfil;
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
 
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ public class TelefonoServiceImpl implements ITelefonoService {
 
         if (dto.getPerfilUsuarioId() != null) {
             TelefonoUsuario e = new TelefonoUsuario();
-            PerfilUsuario p = new PerfilUsuario();
+            Perfil p = new Perfil();
             p.setId(dto.getPerfilUsuarioId());
             e.setPerfilUsuario(p);
 

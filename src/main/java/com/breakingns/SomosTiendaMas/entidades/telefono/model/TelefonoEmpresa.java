@@ -1,4 +1,5 @@
-package com.breakingns.SomosTiendaMas.entidades.telefono.model;
+// TODO: deprecado, unificado en Telefono.java con un campo discriminador "entidad" (CLIENTE, EMPRESA, PROVEEDOR) para evitar duplicación de código y facilitar mantenimiento. Mantener esta clase solo si se necesita una tabla separada por razones de rendimiento o seguridad, pero preferir la unificación si no hay una necesidad clara. 
+/*package com.breakingns.SomosTiendaMas.entidades.telefono.model;
 
 import com.breakingns.SomosTiendaMas.entidades.perfil_empresa.model.PerfilEmpresa;
 import jakarta.persistence.*;
@@ -38,3 +39,4 @@ public class TelefonoEmpresa {
 
     public enum TipoTelefono { EMPRESA, PRINCIPAL, SECUNDARIO }
 }
+*/

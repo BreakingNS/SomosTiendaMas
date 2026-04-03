@@ -1,9 +1,9 @@
-package com.breakingns.SomosTiendaMas.entidades.perfil_usuario.service;
+package com.breakingns.SomosTiendaMas.entidades.perfil.service;
 
 import com.breakingns.SomosTiendaMas.entidades.gestionPerfil.dto.registrarDTO.PerfilUsuarioCreateDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.dto.PerfilUsuarioResponseDTO;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.repository.PerfilUsuarioRepository;
+import com.breakingns.SomosTiendaMas.entidades.perfil.dto.PerfilUsuarioResponseDTO;
+import com.breakingns.SomosTiendaMas.entidades.perfil.model.Perfil;
+import com.breakingns.SomosTiendaMas.entidades.perfil.repository.PerfilRepository;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,17 +13,17 @@ import java.util.Optional;
 @Service
 public class PerfilUsuarioService implements IPerfilUsuarioService {
 
-    private final PerfilUsuarioRepository repo;
+    private final PerfilRepository repo;
 
-    public PerfilUsuarioService(PerfilUsuarioRepository repo) {
+    public PerfilUsuarioService(PerfilRepository repo) {
         this.repo = repo;
     }
 
     @Override
     @Transactional
     public PerfilUsuarioResponseDTO crearOActualizarPerfil(Usuario usuario, PerfilUsuarioCreateDTO dto) {
-        PerfilUsuario perfil = repo.findByUsuario(usuario).orElseGet(() -> {
-            PerfilUsuario p = new PerfilUsuario();
+        Perfil perfil = repo.findByUsuario(usuario).orElseGet(() -> {
+            Perfil p = new Perfil();
             p.setUsuario(usuario);
             System.out.println("Creando nuevo perfil para usuario ID: " + usuario.getIdUsuario() + "\n\n");
             return p;
@@ -37,7 +37,7 @@ public class PerfilUsuarioService implements IPerfilUsuarioService {
         if (dto.getCargo() != null) perfil.setCargo(dto.getCargo());
         if (dto.getCorreoAlternativo() != null) perfil.setCorreoAlternativo(dto.getCorreoAlternativo());
 
-        PerfilUsuario saved = repo.save(perfil);
+        Perfil saved = repo.save(perfil);
 
         return new PerfilUsuarioResponseDTO(
                 saved.getId(),

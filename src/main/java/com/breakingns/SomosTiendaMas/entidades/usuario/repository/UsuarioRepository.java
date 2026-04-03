@@ -1,5 +1,3 @@
-// TODO: reemplazado por UsuarioRepository, eliminar este archivo
-/* 
 package com.breakingns.SomosTiendaMas.entidades.usuario.repository;
 
 import java.util.List;
@@ -13,20 +11,20 @@ import com.breakingns.SomosTiendaMas.auth.model.RolNombre;
 import com.breakingns.SomosTiendaMas.entidades.usuario.model.Usuario;
 
 @Repository
-public interface IUsuarioRepository extends JpaRepository<Usuario, Long>{
-    
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+
     Optional<Usuario> findByEmail(String email);
-    
+
     Optional<Usuario> findByUsername(String username);
-    
+
     Boolean existsByUsername(String username);
-    
+
     boolean existsByEmail(String email);
 
-    List<Usuario> findByActivo(boolean b);
+    List<Usuario> findByActivo(boolean activo);
 
     List<Usuario> findByRolNombre(RolNombre rolNombre);
-    
+
     @Query("SELECT DISTINCT u FROM Usuario u " +
            "LEFT JOIN FETCH u.perfilUsuario p " +
            "LEFT JOIN FETCH p.direcciones " +
@@ -40,4 +38,4 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long>{
            "LEFT JOIN FETCH p.telefonos " +
            "WHERE u.idUsuario = :id")
     Optional<Usuario> findByIdWithDireccionesYTelefonos(@Param("id") Long id);
-}*/
+}

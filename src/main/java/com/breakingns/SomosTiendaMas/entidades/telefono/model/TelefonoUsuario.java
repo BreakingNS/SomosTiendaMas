@@ -1,6 +1,7 @@
-package com.breakingns.SomosTiendaMas.entidades.telefono.model;
+// TODO: deprecado, unificado en Telefono.java con un campo discriminador "entidad" (CLIENTE, EMPRESA, PROVEEDOR) para evitar duplicación de código y facilitar mantenimiento. Mantener esta clase solo si se necesita una tabla separada por razones de rendimiento o seguridad, pero preferir la unificación si no hay una necesidad clara.
+/*package com.breakingns.SomosTiendaMas.entidades.telefono.model;
 
-import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.PerfilUsuario;
+import com.breakingns.SomosTiendaMas.entidades.perfil_usuario.model.Perfil;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,7 +20,7 @@ public class TelefonoUsuario {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "perfil_usuario_id", nullable = false)
-    private PerfilUsuario perfilUsuario;
+    private Perfil perfilUsuario;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,3 +43,4 @@ public class TelefonoUsuario {
 
     public enum TipoTelefono { PRINCIPAL, SECUNDARIO, WHATSAPP }
 }
+*/

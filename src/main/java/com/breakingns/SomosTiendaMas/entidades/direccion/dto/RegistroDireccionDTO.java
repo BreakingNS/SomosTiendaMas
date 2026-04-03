@@ -37,9 +37,18 @@ public class RegistroDireccionDTO {
     @NotBlank
     private String codigoPostal;
     private String referencia;
-
     @NotNull
     private Boolean activa = true;
     @NotNull
     private Boolean esPrincipal = true;
+
+    // Metadatos opcionales de import/duplicado
+    private Long copiadaDeDireccionId;
+    private Long canonicalAddressId;
+    private String origen; // MANUAL|IMPORT|API|COPIA
+    private String originOwnerType; // USUARIO|EMPRESA
+    private Long originOwnerId;
+    private Boolean syncEnabled = false;
+
+    private String notas;
 }
